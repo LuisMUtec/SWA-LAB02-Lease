@@ -64,7 +64,7 @@ A verdict with no citation to the spec is inadmissible and counts as `Does not w
 1. Run the 3 persona agents separately against the current `spec.md`.
 2. Run the aggregator: D2, D3 and D4 over the same document.
 3. Compute `D1 = 3 − Σ(deductions)` and the total out of 10.
-4. Write `evals/iteraciones/YYYY-MM-DD-NN.md` following [the template](iteraciones/_PLANTILLA.md).
+4. Write `evals/iterations/YYYY-MM-DD-NN.md` following [the template](iterations/_TEMPLATE.md).
 5. Append a row to [`HISTORY.md`](HISTORY.md).
 6. If the total is below 8: correct `spec.md` and return to step 1. The spec changes; the rubric
    does not.
