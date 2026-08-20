@@ -5,3 +5,6 @@ Thumbs.db
 .idea/
 .claude/worktrees/
 ~$*.docx
+
+# Claude Code: estado local por maquina (posibles credenciales)
+.claude/settings.local.json

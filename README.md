@@ -31,9 +31,27 @@ Usuarios y sus necesidades (`Pedro.MD`, `Carlos.MD`, `Julia.MD`) · Decisiones c
 producto · Experiencia de usuario esperada · Flujos principales · Alcance por etapas ·
 Criterios de aceptación
 
+## Flujo de trabajo
+
+El proyecto usa [Spec Kit](https://github.com/github/spec-kit) para desarrollo dirigido por
+especificación. Las skills quedan en `.claude/skills/` y las plantillas en `.specify/`:
+
+| Skill | Para qué |
+|---|---|
+| `/speckit-constitution` | Fijar los principios del proyecto (aún es plantilla) |
+| `/speckit-specify` | Redactar la especificación base |
+| `/speckit-clarify` | Resolver ambigüedades antes de planificar |
+| `/speckit-plan` | Plan de implementación |
+| `/speckit-tasks` | Tareas accionables |
+| `/speckit-analyze` | Consistencia entre artefactos |
+| `/speckit-checklist` | Checklists de calidad de requerimientos |
+| `/speckit-implement` | Ejecutar la implementación (POC) |
+| `/speckit-converge` | Detectar trabajo pendiente sobre el código |
+
 ## Estado
 
-Proyecto recién iniciado. Solo contiene el enunciado.
+Andamiaje listo: enunciado cargado y Spec Kit instalado. Falta redactar la constitución
+y la especificación.
 
 ## Documentos
 
