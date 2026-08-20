@@ -8,6 +8,8 @@ Evaluation apparatus for the specification. Run by hand, outside the Spec Kit fl
 |---|---|
 | `specs/<n>-<feature>/spec.md` | **Scored.** The only document with authority over what the system does |
 | [`../personas/*.MD`](../personas/) | Read by each persona agent — its own file only |
+| [`../business-rules.md`](../business-rules.md) | Read by the aggregator: D3 and D4 check that criteria state a rule's effect and cite it correctly |
+| [`../.specify/memory/constitution.md`](../.specify/memory/constitution.md) | Read by the aggregator: the problem D2 measures against is stated there |
 
 Everything downstream of the spec (plan, tasks, code) derives from it and is not scored here.
 
@@ -20,7 +22,7 @@ D4.
 | Dim | Pts | What it measures | Judged by |
 |---|---|---|---|
 | **D1** Persona satisfaction | 3 | The spec resolves the working day of [Pedro](../personas/Pedro.MD), [Carlos](../personas/Carlos.MD) and [Julia](../personas/Julia.MD): each main flow runs end to end. 1 pt per persona, **deductions only** | The 3 agents |
-| **D2** Fit to the problem | 3 | It attacks the brief's actual gap — machinery needed now, payment only at project end — not generic leasing | Aggregator |
+| **D2** Fit to the problem | 3 | It attacks the gap stated in Principle III — machinery needed now, payment only at project end — not generic leasing | Aggregator |
 | **D3** Demonstrable acceptance criteria | 2 | Every main flow carries criteria someone can declare met or unmet | Aggregator |
 | **D4** Coherence and staged scope | 2 | No contradictions or covert duplicates; the staged scope is real **and its first stage is exactly the POC happy path** | Aggregator |
 
@@ -82,6 +84,7 @@ These are what D3 and D4 check. Deliberately few.
   undefined carries one of two markers and is never resolved silently:
   - `[CLARIFY: specific question]` when the answer determines the content.
   - `[ASSUMPTION: statement]` when work continues under a declared hypothesis.
-- **No load-bearing references.** A trailing pointer — `(RN-03)` — is fine. A sentence that cannot
-  be understood without following it is not.
+- **No load-bearing references.** A criterion states a rule's effect and cites its identifier —
+  *"rejects applications from companies operating under 12 months (BR-03)"*. A trailing pointer is
+  fine; a sentence that cannot be understood without following it is not.
 - **Nothing is named by its visible text.** A button's label changes without the spec changing.

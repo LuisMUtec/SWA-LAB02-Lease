@@ -38,7 +38,7 @@ especificación. Las skills quedan en `.claude/skills/` y las plantillas en `.sp
 
 | Skill | Para qué |
 |---|---|
-| `/speckit-constitution` | Fijar los principios del proyecto (aún es plantilla) |
+| `/speckit-constitution` | Fijar los principios del proyecto — ya escrita, v1.0.0 |
 | `/speckit-specify` | Redactar la especificación base |
 | `/speckit-clarify` | Resolver ambigüedades antes de planificar |
 | `/speckit-plan` | Plan de implementación |
@@ -47,6 +47,23 @@ especificación. Las skills quedan en `.claude/skills/` y las plantillas en `.sp
 | `/speckit-checklist` | Checklists de calidad de requerimientos |
 | `/speckit-implement` | Ejecutar la implementación (POC) |
 | `/speckit-converge` | Detectar trabajo pendiente sobre el código |
+
+## Dónde vive cada cosa
+
+Un mismo tema puede aparecer a más de una altitud sin duplicarse, mientras cada altitud afirme algo
+distinto. **Cada afirmación ocurre una sola vez, en su altitud.**
+
+| Altitud | Documento | Afirma |
+|---|---|---|
+| Gobierno | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Por qué existe el proyecto y cómo se juzga el trabajo |
+| Dominio | [`business-rules.md`](business-rules.md) | Las reglas que obedece el negocio, `BR-nn`, sobreviven a cualquier spec |
+| Personas | [`personas/`](personas/) | Quién es cada persona y qué necesita |
+| Feature | `specs/<n>/spec.md` | Qué hace el sistema y qué porción de la brecha cierra |
+| Plan | `specs/<n>/plan.md`, `tasks.md` | Cómo se construye |
+
+Los criterios de aceptación **enuncian el efecto de la regla y citan su ID** —*"rejects
+applications from companies operating under 12 months (BR-03)"*— para que ninguna referencia sea
+portante.
 
 ## EVAL
 
@@ -66,8 +83,8 @@ puedan divergir.
 
 ## Estado
 
-Andamiaje listo: enunciado cargado, Spec Kit instalado y aparato de EVAL definido. Falta redactar
-la constitución, las personas y la especificación.
+Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio abierto con
+las dos reglas que se derivan del enunciado. Falta redactar las personas y la especificación.
 
 ## Documentos
 
