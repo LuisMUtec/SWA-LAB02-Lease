@@ -1,36 +1,36 @@
-# Iteración NN — AAAA-MM-DD
+# Iteration NN — YYYY-MM-DD
 
-Evaluada: `specs/<n>-<feature>/spec.md` @ `<sha-corto>`
+Evaluated: `specs/<n>-<feature>/spec.md` @ `<short-sha>`
 
-## Puntaje
+## Score
 
-| Dim | Pts | Obtenido | Por qué |
+| Dim | Pts | Earned | Why |
 |---|---|---|---|
-| D1 Satisfacción de las personas | 3 | — | — |
-| D2 Ajuste al problema | 3 | — | — |
-| D3 Criterios demostrables | 2 | — | — |
-| D4 Coherencia y alcance por etapas | 2 | — | — |
+| D1 Persona satisfaction | 3 | — | — |
+| D2 Fit to the problem | 3 | — | — |
+| D3 Demonstrable criteria | 2 | — | — |
+| D4 Coherence and staged scope | 2 | — | — |
 | **Total** | **10** | **—** | |
 
 **Gate ≥ 8:** PASSED / FAILED
 
-## Veredictos de persona
+## Persona verdicts
 
-### Pedro — `Sirve` / `Sirve con reservas` / `No sirve` (resta X)
+### Pedro — `Works` / `Works with reservations` / `Does not work` (deducts X)
 
-- **Flujo principal:** dónde lo cubre el spec, o dónde se corta.
-- **Qué me frustra:** —
+- **Main flow:** where the spec covers it, or where it breaks off.
+- **What frustrates me:** —
 
 ### Carlos — …
 
 ### Julia — …
 
-## Hallazgos del agregador
+## Aggregator findings
 
-| Dim | Hallazgo | Dónde | Descuento |
+| Dim | Finding | Where | Deduction |
 |---|---|---|---|
 | — | — | — | — |
 
-## Qué corregir antes de la próxima iteración
+## To correct before the next iteration
 
 1. —

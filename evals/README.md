@@ -1,78 +1,87 @@
-# EVAL — Especificación de Lea$e
+# EVAL — Lea$e specification
 
-Aparato de evaluación de la especificación. Corre a mano, fuera del flujo de Spec Kit.
+Evaluation apparatus for the specification. Run by hand, outside the Spec Kit flow.
 
-## Qué puntúa y qué no
+## Inputs
 
-Puntúa **`specs/<n>-<feature>/spec.md`**: el único documento con autoridad sobre qué hace el
-sistema. Todo lo demás (plan, tasks, código) deriva de ahí y no se puntúa aquí.
+| Input | Role |
+|---|---|
+| `specs/<n>-<feature>/spec.md` | **Scored.** The only document with authority over what the system does |
+| [`../personas/*.MD`](../personas/) | Read by each persona agent — its own file only |
 
-**El POC no entra en el puntaje.** Son dos entregables distintos: el spec se puntúa, el POC corre
-o no corre. Lo que sí exige esta rúbrica es que no puedan divergir — ver D4.
+Everything downstream of the spec (plan, tasks, code) derives from it and is not scored here.
 
-## Rúbrica — 10 puntos
+**The POC is not part of the score.** They are two separate deliverables: the spec is scored, the
+POC either runs or it does not. What this rubric does enforce is that they cannot drift apart — see
+D4.
 
-| Dim | Pts | Qué mide | Quién juzga |
+## Rubric — 10 points
+
+| Dim | Pts | What it measures | Judged by |
 |---|---|---|---|
-| **D1** Satisfacción de las personas | 3 | El spec resuelve el día de [Pedro](../personas/Pedro.MD), [Carlos](../personas/Carlos.MD) y [Julia](../personas/Julia.MD): su flujo principal se recorre entero. 1 pt por persona, **solo se resta** | Los 3 agentes |
-| **D2** Ajuste al problema | 3 | Ataca la brecha real del enunciado —maquinaria necesaria hoy, cobro al final del proyecto— y no un leasing genérico | Agregador |
-| **D3** Criterios de aceptación demostrables | 2 | Cada flujo principal tiene criterios que alguien puede declarar cumplidos o incumplidos | Agregador |
-| **D4** Coherencia y alcance por etapas | 2 | Sin contradicciones ni duplicados encubiertos; el alcance por etapas es real **y su primera etapa es exactamente el happy path del POC** | Agregador |
+| **D1** Persona satisfaction | 3 | The spec resolves the working day of [Pedro](../personas/Pedro.MD), [Carlos](../personas/Carlos.MD) and [Julia](../personas/Julia.MD): each main flow runs end to end. 1 pt per persona, **deductions only** | The 3 agents |
+| **D2** Fit to the problem | 3 | It attacks the brief's actual gap — machinery needed now, payment only at project end — not generic leasing | Aggregator |
+| **D3** Demonstrable acceptance criteria | 2 | Every main flow carries criteria someone can declare met or unmet | Aggregator |
+| **D4** Coherence and staged scope | 2 | No contradictions or covert duplicates; the staged scope is real **and its first stage is exactly the POC happy path** | Aggregator |
 
-**Gate: ≥ 8/10.** Se pueden perder 2 puntos, no más.
+**Gate: ≥ 8/10.** Two points may be lost, no more.
 
-Un puntaje bajo el gate no baja la barra: se corrige el spec y se vuelve a correr.
+A score below the gate does not lower the bar: the spec is corrected and the evaluation is run again.
 
-## Regla de asimetría
+## The asymmetry rule
 
-**Un agente de persona solo puede restar en D1. Nunca sumar.** Su función es detectar la falla, no
-certificar el acierto. Si ningún agente objeta, D1 vale 3. Un puntaje alto debe costar.
+**A persona agent may only deduct from D1. Never add.** Its job is to detect the failure, not to
+certify the success. If no agent objects, D1 is worth 3. A high score must cost something.
 
-## Quién juzga qué
+## Who judges what
 
-| Pregunta | Quién responde | Por qué |
+| Question | Who answers | Why |
 |---|---|---|
-| ¿Este spec le sirve a esta persona? | Su agente | Solo quien opera desde esa posición reconoce si le resuelve el día |
-| ¿Resuelve la brecha de financiamiento del enunciado? | Agregador | Cada persona ve un ángulo; ninguna ve el problema completo |
-| ¿Los criterios de aceptación son demostrables? | Agregador | La forma es ajena a la perspectiva de la persona |
-| ¿Hay contradicciones o duplicados? | Agregador | Requiere el documento entero a la vista |
-| ¿La primera etapa es construible como POC? | Agregador | Comparativa entre etapas, no dentro de una |
+| Does this spec serve this person? | Their agent | Only someone working from that position recognises whether it resolves their day |
+| Does it close the brief's financing gap? | Aggregator | Each persona sees one angle; none sees the whole problem |
+| Are the acceptance criteria demonstrable? | Aggregator | Form is outside any single persona's perspective |
+| Are there contradictions or duplicates? | Aggregator | Requires the whole document in view |
+| Is the first stage buildable as the POC? | Aggregator | A comparison between stages, not within one |
 
-## Protocolo del agente de persona
+## Persona-agent protocol
 
-Se corre **una vez por persona, por separado**. Cada agente lee exactamente dos cosas y nada más:
-su archivo en `personas/` y `spec.md`. No lee los veredictos de los otros ni el historial.
+Run **once per persona, separately**. Each agent reads exactly two things and nothing else: its own
+file in `personas/` and `spec.md`. It does not read the other verdicts or the history.
 
-Cada agente responde, en este orden:
+Each agent answers, in this order:
 
-1. **Mi flujo principal, ¿se recorre entero en el spec?** Cita las secciones que lo cubren. Si se
-   corta, di dónde.
-2. **¿Qué me frustra del spec?** Lo que el spec decide en tu contra, o deja sin decidir y te toca
-   sufrir a ti.
-3. **Veredicto:** `Sirve` (resta 0) · `Sirve con reservas` (resta 0,5) · `No sirve` (resta 1).
+1. **Does my main flow run end to end in the spec?** Cite the sections that cover it. If it breaks
+   off, say where.
+2. **What frustrates me about this spec?** What the spec decides against me, or leaves undecided so
+   that I am the one who absorbs it.
+3. **Verdict:** `Works` (deduct 0) · `Works with reservations` (deduct 0.5) · `Does not work`
+   (deduct 1).
 
-Un veredicto sin cita al spec no es admisible: se trata como `No sirve`.
+A verdict with no citation to the spec is inadmissible and counts as `Does not work`.
 
-## Procedimiento de una iteración
+## Running one iteration
 
-1. Correr los 3 agentes de persona por separado sobre el `spec.md` vigente.
-2. Correr el agregador: D2, D3 y D4 sobre el mismo documento.
-3. Calcular `D1 = 3 − Σ(descuentos)` y el total sobre 10.
-4. Escribir `EVAL/iteraciones/AAAA-MM-DD-NN.md` siguiendo [la plantilla](iteraciones/_PLANTILLA.md).
-5. Agregar una fila a [`HISTORIAL.md`](HISTORIAL.md).
-6. Si el total < 8: corregir `spec.md` y volver a 1. El spec cambia; la rúbrica no.
+1. Run the 3 persona agents separately against the current `spec.md`.
+2. Run the aggregator: D2, D3 and D4 over the same document.
+3. Compute `D1 = 3 − Σ(deductions)` and the total out of 10.
+4. Write `evals/iteraciones/YYYY-MM-DD-NN.md` following [the template](iteraciones/_PLANTILLA.md).
+5. Append a row to [`HISTORY.md`](HISTORY.md).
+6. If the total is below 8: correct `spec.md` and return to step 1. The spec changes; the rubric
+   does not.
 
-## Reglas de redacción que el agregador exige al spec
+## Writing rules the aggregator enforces on the spec
 
-Son las que D3 y D4 verifican. Deliberadamente pocas.
+These are what D3 and D4 check. Deliberately few.
 
-- **Verificable.** «Rápido», «intuitivo» y «confiable» se sustituyen por su medida. Un enunciado
-  que nadie puede declarar cumplido o incumplido no es un criterio de aceptación.
-- **Atómico.** Una cosa verdadera o falsa, modificable por separado.
-- **Sin mecanismo.** El spec enuncia la garantía, no la tecnología. Una cola, un producto cloud o
-  una topología dentro de un criterio es una decisión de arquitectura disfrazada.
-- **La ambigüedad se marca, no se rellena.** El enunciado deja abierta buena parte del dominio.
-  Lo indefinido lleva uno de dos marcadores, nunca se resuelve en silencio:
-  - `[CLARIFY: pregunta concreta]` cuando la respuesta condiciona el contenido.
-  - `[ASSUMPTION: enunciado]` cuando el trabajo continúa bajo hipótesis declarada.
-- **Nada se nombra por su texto visible.** La etiqueta de un botón cambia sin que cambie el spec.
+- **Verifiable.** "Fast", "intuitive" and "reliable" are replaced by their measure. A statement
+  nobody can declare met or unmet is not an acceptance criterion.
+- **Atomic.** One thing that is true or false, changeable on its own.
+- **No mechanism.** The spec states the guarantee, not the technology. A queue, a cloud product or
+  a topology inside a criterion is an architecture decision in disguise.
+- **Ambiguity is marked, never filled in.** The brief leaves much of the domain open. What is
+  undefined carries one of two markers and is never resolved silently:
+  - `[CLARIFY: specific question]` when the answer determines the content.
+  - `[ASSUMPTION: statement]` when work continues under a declared hypothesis.
+- **No load-bearing references.** A trailing pointer — `(RN-03)` — is fine. A sentence that cannot
+  be understood without following it is not.
+- **Nothing is named by its visible text.** A button's label changes without the spec changing.
