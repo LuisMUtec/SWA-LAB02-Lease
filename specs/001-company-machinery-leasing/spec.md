@@ -1,6 +1,6 @@
 # Feature Specification: Company Machinery Leasing
 
-**Feature Branch**: `claude/spec-empresa-actor-otf606`
+**Feature Branch**: `001-company-machinery-leasing`
 
 **Created**: 2026-08-20
 
@@ -74,7 +74,7 @@ Company's needs, as covered by this feature:
 - **When an approved request moves the operation forward**: approval is itself the trigger. Once a Leasing Request is `approved`, Company does not need to take a separate action for Lease Company to proceed toward purchasing and delivering the Machinery — the internal purchase from Supplier is Lease Company's process, and what this feature specifies is that its result (the Machinery arriving) becomes observable and confirmable by Company.
 - **What a rejected request means**: a `rejected` Leasing Request never produces a Lease. Whether Company may submit a new Leasing Request for the same machinery need after a rejection is a later-stage decision (see Phased Scope), not part of Stage 1.
 - **How Machinery receipt is recognized**: Company explicitly confirms that it received the Machinery for a specific Leasing Operation. `[ASSUMPTION: receipt becomes an observable, confirmed milestone through an explicit Company action, rather than being inferred automatically from Supplier-side data the brief does not describe]`.
-- **When the Acquisition Option becomes available**: exactly when every Installment belonging to the Lease is `paid` — this follows directly from the brief's diagram (all installments paid → acquisition option). `[CLARIFY: does exercising the Acquisition Option require anything beyond every Installment being paid — for example, an additional residual-value payment — or is it available at no further cost once Installments are complete?]`
+- **When the Acquisition Option becomes available**: exactly when every Installment belonging to the Lease is `paid` — this follows directly from the brief's own diagram (`docs/LAB-02-ARQ-2026.2.md#diagramas-del-flujo-extraídos-de-lab-02-arq-20262docx`, second diagram: *"Pago TODAS las cuotas → opciones de adquisición"*), not an invented rule. `[CLARIFY: does exercising the Acquisition Option require anything beyond every Installment being paid — for example, an additional residual-value payment — or is it available at no further cost once Installments are complete?]`
 - **What constitutes a completed Leasing Operation**: for Stage 1, a Leasing Operation is complete once Company exercises an available Acquisition Option and the system confirms the exercise. `[CLARIFY: if Company does not exercise an available Acquisition Option, what terminal state does the Leasing Operation reach? The brief's diagram only shows the path through acquisition, so Stage 1 treats exercising the option as part of the happy path itself; a distinct "available but not exercised" terminal outcome is left for a later stage.]`
 - **What belongs to Stage 1**: exactly the happy-path journey enumerated in Phased Scope below — nothing that assumes a rejection, a delay, or a dispute.
 
@@ -159,7 +159,7 @@ Pedro's company is partway through paying a Lease's Installments and needs to kn
 
 Each criterion is atomic, observable, and traceable to a Functional Requirement. Where a criterion states a business rule's effect, it cites the rule's identifier per `business-rules.md`'s convention.
 
-- **AC-001**: **Given** a Project that requires Machinery Company has not yet leased, **When** Company records the need, **Then** the need is retrievable as associated with that Project. *(FR-001)*
+- **AC-001**: **Given** a Project that requires Machinery Company has not yet leased, **When** Company records the need, **Then** the need is retrievable as associated with that Project — Company is eligible to do this because it is a company that works by project (BR-02). *(FR-001)*
 - **AC-002**: **Given** a recorded machinery need, **When** Company submits a Leasing Request, **Then** the request exists with a unique identity, status `pending`, and references to the Company, Project, and Machinery need. *(FR-002, FR-003)*
 - **AC-003**: **Given** any Leasing Request belonging to Company, **When** Company queries its status, **Then** the result is exactly one of `pending`, `approved`, or `rejected` — never more than one, never none. *(FR-004)*
 - **AC-004**: **Given** a Leasing Request that becomes `approved`, **When** Company checks for a corresponding Lease, **Then** exactly one Lease now exists, traceable back to that Leasing Request. *(FR-005, FR-006)*
@@ -167,14 +167,15 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-006**: **Given** an approved Leasing Request whose Machinery has arrived, **When** Company confirms receipt, **Then** the confirmation is recorded against that specific Leasing Operation and is retrievable afterward. *(FR-008)*
 - **AC-007**: **Given** an approved Leasing Request whose Machinery receipt has not been confirmed, **When** Company attempts to confirm receipt for it before that Machinery exists for the operation, **Then** the system does not record a receipt confirmation. *(FR-009)*
 - **AC-008**: **Given** a Lease, **When** Company views its Installments, **Then** every Installment belonging to that Lease is listed with its own status. *(FR-010)*
-- **AC-009**: **Given** a Lease and one of its `pending` Installments, **When** Company pays it, **Then** that Installment's status becomes `paid`, and no other Installment's status changes. *(FR-012)*
-- **AC-010**: **Given** an Installment already `paid`, **When** Company attempts to pay it again, **Then** the system rejects the attempt and the Installment's status and the Lease's paid/pending counts remain unchanged. *(FR-013)*
-- **AC-011**: **Given** a Lease, **When** Company requests the count of paid and pending Installments, **Then** the two counts always sum to the Lease's total number of Installments. *(FR-014)*
-- **AC-012**: **Given** a Lease with at least one `pending` Installment, **When** Company checks the Acquisition Option, **Then** it is `not yet available`. *(FR-015)*
-- **AC-013**: **Given** a Lease whose Installments are all `paid`, **When** Company checks the Acquisition Option, **Then** it is `available`. *(FR-015)*
-- **AC-014**: **Given** an Acquisition Option that is `not yet available`, **When** Company attempts to exercise it, **Then** the system rejects the attempt and the Leasing Operation does not reach a completed state. *(FR-016)*
-- **AC-015**: **Given** an Acquisition Option that is `available`, **When** Company exercises it, **Then** the exercise is confirmed and the Leasing Operation's state becomes unambiguously completed, distinguishable from every non-terminal state used in this feature. *(FR-017)*
-- **AC-016**: **Given** two different Companies, **When** either queries Leasing Requests, Leases, or Installments, **Then** each sees only the records associated with itself. *(FR-018)*
+- **AC-009**: **Given** a Lease whose Machinery receipt has not been confirmed, **When** Company attempts to pay any of its Installments, **Then** the system rejects the attempt — installments are not payable ahead of confirmed delivery, since Lea$e's collateral is the Machinery it has handed over (BR-01). *(FR-011)*
+- **AC-010**: **Given** a Lease and one of its `pending` Installments, **When** Company pays it, **Then** that Installment's status becomes `paid`, and no other Installment's status changes. *(FR-012)*
+- **AC-011**: **Given** an Installment already `paid`, **When** Company attempts to pay it again, **Then** the system rejects the attempt and the Installment's status and the Lease's paid/pending counts remain unchanged. *(FR-013)*
+- **AC-012**: **Given** a Lease, **When** Company requests the count of paid and pending Installments, **Then** the two counts always sum to the Lease's total number of Installments. *(FR-014)*
+- **AC-013**: **Given** a Lease with at least one `pending` Installment, **When** Company checks the Acquisition Option, **Then** it is `not yet available`. *(FR-015)*
+- **AC-014**: **Given** a Lease whose Installments are all `paid`, **When** Company checks the Acquisition Option, **Then** it is `available`. *(FR-015)*
+- **AC-015**: **Given** an Acquisition Option that is `not yet available`, **When** Company attempts to exercise it, **Then** the system rejects the attempt and the Leasing Operation does not reach a completed state. *(FR-016)*
+- **AC-016**: **Given** an Acquisition Option that is `available`, **When** Company exercises it, **Then** the exercise is confirmed and the Leasing Operation's state becomes unambiguously completed, distinguishable from every non-terminal state used in this feature. *(FR-017)*
+- **AC-017**: **Given** two different Companies, **When** either queries Leasing Requests, Leases, or Installments, **Then** each sees only the records associated with itself. *(FR-018)*
 
 ## Requirements *(mandatory)*
 
@@ -266,5 +267,5 @@ The following are real, useful boundaries for future scope, not commitments made
 - `[ASSUMPTION]` Stage 1 treats an approved Leasing Request as a reachable, business-decided outcome; the method Lease Company uses to decide is not part of this feature.
 - `[ASSUMPTION]` Machinery receipt becomes an observable milestone through an explicit confirmation action by Company, rather than being inferred automatically from Supplier-side data.
 - `[ASSUMPTION]` All Installments needed to demonstrate Stage 1 can be completed within the POC scenario without a real banking integration (Constitution, Ambiguity and Assumptions).
-- Acquisition becomes available strictly after every Installment of the Lease is paid — this restates the brief's diagram directly, not an invented assumption; whether anything beyond that is required is the open `[CLARIFY]` in Key Product Decisions.
+- Acquisition becomes available strictly after every Installment of the Lease is paid — this restates the brief's own diagram directly (see `docs/LAB-02-ARQ-2026.2.md`), not an invented assumption; whether anything beyond that is required is the open `[CLARIFY]` in Key Product Decisions.
 - `[ASSUMPTION]` A Leasing Request, once `rejected`, is not retried within Stage 1; resubmission is later-stage scope.

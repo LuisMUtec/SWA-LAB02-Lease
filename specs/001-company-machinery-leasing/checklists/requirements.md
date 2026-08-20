@@ -47,9 +47,20 @@
   before all installments are paid — so both open questions sit outside the POC's demonstrated
   path, not inside it.
 - Every Functional Requirement (FR-001–FR-018) is cited by at least one Acceptance Criterion
-  (AC-001–AC-016), and every Acceptance Scenario in User Stories 1–3 is covered by the
-  corresponding Functional Requirements. Traceability: persona need → main flow step → FR → AC was
-  checked by hand while drafting and no orphaned requirement or uncited scenario was found.
+  (AC-001–AC-017), and every Acceptance Scenario in User Stories 1–3 is covered by the
+  corresponding Functional Requirements. **Correction (PR #1 review, 2026-08-20):** the first pass
+  of this checklist claimed this was checked by hand and found no gaps — that was false. FR-011 had
+  no citing AC. AC-009 was added to close the gap; this note is left here, rather than silently
+  rewritten, so the correction is traceable.
+- Where an Acceptance Criterion states a business rule's effect, it now cites the rule's identifier
+  per `business-rules.md`'s convention (AC-001 cites BR-02, AC-009 and AC-016 cite BR-01). Only
+  BR-01 and BR-02 exist in `business-rules.md` as of this spec; several other invented rules
+  currently live only as FRs (FR-011, FR-013, FR-015, FR-018) and are candidates to move to
+  `business-rules.md` as new `BR-nn` entries — deferred until the numbering already in progress
+  there (reported as BR-03–BR-06, not yet committed) lands, to avoid a collision.
 - Carlos and Julia are intentionally absent from Users and Their Needs, Acceptance Criteria, and
   Functional Requirements — they are Lease Company-side actors, out of scope for this feature by
-  design (see spec.md's Out of Scope). This is a scope decision, not an omission.
+  design (see spec.md's Out of Scope). This is a scope decision, not an omission. It carries a
+  measurable cost against `evals/README.md`'s D1 (their persona agents can only deduct, never
+  certify, and score 0 for a flow this spec does not cover), capping D1 at ≤ 1/3 until either actor
+  gets its own feature. See the PR discussion for the explicit acknowledgment this decision needs.
