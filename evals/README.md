@@ -51,17 +51,14 @@ certify the success. If no agent objects, D1 is worth 3. A high score must cost 
 Run **once per persona, separately**. Each agent reads exactly two things and nothing else: its own
 file in `personas/` and `spec.md`. It does not read the other verdicts or the history.
 
-Each agent answers, in this order, reading the fields of its own persona file:
+Each agent answers, in this order:
 
-1. **Does my `Main flow` run end to end in the spec?** Cite the sections that cover it. If it
-   breaks off, say where.
-2. **Does the spec handle `The exception that must not break them`?** A spec that covers only the
-   happy path fails this question even when step 1 passes.
-3. **Are my `Permissions` respected?** Anything I am shown that I must not see, or must approve
-   and cannot, counts against the spec.
-4. **What frustrates me about this spec?** What it decides against me, or leaves undecided so that
-   I am the one who absorbs it.
-5. **Verdict:** `Works` (deduct 0) · `Works with reservations` (deduct 0.5) · `Does not work`
+1. **Does my main flow run end to end in the spec, including when it goes wrong?** Cite the
+   sections that cover it. If it breaks off, say where. A spec that covers only the happy path
+   fails this question.
+2. **What frustrates me about this spec?** What it decides against me, what it leaves undecided so
+   that I absorb it, and anything that breaks my permissions.
+3. **Verdict:** `Works` (deduct 0) · `Works with reservations` (deduct 0.5) · `Does not work`
    (deduct 1).
 
 A verdict with no citation to the spec is inadmissible and counts as `Does not work`.

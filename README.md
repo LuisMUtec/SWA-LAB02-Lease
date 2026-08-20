@@ -57,7 +57,7 @@ distinto. **Cada afirmación ocurre una sola vez, en su altitud.**
 |---|---|---|
 | Gobierno | [`.specify/memory/constitution.md`](.specify/memory/constitution.md) | Por qué existe el proyecto y cómo se juzga el trabajo |
 | Dominio | [`business-rules.md`](business-rules.md) | Las reglas que obedece el negocio, `BR-nn`, sobreviven a cualquier spec |
-| Personas | [`personas/`](personas/) | Quién es cada persona y qué necesita — ocho campos fijos, ver [`_TEMPLATE.MD`](personas/_TEMPLATE.MD) |
+| Personas | [`personas/`](personas/) | Quién es cada persona y qué necesita — cinco campos fijos, ver [`_TEMPLATE.MD`](personas/_TEMPLATE.MD) |
 | Feature | `specs/<n>/spec.md` | Qué hace el sistema y qué porción de la brecha cierra |
 | Plan | `specs/<n>/plan.md`, `tasks.md` | Cómo se construye |
 

@@ -19,8 +19,6 @@ Evaluated: `specs/<n>-<feature>/spec.md` @ `<short-sha>`
 ### Pedro — `Works` / `Works with reservations` / `Does not work` (deducts X)
 
 - **Main flow:** where the spec covers it, or where it breaks off.
-- **Exception:** whether the spec handles it.
-- **Permissions:** respected / violated, and where.
 - **What frustrates me:** —
 
 ### Carlos — …

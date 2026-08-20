@@ -7,78 +7,45 @@ status: proto
 # Pedro — owner of an SME that needs machinery it cannot yet pay for
 
 <!--
-  Read by the persona agent that judges the spec on this person's behalf, and linked from
-  specs/<n>/spec.md § Users and their needs. See evals/README.md.
-
-  This file states WHO THIS PERSON IS AND WHAT THEY NEED.
-  It never states what the system does — that is the spec.
-
-  Traceability runs one way: the spec names its personas, this file never lists user stories.
-  Coverage is computed by the evaluation, not maintained by hand here.
-
-  status: proto = assumption-based, not validated against a real person. Every invented fact
-  carries [ASSUMPTION: what we suppose and why]. An unmarked invention is a defect.
+  Who this person is and what they need. Never what the system does.
+  Read by their evaluation agent (../evals/README.md) and linked from the spec.
+  status: proto = we invented them. Mark every invented fact with [ASSUMPTION: ...].
 
   [ASSUMPTION: the brief names Pedro, Carlos and Julia but does not describe them. The role above
-  is a working hypothesis covering one side of the leasing transaction; confirm or replace it
-  while writing the spec.]
-
-  Every field below is read by some dimension of the evaluation. Do not add fields, do not
-  leave one empty.
+  is a working hypothesis covering one side of the transaction; confirm it while writing the spec.]
 -->
 
 ## Context
 
-<!-- Where they work, what they are accountable for, what they are measured on.
-     Behaviour and accountability, never demographics: age and photo change no requirement. -->
+<!-- Where they work and what they are accountable for. Behaviour, not demographics. -->
 
 [CONTEXT]
 
-## Goal
-
-<!-- The one thing this person is trying to achieve. Singular. Read by D1. -->
-
-[GOAL]
-
-## Constraints
-
-<!-- What limits them: time, information, authority, money, tools. Most frustration starts here. -->
-
-- [CONSTRAINT]
-
-## Permissions
-
-<!-- What they may see, do and approve, and what they must never. Read by D4: when two personas'
-     permissions collide, the spec must decide the tension rather than leave it open. -->
-
-- **May:** [WHAT THEY ARE ALLOWED TO DO]
-- **Must not:** [WHAT THEY MUST NEVER BE ABLE TO DO]
-
 ## Main flow
 
-<!-- Scored by D1, one point per persona. The agent asks: does this run end to end in the spec?
-     Stated as a job story so the situation is explicit, then the steps. -->
+<!-- Scored by D1: the agent asks whether this runs end to end in the spec. -->
 
 **When** [SITUATION], **I want to** [MOTIVATION], **so I can** [OUTCOME].
 
 1. [STEP]
 
-## The exception that must not break them
+**When it goes wrong:** [THE FAILURE THEY LIVE WITH, WHICH THE SPEC MUST HANDLE]
 
-<!-- The failure case this person lives with. Without it the spec covers only the happy path,
-     and #684's rule is one normal scenario plus one exception per persona. -->
+## What gets in the way
 
-[EXCEPTION]
+<!-- Limits and frustrations today: time, information, authority, money. Feeds D2. -->
 
-## Pains today
+- [OBSTACLE]
 
-<!-- What is broken before Lea$e exists. Read by D2: the spec must narrow these, not restate them. -->
+## Permissions
 
-- [PAIN]
+<!-- What they may do and must never do. Feeds D4 when two personas collide. -->
+
+- **May:** [WHAT THEY ARE ALLOWED TO DO]
+- **Must not:** [WHAT THEY MUST NEVER BE ABLE TO DO]
 
 ## Success signal
 
-<!-- How this person declares the system works. Must be observable: it becomes acceptance
-     criteria in the spec, and D3 scores whether those criteria are demonstrable. -->
+<!-- Observable sign that the system works for them. Becomes acceptance criteria. -->
 
 - [SIGNAL]
