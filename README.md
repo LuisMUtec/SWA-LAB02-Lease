@@ -48,10 +48,26 @@ especificación. Las skills quedan en `.claude/skills/` y las plantillas en `.sp
 | `/speckit-implement` | Ejecutar la implementación (POC) |
 | `/speckit-converge` | Detectar trabajo pendiente sobre el código |
 
+## EVAL
+
+El enunciado exige un EVAL con resultado ≈8/10. Spec Kit no puntúa nada (`/speckit-analyze` y
+`/speckit-checklist` emiten hallazgos, no un número), así que el EVAL vive aparte en
+[`evals/`](evals/README.md) y se corre a mano sobre `specs/<n>-<feature>/spec.md`, que es la única
+fuente de verdad sobre qué hace el sistema.
+
+Rúbrica sobre 10 puntos: **D1** satisfacción de las personas (3, la juzgan los agentes de
+[Pedro](personas/Pedro.MD), [Carlos](personas/Carlos.MD) y [Julia](personas/Julia.MD), y solo
+pueden restar) · **D2** ajuste al problema (3) · **D3** criterios de aceptación demostrables (2) ·
+**D4** coherencia y alcance por etapas (2). Gate: ≥ 8.
+
+El POC no entra en el puntaje —son dos entregables distintos—, pero D4 exige que la primera etapa
+del alcance sea exactamente el happy path que el POC construye, de modo que spec y código no
+puedan divergir.
+
 ## Estado
 
-Andamiaje listo: enunciado cargado y Spec Kit instalado. Falta redactar la constitución
-y la especificación.
+Andamiaje listo: enunciado cargado, Spec Kit instalado y aparato de EVAL definido. Falta redactar
+la constitución, las personas y la especificación.
 
 ## Documentos
 
