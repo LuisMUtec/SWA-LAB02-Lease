@@ -188,6 +188,21 @@ lapses, the contract ends without acquisition, and the machine returns to Lea$e.
   stays with Lea$e unless the client affirmatively takes it.]`
 - **Affects:** end of term, fleet planning, contract closure.
 
+### BR-12 — Any upfront payment is capped and cannot exceed a tenth of the machine
+
+Where a contract requires the client to pay anything before its instalment schedule begins, that
+amount may not exceed 10% of the machine's value.
+
+- **Why:** the client comes to Lea$e precisely because it cannot produce the machine's price before
+  its project pays. An unbounded upfront demand recreates that shortfall at the start line, which is
+  the same objection BR-07 answers at the finish line — and a client who could pay a third of a
+  machine up front did not need Lea$e for that third. A cap keeps the down payment a risk instrument
+  for underwriting rather than a way of shifting the gap back onto the client.
+- **Source:** `[ASSUMPTION: the brief fixes no pricing at all. Ten per cent is ours — small enough
+  that it does not reproduce the problem the product exists to solve, large enough to remain a real
+  condition an underwriter can set against a weaker case.]`
+- **Affects:** underwriting conditions, contracting, the start of the instalment schedule.
+
 <!--
 Add new rules below, continuing the numbering. Template:
 

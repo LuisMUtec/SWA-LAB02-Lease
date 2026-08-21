@@ -24,6 +24,8 @@ The consequences land on the same asset the financing gap was closed with. A mac
 
 **Why this feature exists only because of the gap.** Custody, wear and servicing are the concerns of any machinery business, and read alone they would survive the financing gap disappearing — that is a fair objection and it is worth answering directly. What does not survive is the situation they apply to. Lea$e holds title to these machines (BR-01) **for one reason**: Company could not pay for them up front, so Lea$e paid instead and holds the machine as the collateral of that financing. Remove the gap and Company buys its own machine, Lea$e never owns it, and there is no Lea$e-owned fleet standing on ground Lea$e does not control — this feature has no subject. That is also why its two ends are what they are: a machine leaves this fleet by **acquisition**, which happens only because instalments finished (BR-07), or by **recovery**, which happens only because they stopped. Both terminal states are financing events. A rental business would have neither.
 
+The tie runs deeper than the ends, and it is what makes servicing here a different job from servicing a rental fleet. Lea$e is repaid out of the client's project, and only when that project is certified (BR-04). A machine standing idle for want of a service does not merely cost the client a day — it stops the progress that certifies, and an uncertified milestone is an instalment that does not fall due (`001` FR-010b). A rental firm whose machine is down loses that day's rent and nothing more; Lea$e's own repayment is downstream of whether the machine is working. Keeping a deployed machine serviceable is therefore not asset care alongside the financing — it is how the financing gets paid, which is why the hours clock (BR-06), the service window and BR-10's threshold belong to a leasing company at all.
+
 ## Goal
 
 Enable Fleet Manager to know the condition, use, location and maintenance state of every deployed machine without depending on the site to volunteer it, to settle what changed against a record both parties accepted rather than against memory, and to close every deployment by one of its two defined ends with the asset's state unambiguous.
@@ -339,16 +341,17 @@ Stage 1 is exactly the happy path User Stories 1 to 4 describe together, and is 
 7. A Service Window is agreed with the client.
 8. The service is completed inside the window; the machine is no longer due and its next interval counts from the hours at completion.
 9. At any point, Fleet Manager can retrieve which end the Deployment is heading for — Return, Acquisition Retirement, or not yet determined — and the answer becomes definite once Company exercises or declines its Acquisition Option. **Amended 2026-08-21, per EVAL iteration 01:** this step previously promised the end was knowable *before the term ends*, which SC-007's own amendment had already withdrawn as undeliverable; the withdrawal was applied to the criterion and not to the step it governs.
-10. The Deployment closes by that end — Return settled against the Handover Record, or Acquisition Retirement with the machine leaving the fleet (BR-07).
+10. The Deployment closes by **Acquisition Retirement**: Company exercised its Acquisition Option, the machine's condition and hours are settled against the Handover Record, and it leaves the fleet (BR-07).
 
-The closing step covers both ends because it is one behaviour with two outcomes, and Fleet Manager's whole difficulty is not knowing which applies. The end-to-end POC run shared with `001-company-machinery-leasing` exercises the acquisition end, because that is where `001`'s own Stage 1 finishes; the return end is exercised by its own scenario.
+**Amended 2026-08-21 (EVAL iteration 02):** this step previously offered both ends. Return requires `001`'s Option to be `declined` (its FR-019) or `lapsed` (its FR-026), and neither is in `001`'s Stage 1 — so Stage 1 admitted a branch no Stage 1 in the set could reach. Stage 1 now closes by the one end the shared POC run actually produces, matching where `001`'s own Stage 1 finishes. Return and Recovery Close are exercised by their own scenarios, in later stages.
 
-Nothing in Stage 1 assumes a site departure, an incident, a safety stop, a missed window, or a default.
+Nothing in Stage 1 assumes a site departure, an incident, a safety stop, a missed window, a lapsed or declined Acquisition Option, or a default.
 
 ### Later stages (not Stage 1)
 
 The following are real boundaries for future scope, not commitments made by this feature:
 
+- Closing a Deployment by Return (FR-015) or by Recovery Close (FR-018b) — the ends reached when Company declines or lets its Option lapse, or when an operation defaults.
 - Incidents recorded in flight (FR-013). How a difference at return is then settled between the parties is out of scope entirely, not merely deferred.
 - Site Departures (User Story 5).
 - Safety Stops.
@@ -369,7 +372,7 @@ The following are real boundaries for future scope, not commitments made by this
 - **SC-004**: No machine is Service Due because of elapsed time, and no machine that has reached its Service Interval in hours is anything other than Service Due.
 - **SC-005**: Every difference recorded at a Return is a difference against that Deployment's own Handover Record, not against an unrecorded expectation.
 - **SC-006**: Every closed Deployment closed by exactly one of Return, Acquisition Retirement, or Recovery Close, and no acquisition was refused, delayed or made conditional.
-- **SC-007**: For every live Deployment, the end it is heading for is retrievable at any moment as exactly one of heading-for-Return, heading-for-Acquisition-Retirement, or not-yet-determined — never absent and never wrong. Once Company exercises or declines its Acquisition Option, the answer is definite from that moment on. **Amended 2026-08-21:** the earlier wording promised the end could be determined *before the term ends*, which no requirement delivers — nothing forces Company to decide, and neither this spec nor `001` fixes when a term ends (see Key Product Decisions).
+- **SC-007**: For every live Deployment, the end it is heading for is retrievable at any moment as exactly one of heading-for-Return, heading-for-Acquisition-Retirement, or not-yet-determined — never absent and never wrong — and it becomes definite no later than 30 calendar days after the operation's Acquisition Option becomes available, because an Option not acted on within that window lapses (BR-11). **Amended 2026-08-21 (EVAL iteration 02):** an earlier wording promised the end was knowable before the term ends with nothing to deliver it, and a later one withdrew the promise entirely; BR-11 now bounds the wait, so the guarantee can be stated as a time rather than withdrawn.
 - **SC-008**: No Recovery exists without a Default Declaration recorded against its operation, and no capability of this feature let Fleet Manager declare one.
 
 ## Assumptions
