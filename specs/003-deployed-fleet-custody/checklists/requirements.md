@@ -92,8 +92,8 @@
   filling it); a return difference reaches nobody who may act on it, since settlement is out of scope
   entirely and neither Julia (FR-020) nor Underwriter (`002` FR-015) may move money; Julia's
   permission to *require* a service window is granted only as *agree* (FR-010), a deliberate product
-  decision — Lea$e cannot compel a jobsite — with BR-10/FR-025 as the only lever at the far end; and
-  no requirement lets anyone set a machine's Service Interval, though Key Entities reads it.
+  decision — Lea$e cannot compel a jobsite — with BR-10/FR-025 as the only lever at the far end. The
+  Service Interval gap noted in this pass is closed by FR-017b; the rest stand.
 - Where an Acceptance Criterion states a business rule's effect it cites the identifier per
   `business-rules.md`'s convention: AC-003 cites BR-05, AC-008, AC-009 and AC-013 cite BR-06,
   AC-018, AC-020 and AC-021 cite BR-07, and AC-030 cites BR-10. BR-01 is cited in Summary and Key
