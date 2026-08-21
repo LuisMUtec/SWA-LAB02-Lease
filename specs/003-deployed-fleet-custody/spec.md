@@ -30,8 +30,6 @@ The consequences land on the same asset the financing gap was closed with. A mac
 
 *Custody is only a problem here because ownership was forced.* Lea$e holds title (BR-01) for one reason: Company could not pay up front. A rental firm chooses to own its fleet; Lea$e owns it as the collateral of a loan it did not want to make in machines. That does not make FR-003's handover record gap-specific in form — it makes it gap-specific in why anyone at Lea$e is doing it.
 
-The tie runs deeper than the ends, and it is what makes servicing here a different job from servicing a rental fleet. Lea$e is repaid out of the client's project, and only when that project is certified (BR-04). A machine standing idle for want of a service does not merely cost the client a day — it stops the progress that certifies, and an uncertified milestone is an instalment that does not fall due (`001` FR-010b). A rental firm whose machine is down loses that day's rent and nothing more; Lea$e's own repayment is downstream of whether the machine is working. Keeping a deployed machine serviceable is therefore not asset care alongside the financing — it is how the financing gets paid, which is why the hours clock (BR-06), the service window and BR-10's threshold belong to a leasing company at all.
-
 ## Goal
 
 Enable Fleet Manager to know the condition, use, location and maintenance state of every deployed machine without depending on the site to volunteer it, to settle what changed against a record both parties accepted rather than against memory, and to close every deployment by one of its three defined ends with the asset's state unambiguous.

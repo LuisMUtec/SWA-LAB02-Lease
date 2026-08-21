@@ -101,7 +101,7 @@ Pedro's company has a Project that requires a specific Machinery item it cannot 
 
 **Why this priority**: this is the entire reason Lea$e exists (Constitution, Principle III) and it is the exact Happy Path the Stage 1 POC must demonstrate end to end (Constitution, Principle V). Without this story, no other story has anything to build on.
 
-**Independent Test**: can be fully tested by taking one Company, one Project, and one Machinery need through submission, approval, delivery confirmation, payment of every Installment, and exercise of the Acquisition Option, and observing that the Leasing Operation reaches a completed state — delivers the entire value this feature exists for.
+**Independent Test**: can be fully tested by taking one Company, one Project, and one Machinery need through submission, approval, settlement of the approval's up-front conditions, delivery confirmation, payment of every Installment, and exercise of the Acquisition Option, and observing that the Leasing Operation reaches a completed state — delivers the entire value this feature exists for.
 
 **Acceptance Scenarios**:
 
@@ -109,6 +109,7 @@ Pedro's company has a Project that requires a specific Machinery item it cannot 
 2. **Given** a recorded machinery need, **When** Company submits a Leasing Request for it, **Then** the request is created with a unique identity, references the Company, the Project, and the Machinery need, and has status `pending`.
 3. **Given** a `pending` Leasing Request that is approved, **When** Company checks its status, **Then** Company sees `approved` and a Lease now exists for that request.
 4. **Given** an approved Leasing Request whose Machinery has arrived, **When** Company confirms receipt, **Then** the Leasing Operation records the Machinery as received for that specific operation.
+4b. **Given** an approved Leasing Request whose conditions require an amount before the Installment schedule begins, **When** Company views those conditions and pays that amount, **Then** the schedule begins and Company can see that it has.
 5. **Given** a Lease with Machinery received, **When** Company views its Installments, **Then** Company sees every Installment belonging to that Lease, each one's status, and the Certification Milestone of its Project each one falls due against.
 6. **Given** an Installment whose Certification Milestone has been certified and whose Machinery receipt has been confirmed, **When** Company views it, **Then** it is `due`; **and when** Company pays it, **Then** its status becomes `paid` and Company can see it as paid from then on.
 7. **Given** a Lease whose last unpaid Installment is paid, **When** Company checks the Acquisition Option, **Then** it is now `available`.
@@ -260,7 +261,7 @@ Stage 1 is exactly the happy path User Story 1 describes, and is exactly what th
 8. Company confirms it received the Machinery for that Leasing Operation, which is the same act as accepting the handover record (FR-008).
 9. Company sees the conditions the approval carried (FR-022) and settles any that must be met before the schedule begins — in the POC scenario a down payment within BR-12's cap (FR-024).
 10. Company can view the Lease's Installments — each one's status, its amount, and the Certification Milestone of its Project whose certification makes it fall due (BR-04).
-11. Each Installment becomes `due` when its Certification Milestone is certified — a step Lease Company performs, staged as step 12 of [`002`](../002-leasing-request-underwriting/spec.md)'s own Stage 1 — and Company has confirmed receipt. **This is the step that makes the POC demonstrate the gap rather than a generic ledger:** payment follows the project's certified progress, not a date.
+11. Each Installment becomes `due` when its Certification Milestone is certified — a step Lease Company performs, staged as step 13 of [`002`](../002-leasing-request-underwriting/spec.md)'s own Stage 1 — and Company has confirmed receipt. **This is the step that makes the POC demonstrate the gap rather than a generic ledger:** payment follows the project's certified progress, not a date.
 12. Company pays each Installment once it is `due`.
 13. Company can tell, at any point, which Installments are paid, which are due, and which are still pending — and for the pending ones, what they are waiting on.
 14. Once every Installment is paid, the Acquisition Option becomes `available`.

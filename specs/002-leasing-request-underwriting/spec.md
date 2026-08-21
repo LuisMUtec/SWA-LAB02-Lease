@@ -103,7 +103,7 @@ This section exists because Underwriter's authority is bounded on two sides, and
 
 **Bounded across by role.** Deciding to lend and lending must not be the same person's act. Underwriter may declare a contract in default; he may take no part in recovering the machine. He may approve an operation; he may take no part in handing the machine over. The mirror of this constraint lives in [`personas/Julia.MD`](../../personas/Julia.MD): Julia may recover a machine once a default has been declared and may never declare one herself. Neither of them can both decide and execute, and this feature and `003-deployed-fleet-custody` must not create a path that lets either of them do so.
 
-**Bounded in time.** A signed contract's Instalment Schedule is not Underwriter's to change afterward. He may raise a Slippage Warning against it; he may not resolve the slip by moving what the Applicant owes.
+**Bounded in time.** Once produced, an operation's Instalment Schedule is not Underwriter's to change. He may raise a Slippage Warning against it; he may not resolve the slip by moving what the Applicant owes.
 
 ## Expected User Experience
 
@@ -127,7 +127,7 @@ Carlos takes up a submitted Leasing Request. He establishes that the Applicant i
 
 **Why this priority**: this is the decision `001` treats as given, and without it no operation exists to deliver, pay or acquire. It is also where Underwriter's central failure is prevented — approving on the Applicant's history without ever looking at the Project or its Payer.
 
-**Independent Test**: can be fully tested by taking one submitted Leasing Request through assessment, attaching each required Evidence Item, and recording an approval with Conditions inside the Authority Limit, then retrieving the Decision with its evidence and conditions intact — delivers a defensible, reviewable financing decision, which is the whole of Underwriter's job.
+**Independent Test**: can be fully tested by taking one submitted Leasing Request through assessment, attaching each required Evidence Item, recording an approval with Conditions inside the Authority Limit, and recording those Conditions as met, then retrieving the Decision with its evidence and conditions intact — delivers a defensible, reviewable financing decision, which is the whole of Underwriter's job.
 
 **Acceptance Scenarios**:
 
@@ -136,6 +136,7 @@ Carlos takes up a submitted Leasing Request. He establishes that the Applicant i
 3. **Given** an Assessment missing any required Evidence Item, **When** Underwriter attempts to record a Decision, **Then** the system does not record one and identifies what is missing.
 4. **Given** a fully evidenced Assessment whose machinery value is within the Authority Limit, **When** Underwriter records an approval with its Conditions and reason, **Then** the Decision is `approved` and carries both.
 5. **Given** a recorded Decision, **When** anyone retrieves it later, **Then** its reason, its Conditions and every Evidence Item it rested on are retrievable with it.
+6. **Given** an approval whose Conditions must be satisfied before the operation proceeds, **When** each is recorded as met — an amount by Company paying it, a guarantee by Underwriter recording it in place — **Then** the operation may proceed past the point each governed, and the outstanding Conditions are retrievable until then.
 
 ---
 
@@ -151,7 +152,7 @@ Having approved an operation, Carlos sets its Instalment Schedule against the Ce
 
 1. **Given** an approved operation whose Project has a Certification Schedule, **When** its Instalment Schedule is produced, **Then** every instalment is anchored to a named Certification Milestone of that Project.
 2. **Given** an approved operation whose Project has no Certification Schedule, **When** an Instalment Schedule is attempted, **Then** the system does not produce one anchored to the calendar instead.
-3. **Given** an operation with a signed Instalment Schedule, **When** Underwriter attempts to change what is owed or when, **Then** the system does not allow it.
+3. **Given** an operation whose Instalment Schedule has been produced, **When** Underwriter attempts to change what is owed or when, **Then** the system does not allow it.
 
 ---
 
@@ -223,7 +224,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-016**: **Given** an approved operation whose Project has a Certification Schedule, **When** its Instalment Schedule is produced, **Then** every instalment names the Certification Milestone whose certification makes it fall due, and none falls due on a fixed calendar date — instalments are anchored to the project's certified progress (BR-04). *(FR-014)*
 - **AC-016b**: **Given** an instalment anchored to a Certification Milestone, **When** Underwriter retrieves the schedule, **Then** whether that Milestone's expected amount covers that instalment is retrievable for each instalment. *(FR-014)*
 - **AC-017**: **Given** an approved operation whose Project has no Certification Schedule, **When** an Instalment Schedule is attempted, **Then** the system does not produce a calendar-anchored schedule in its place (BR-04). *(FR-014)*
-- **AC-018**: **Given** an operation with a signed Instalment Schedule, **When** Underwriter attempts to change what is owed or when it falls due, **Then** the system does not allow the change. *(FR-015)*
+- **AC-018**: **Given** an operation whose Instalment Schedule has been produced, **When** Underwriter attempts to change what is owed or when it falls due, **Then** the system does not allow the change. *(FR-015)*
 - **AC-019**: **Given** any two Assessments, **When** Underwriter retrieves both, **Then** both present the same set of required Evidence Items, whatever their machinery value, so any difference between them is a difference of content and not of form. *(FR-009, FR-010)*
 - **AC-020**: **Given** a live operation whose Project has a Certification Milestone past its expected date with no recorded certification, **When** the Project's state is evaluated, **Then** a Slippage Warning exists against that operation, naming the operation, the Project and the milestone. *(FR-017)*
 - **AC-021**: **Given** a Slippage Warning, **When** it is raised, **Then** it is directed to the Underwriter who recorded that operation's Decision, and the operation is still current — meaning its machine has neither been returned, nor retired to the client by acquisition, nor recovered, and no Default Declaration stands against it. *(FR-017, FR-019)*
@@ -260,7 +261,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **FR-012b**: The system MUST record, for each Condition of an approval, whether it must be satisfied before the operation proceeds, and MUST NOT allow the operation to proceed past the point each such Condition governs until it is recorded as met — the Installment schedule does not begin before the amounts and guarantees due beforehand are in place (`001` FR-024), and no machine is handed over that is not the machine the Conditions name (`003` FR-001b). **Added 2026-08-21, per EVAL iteration 02:** Conditions were recorded and reviewable and gated nothing. An approval granted on 30% down and a guarantee could reach a jobsite with neither in place, which makes the conditional approval — the instrument by which Underwriter says yes to a case he would otherwise refuse — narrower in force than it reads.
 - **FR-013**: The system MUST allow Underwriter to record a refusal carrying its reason, and MUST NOT produce an operation or an Instalment Schedule from it.
 - **FR-014**: The system MUST produce an approved operation's Instalment Schedule with every instalment anchored to a named Certification Milestone of the Project, MUST make retrievable, for each instalment, whether the amount its Milestone is expected to release covers it, and MUST NOT produce a calendar-anchored schedule when the Project has no Certification Schedule (BR-04). **Amended 2026-08-21 (EVAL iteration 03):** FR-007 collects each Milestone's expected amount and Key Entities calls it "what makes an anchoring checkable rather than merely stated", yet nothing required the check — so an operation could be anchored to milestones that cannot cover it, which is the financing gap reproduced inside the schedule built to close it.
-- **FR-015**: The system MUST NOT allow Underwriter to alter what is owed, or when it falls due, on an operation whose Instalment Schedule is signed.
+- **FR-015**: The system MUST NOT allow Underwriter to alter what is owed, or when it falls due, on an operation whose Instalment Schedule has been produced (FR-014). **Amended 2026-08-21, per EVAL iteration 04:** this requirement and AC-018 previously turned on a schedule being *signed*, a state no requirement in any of the three specs produces — no event, no status, no stage — so the criterion carrying `personas/Carlos.MD`'s "must not alter the agreed schedule of a signed contract" could be declared neither met nor unmet. Production of the schedule is the state that exists and is the moment from which it binds.
 - **FR-016**: The system MUST keep a Decision's reason, its Conditions, and every Evidence Item it rested on retrievable with that Decision after it is recorded.
 - **FR-017**: The system MUST raise a Slippage Warning against a live operation when a Certification Milestone of its Project passes its expected date without a recorded certification, naming the operation, the Project and the milestone, and directing it to the Underwriter who recorded that operation's Decision.
 - **FR-018**: The system MUST keep a Slippage Warning retrievable after its milestone is subsequently certified, recording that it was.
@@ -285,7 +286,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **Payer**: the party that owes the Applicant for the Project. Named, with what is known of its payment behaviour, including unknown.
 - **Decision**: the resolution of an Assessment — `approved`, `refused` or `escalated` — carrying a reason, Conditions when it is an approval, and the identity of the Underwriter who recorded it.
 - **Conditions**: the terms an approval was granted under: down payment, term, guarantees, and which machine.
-- **Instalment Schedule**: the sequence of instalments of an approved operation, each anchored to a Certification Milestone. Signed schedules are immutable to Underwriter.
+- **Instalment Schedule**: the sequence of instalments of an approved operation, each anchored to a Certification Milestone. Immutable to Underwriter once produced.
 - **Slippage Warning**: a signal against a live operation that a Certification Milestone passed its expected date uncertified. Names operation, Project and milestone; records subsequent certification; changes nothing owed.
 - **Default Declaration**: Underwriter's recorded determination, with reason, that an operation has defaulted. Authorises recovery; performs nothing.
 
@@ -311,7 +312,7 @@ Stage 1 is exactly the happy path User Stories 1 and 2 describe together, and is
 
 Nothing in Stage 1 assumes a refusal, an escalation, a Project without a Certification Schedule, a slip, or a default.
 
-**Requirements this feature defines that Stage 1 does *not* exercise**, so Principle V's boundary is applicable to the whole set: FR-025 and FR-028 (requesting further evidence and receiving the answer — Stage 1's Assessment is complete when taken up), FR-026 (a Payer's history across operations — Stage 1's Payer is new to Lea$e), FR-027 (queue age — Stage 1 has one request), FR-013 (refusal), FR-011's escalation branch with FR-022, and FR-017–FR-021, FR-023 (slippage, eligibility, default). Each is specified here and demonstrated later. Step 12's milestones are certified **on time** in the happy path; a milestone passing its expected date uncertified is the Slippage Warning of User Story 4, which is later-stage.
+**Requirements this feature defines that Stage 1 does *not* exercise**, so Principle V's boundary is applicable to the whole set: FR-025 and FR-028 (requesting further evidence and receiving the answer — Stage 1's Assessment is complete when taken up); note that Stage 1 step 13 is where certification is recorded, which `001`'s Stage 1 step 11 depends on, FR-026 (a Payer's history across operations — Stage 1's Payer is new to Lea$e), FR-027 (queue age — Stage 1 has one request), FR-013 (refusal), FR-011's escalation branch with FR-022, and FR-017–FR-021, FR-023 (slippage, eligibility, default). Each is specified here and demonstrated later. Step 12's milestones are certified **on time** in the happy path; a milestone passing its expected date uncertified is the Slippage Warning of User Story 4, which is later-stage.
 
 ### Later stages (not Stage 1)
 

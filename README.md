@@ -98,18 +98,26 @@ El EVAL se corre contra las tres juntas, no contra una: `evals/README.md` da un 
 persona y solo permite deducciones, de modo que evaluar una sola especificación deja el total en el
 gate de 8/10 sin margen.
 
-**Primera iteración corrida: [4.5/10](evals/iterations/2026-08-21-01.md) — no pasa el gate.** Los
-cuatro `[CLARIFY]` que quedaban abiertos están cerrados, dos de ellos catalogados como BR-09 y
-BR-10, y los tres agentes de persona dan `Works with reservations` con sus flujos corriendo de
-punta a punta. El agregador es donde se rompe: `001` no cita `BR-04` en ninguna parte, de modo que
-la spec del actor cuyo problema *es* la brecha de financiamiento no ancla ninguna cuota al avance
-de su proyecto y sobreviviría sin cambios si la brecha desapareciera —justamente lo que el
-Principio III prohíbe—; y el Stage 1 de `001` depende de `002` FR-024, que no está en ninguna
-etapa. Las correcciones están listadas en la iteración, por orden de lo que valen.
+**EVAL corrido: [8.25/10](evals/iterations/2026-08-21-04.md) — pasa el gate.** Cuatro iteraciones, de
+4.5 a 8.25, cada una registrada en [`evals/iterations/`](evals/iterations/) y resumida en
+[`HISTORY.md`](evals/HISTORY.md).
 
-La segunda corrección **mueve el Stage 1 y por lo tanto lo que el POC construye**, así que hay que
-acordarla antes de mergear. Las tres specs siguen en Draft y ninguna ha pasado por
-`/speckit-clarify`.
+| Iter | D1 | D2 | D3 | D4 | Total |
+|---|---|---|---|---|---|
+| [01](evals/iterations/2026-08-21-01.md) | 1.5 | 1.5 | 0.75 | 0.75 | 4.5 |
+| [02](evals/iterations/2026-08-21-02.md) | 1.5 | 2.25 | 0.75 | 0.50 | 5.0 |
+| [03](evals/iterations/2026-08-21-03.md) | 1.5 | 2.25 | 1.25 | 0.50 | 5.5 |
+| [04](evals/iterations/2026-08-21-04.md) | **3.0** | **2.5** | **1.5** | **1.25** | **8.25** |
+
+Lo que movió el puntaje, en orden: darle `BR-04` a `001` —la spec del actor cuyo problema *es* la
+brecha no ancla­ba ninguna cuota al avance de su proyecto y habría sobrevivido sin cambios si la
+brecha desapareciera—; acotar la brecha en las dos puntas, con `BR-12` al frente y `BR-07` al
+final; y un barrido de propagación, que fue el hallazgo de fondo: se enmendaba un requisito y
+quedaban la decisión de producto, la entidad, la historia de usuario o el criterio de éxito
+afirmando lo viejo.
+
+En la cuarta iteración los tres agentes de persona devolvieron `Works` sin deducciones. Las specs
+siguen en Draft y ninguna ha pasado por `/speckit-clarify`.
 
 ## Documentos
 
