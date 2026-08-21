@@ -109,7 +109,7 @@ Seis iteraciones registradas, cada una en [`evals/iterations/`](evals/iterations
 | [03](evals/iterations/2026-08-21-03.md) | 1.5 | 2.25 | 1.25 | 0.50 | 5.5 |
 | [04](evals/iterations/2026-08-21-04.md) | **3.0** | **2.5** | **1.5** | **1.25** | **8.25** |
 | [05](evals/iterations/2026-08-21-05.md) | 2.5 | 2.5 | 1.5 | 1.25 | 7.75 |
-| [06](evals/iterations/2026-08-21-06.md) | 2.5 | 2.5 | 1.75 | 1.25 | 7.75 |
+| [06](evals/iterations/2026-08-21-06.md) | 2.5 | 2.5 | 1.75 | 1.25 | **8.0** |
 
 Lo que movió el puntaje, en orden: darle `BR-04` a `001` —la spec del actor cuyo problema *es* la
 brecha no ancla­ba ninguna cuota al avance de su proyecto y habría sobrevivido sin cambios si la
@@ -119,8 +119,9 @@ quedaban la decisión de producto, la entidad, la historia de usuario o el crite
 afirmando lo viejo.
 
 En la cuarta iteración los tres agentes de persona devolvieron `Works` sin deducciones. Las
-iteraciones 05 y 06 bajaron a 7.75 persiguiendo el 10, y la causa vale registrarla: casi todas sus
-deducciones fueron defectos que introdujeron las correcciones de la ronda anterior. Tres rondas
+iteracion 05 bajo a 7.75 persiguiendo el 10 y la 06 volvio a pasar con 8.0, y la causa de la caida
+vale registrarla: casi todas sus deducciones fueron defectos que introdujeron las correcciones de la
+ronda anterior. Tres rondas
 seguidas encontraron la misma forma —un requisito apoyado en una cifra que nada produce: el
 calendario «firmado», el valor tasado, y el valor de la maquinaria del que depende el propio límite
 de autoridad—, y las tres se cerraron dándole un productor a la cifra, nunca reescribiendo el
