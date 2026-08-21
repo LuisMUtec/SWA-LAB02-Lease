@@ -203,6 +203,26 @@ amount may not exceed 10% of the machine's value.
   condition an underwriter can set against a weaker case.]`
 - **Affects:** underwriting conditions, contracting, the start of the instalment schedule.
 
+### BR-13 — A deployed machine must stay worth at least what its contract still owes
+
+For as long as a contract is running, the machine securing it must remain worth at least the amount
+the client has still to pay. A machine that has fallen below that line leaves Lea$e lending against
+less than it is owed.
+
+- **Why:** this is the rule that separates Lea$e's interest in a machine's condition from a rental
+  firm's. A rental company watches wear to price its next rental; if a machine deteriorates it
+  charges less next time and loses nothing already committed. Lea$e has *already paid the supplier*
+  in full (BR-01, and the brief's third diagram) and is recovering that money over instalments the
+  client pays as its project certifies (BR-04). The machine is the security for money already out
+  the door. Wear is therefore not a pricing input here — it is an erosion of the only collateral
+  behind an outstanding balance, and it is why hours, condition and servicing are watched at all.
+- **Source:** brief — Lea$e buys the equipment from the supplier before the client has paid for it ·
+  `[ASSUMPTION: that the machine is the security for that outlay, and that its value should track
+  the balance down rather than fall below it, is ours. The brief fixes no valuation method and this
+  rule deliberately does not invent one: what it requires is that the comparison be possible and
+  visible, not how a value is arrived at.]`
+- **Affects:** custody, maintenance priority, underwriting of a live operation, end of term.
+
 <!--
 Add new rules below, continuing the numbering. Template:
 
