@@ -42,7 +42,7 @@ outright, **I want to** get that machinery financed and delivered without stalli
 5. He reviews the installments the resulting lease carries — how many, and what each one costs him.
 6. He pays installments as they come due, and at any point can tell which are already paid and
    which remain.
-7. Once every installment is paid, he checks whether the acquisition option is available.
+7. Once every installment is paid, he checks whether the acquisition option is available (BR-07).
 8. He exercises it, and confirms the leasing operation is closed and the machinery is his.
 
 **When it goes wrong:** his request is rejected, or stays pending long enough to threaten the

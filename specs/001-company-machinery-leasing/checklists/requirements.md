@@ -52,15 +52,20 @@
   of this checklist claimed this was checked by hand and found no gaps — that was false. FR-011 had
   no citing AC. AC-009 was added to close the gap; this note is left here, rather than silently
   rewritten, so the correction is traceable.
-- Where an Acceptance Criterion states a business rule's effect, it now cites the rule's identifier
-  per `business-rules.md`'s convention (AC-001 cites BR-02, AC-009 and AC-016 cite BR-01). Only
-  BR-01 and BR-02 exist in `business-rules.md` as of this spec; several other invented rules
-  currently live only as FRs (FR-011, FR-013, FR-015, FR-018) and are candidates to move to
-  `business-rules.md` as new `BR-nn` entries — deferred until the numbering already in progress
-  there (reported as BR-03–BR-06, not yet committed) lands, to avoid a collision.
+- Where an Acceptance Criterion states a business rule's effect, it cites the rule's identifier per
+  `business-rules.md`'s convention (AC-001 cites BR-02, AC-016 cites BR-01, AC-009 cites BR-08,
+  AC-014 cites BR-07). **Resolved (2026-08-20):** the deferral noted in the first pass — waiting on
+  BR-03–BR-06 to land before promoting FRs to rules — is closed. FR-011 and FR-015 carried business
+  rules inside them and now cite BR-08 and BR-07 instead. FR-013 (an Installment cannot be paid
+  twice) and FR-018 (a Company sees only its own records) were *not* promoted: the first is an
+  idempotency invariant and the second an access-scope constraint, neither of which any persona or
+  business decision reads as a rule of the Lea$e business.
 - Carlos and Julia are intentionally absent from Users and Their Needs, Acceptance Criteria, and
   Functional Requirements — they are Lease Company-side actors, out of scope for this feature by
   design (see spec.md's Out of Scope). This is a scope decision, not an omission. It carries a
   measurable cost against `evals/README.md`'s D1 (their persona agents can only deduct, never
-  certify, and score 0 for a flow this spec does not cover), capping D1 at ≤ 1/3 until either actor
-  gets its own feature. See the PR discussion for the explicit acknowledgment this decision needs.
+  certify, and score 0 for a flow this spec does not cover), capping D1 at ≤ 1/3 for this feature
+  read alone. **Decided (2026-08-20):** Carlos and Julia each get their own feature rather than
+  being folded into this one. The EVAL is therefore run against the three specs together, not
+  against `001` alone — running it on `001` by itself would cap the total at 8/10, exactly the
+  gate, with no margin.

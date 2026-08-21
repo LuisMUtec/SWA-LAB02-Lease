@@ -61,8 +61,8 @@ distinto. **Cada afirmación ocurre una sola vez, en su altitud.**
 | Feature | `specs/<n>/spec.md` | Qué hace el sistema y qué porción de la brecha cierra |
 | Plan | `specs/<n>/plan.md`, `tasks.md` | Cómo se construye |
 
-Los criterios de aceptación **enuncian el efecto de la regla y citan su ID** —*"rejects
-applications from companies operating under 12 months (BR-03)"*— para que ninguna referencia sea
+Los criterios de aceptación **enuncian el efecto de la regla y citan su ID** —*"rejects an
+instalment payment before receipt is confirmed (BR-08)"*— para que ninguna referencia sea
 portante.
 
 ## EVAL
@@ -83,8 +83,13 @@ puedan divergir.
 
 ## Estado
 
-Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio abierto con
-las dos reglas que se derivan del enunciado. Falta redactar las personas y la especificación.
+Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio con ocho
+entradas (BR-01 a BR-08). Las tres personas están redactadas: Pedro, Carlos y Julia.
+
+De las especificaciones existe la primera, `specs/001-company-machinery-leasing`, escrita para el
+actor Empresa. Faltan las de Carlos y Julia, una por actor. El EVAL se corre contra las tres
+juntas: `evals/README.md` da un punto de D1 por persona y solo permite deducciones, de modo que
+evaluar una sola especificación deja el total en el gate de 8/10 sin margen.
 
 ## Documentos
 

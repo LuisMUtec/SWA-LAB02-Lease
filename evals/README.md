@@ -87,6 +87,6 @@ These are what D3 and D4 check. Deliberately few.
   - `[CLARIFY: specific question]` when the answer determines the content.
   - `[ASSUMPTION: statement]` when work continues under a declared hypothesis.
 - **No load-bearing references.** A criterion states a rule's effect and cites its identifier —
-  *"rejects applications from companies operating under 12 months (BR-03)"*. A trailing pointer is
+  *"rejects an instalment payment before receipt is confirmed (BR-08)"*. A trailing pointer is
   fine; a sentence that cannot be understood without following it is not.
 - **Nothing is named by its visible text.** A button's label changes without the spec changing.
