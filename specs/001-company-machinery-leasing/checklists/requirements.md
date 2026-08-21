@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [x] No `[NEEDS CLARIFICATION]` markers remain — this project uses `[CLARIFY: ...]` / `[ASSUMPTION: ...]` per `evals/README.md` and the constitution instead; two `[CLARIFY: ...]` markers remain by design (see Notes) and are intentionally *not* resolved silently
+- [x] No `[NEEDS CLARIFICATION]` markers remain — this project uses `[CLARIFY: ...]` / `[ASSUMPTION: ...]` per `evals/README.md` and the constitution instead; no `[CLARIFY: ...]` markers remain (both closed 2026-08-21, see Notes)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -37,15 +37,16 @@
   underspecified domain areas, and require that ambiguity be marked rather than resolved in
   silence. The generic Spec Kit item above is read against that convention: the check is that no
   ambiguity was filled in *without* a marker, not that zero markers exist.
-- Two `[CLARIFY: ...]` markers remain in `spec.md`, both in **Key Product Decisions**:
+- **Closed (2026-08-21, issue #5):** the two `[CLARIFY: ...]` markers this spec previously carried,
+  both in **Key Product Decisions**, are now resolved:
   1. Whether exercising the Acquisition Option requires anything beyond every Installment being
-     paid (e.g. a residual-value payment).
+     paid — resolved by BR-07: no further cost.
   2. What terminal state a Leasing Operation reaches if Company does not exercise an available
-     Acquisition Option.
-  Both are flagged as candidates for `/speckit-clarify`. Neither blocks Stage 1, because Stage 1's
-  happy path (User Story 1) always exercises the option once available and never exercises it
-  before all installments are paid — so both open questions sit outside the POC's demonstrated
-  path, not inside it.
+     Acquisition Option — resolved as a named non-terminal state (`available, not yet exercised`)
+     with no forced deadline; the `Return` outcome, if it never is exercised, is
+     `003-deployed-fleet-custody`'s behavior, not this feature's.
+  Neither resolution moves Stage 1: Stage 1's happy path (User Story 1) always exercises the option
+  once available and never exercises it before all installments are paid.
 - Every Functional Requirement (FR-001–FR-018) is cited by at least one Acceptance Criterion
   (AC-001–AC-017), and every Acceptance Scenario in User Stories 1–3 is covered by the
   corresponding Functional Requirements. **Correction (PR #1 review, 2026-08-20):** the first pass

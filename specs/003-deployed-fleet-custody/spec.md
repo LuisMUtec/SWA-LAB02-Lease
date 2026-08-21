@@ -84,7 +84,7 @@ Fleet Manager's needs, as covered by this feature:
 - **What "accepted by both sides" means**: both Lea$e and the client are recorded as having accepted the Handover Record's contents at handover, and the record is thereafter immutable. It may be superseded by a later record, never edited. `[ASSUMPTION: acceptance is an explicit act by a named person on each side. The brief describes no handover procedure; this is ours, and it is the minimum that makes a later assessment possible.]`
 - **What governs maintenance**: accumulated operating hours, never elapsed time (BR-06). A machine reaches Service Due when its accumulated hours since its last completed service reach its Service Interval, regardless of how long it has held the contract.
 - **What a Service Due is and is not**: it is a fact about the machine's state, raised by the hours. It is not an instruction to the client and it does not by itself stop the machine. Agreeing the Service Window is a separate act, and a client who postpones is not thereby in breach of anything this feature defines.
-- **What happens when a service is not completed in its window**: the Deployment records that the window passed with the service outstanding, and the machine remains Service Due with its overdue hours visible. `[CLARIFY: how many overdue hours past a Service Interval constitute a condition Lea$e will act on, and what that action is — a stoppage, a charge, or a matter for the contract? personas/Julia.MD is explicit that a service window costs the client nothing to postpone, so a consequence must exist somewhere; but choosing it is a business decision this specification has no authority to invent. Stage 1 records the fact and stops there.]`
+- **What happens when a service is not completed in its window**: the Deployment records that the window passed with the service outstanding, and the machine remains Service Due with its overdue hours visible. **Resolved (2026-08-21):** once the overdue hours exceed 20% of the machine's Service Interval, BR-10, catalogued in [`business-rules.md`](../../business-rules.md), makes this a Safety Stop cause — the same capability Fleet Manager already has for any safety ground, not a new one. Below that threshold, the fact is recorded and nothing forces the machine to stop; Stage 1 never reaches the threshold, since its happy path completes the service inside its window.
 - **Where the hours come from**: an Operating-Hours Reading is recorded against a Deployment with the moment it refers to. This feature does not specify who or what records it, and deliberately supports a reading taken at an inspection as well as one arriving continuously — so that Stage 1 does not depend on hardware.
 - **What a Site Departure means**: that the machine is not at its Contracted Site. This feature records the fact and makes it known to Fleet Manager; it does not decide whether the departure was permitted. `[ASSUMPTION: a machine working a second site is common and not by itself a breach — personas/Julia.MD's complaint is that she does not know, not that it is forbidden. Whether the contract permits it is a matter for the contract, not for this feature.]`
 - **How a Deployment closes**: by exactly one of Return or Acquisition Retirement, never both and never neither. Which one applies is determined by whether the operation's Acquisition Option was exercised (BR-07), which is `001`'s behaviour, not this feature's. What this feature adds is that Fleet Manager can see which end a live Deployment is heading for before the term ends.
@@ -259,6 +259,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-027**: **Given** a live Deployment whose operation has a recorded Default Declaration, **When** Fleet Manager opens a Recovery, **Then** it carries the machine's last known location, its last Operating-Hours Reading, its Custodian and its Contracted Site. *(FR-022)*
 - **AC-028**: **Given** a live Deployment with no Default Declaration, **When** Fleet Manager attempts to open a Recovery, **Then** no Recovery opens. *(FR-023)*
 - **AC-029**: **Given** a client who has met the contract, **When** Fleet Manager attempts to hold the machine or refuse its release, **Then** the system does not allow it. *(FR-024)*
+- **AC-030**: **Given** a Service Due machine whose overdue hours exceed 20% of its Service Interval, **When** Fleet Manager records a Safety Stop citing that condition as its cause, **Then** the system accepts it as a valid safety ground (BR-10). *(FR-025)*
 
 ## Requirements *(mandatory)*
 
@@ -288,6 +289,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **FR-022**: The system MUST allow Fleet Manager to open a Recovery for a Deployment whose operation has a recorded Default Declaration, carrying the machine's last known location, last Operating-Hours Reading, Custodian and Contracted Site.
 - **FR-023**: The system MUST NOT allow a Recovery to be opened for a Deployment whose operation has no recorded Default Declaration.
 - **FR-024**: The system MUST NOT allow Fleet Manager to hold a machine or refuse its release once the client has met the contract.
+- **FR-025**: The system MUST make it retrievable, for a Service Due machine, whether its overdue hours exceed 20% of its Service Interval, and MUST allow that condition to serve as the cause of a Safety Stop (BR-10).
 
 ### Key Entities
 
@@ -333,7 +335,7 @@ The following are real boundaries for future scope, not commitments made by this
 - Site Departures (User Story 5).
 - Safety Stops.
 - Default and Recovery (User Story 6).
-- What Lea$e does about a service left overdue — the open `[CLARIFY]` in Key Product Decisions.
+- What Lea$e does about a service left overdue below the Safety Stop threshold (BR-10) — recorded and visible, but no consequence beyond visibility is specified for it.
 - Continuous or device-sourced hours readings, as opposed to readings recorded at a moment.
 - More than one machine on a single operation.
 - Fleet-wide planning: which machine goes to which next contract, and utilisation across the fleet.
@@ -364,5 +366,6 @@ The following are real boundaries for future scope, not commitments made by this
 - `[ASSUMPTION]` Accumulated operating hours are monotonic: a lower reading is an error, not a correction. Replacing a machine's hour meter is outside Stage 1.
 - `[ASSUMPTION]` A machine working away from its Contracted Site is not by itself a breach; whether the contract permits it is a matter for the contract. What this feature fixes is that Fleet Manager does not know.
 - `[ASSUMPTION]` A Service Interval is a property of the machine rather than of the contract, so it does not change when a machine moves between operations.
+- `[ASSUMPTION]` Overdue hours beyond 20% of the Service Interval constitute a Safety Stop cause (BR-10). The figure is ours — the brief fixes no overdue tolerance — and is intentionally not a new capability, only a defined trigger for the Safety Stop Fleet Manager already has.
 - `[ASSUMPTION]` The separation of duties between deciding and executing — Underwriter declares a default, Fleet Manager recovers the machine — is ours, derived from the `Permissions` sections of both personas. It is specified from both sides: here in FR-021 and FR-023, and in `002-leasing-request-underwriting`'s FR-021.
 - `[ASSUMPTION]` In Stage 1 one operation concerns one machine, matching the same assumption in `001-company-machinery-leasing` and `002-leasing-request-underwriting`.

@@ -89,7 +89,7 @@ Underwriter's needs, as covered by this feature:
 - **What an approval produces**: an approved Decision with its Conditions is what makes a Leasing Request `approved` in `001`'s terms, and it is what produces the Instalment Schedule. `001` states that approval creates a Lease without further action from Company; this feature states what the approval itself consists of.
 - **How the Instalment Schedule is anchored**: each instalment is tied to a Certification Milestone of the Project and falls due on the certification of that milestone, not on a calendar date (BR-04). A schedule that cannot be anchored — because the Project has no Certification Schedule — is not a schedule this feature produces. `[ASSUMPTION: an instalment falls due a fixed number of working days after its milestone is certified, rather than on the certification instant, so that certification and payment are not assumed simultaneous. Public-works valorizaciones are paid within six working days of presentation, which is the shortest anchor available; the exact offset is a business decision.]`
 - **When a Slippage Warning is raised**: when an expected Certification Milestone of a live operation's Project passes its expected date without being certified and paid. It is raised against the operation and directed to the Underwriter who decided it, while the contract is still current — this is the point of the whole thing, and it is what distinguishes a warning from the overdue-account notice Underwriter gets today.
-- **What a Slippage Warning does not do**: it does not change what the Applicant owes, does not move an instalment, and does not by itself constitute a default. `[CLARIFY: how far may a schedule bend before the operation is treated as defaulted — how many slipped milestones, or how long a slip, is tolerated? personas/Carlos.MD states this must be settled in advance rather than case by case, but the tolerance itself is a business decision this specification cannot invent. Stage 1 raises the warning and leaves the consequence to a later stage.]`
+- **What a Slippage Warning does not do**: it does not change what the Applicant owes, does not move an instalment, and does not by itself constitute a default. **Resolved (2026-08-21):** how far a schedule may bend before default-eligibility is reached is now BR-09, catalogued in [`business-rules.md`](../../business-rules.md) — a single Certification Milestone uncertified more than 30 calendar days past its expected date, or two milestones of the same Project simultaneously past their expected dates, whichever comes first. Reaching that threshold makes the operation eligible for a Default Declaration; it does not, by itself, produce one — Underwriter still decides (see Default Declaration below).
 - **What a Default Declaration is**: a recorded decision by Underwriter, with its reason, that a contract has defaulted. It authorises recovery; it never performs it. What happens to the machine afterward is Julia's, in `003-deployed-fleet-custody`.
 - **What belongs to Stage 1**: exactly the happy path in Phased Scope below — a request assessed on complete evidence, approved within the Authority Limit under stated conditions, with its Instalment Schedule anchored to the Project's Certification Milestones. Refusal, escalation, slippage and default are specified here but are not what the POC demonstrates.
 
@@ -223,6 +223,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-023**: **Given** a Slippage Warning whose milestone is later certified, **When** Underwriter retrieves the operation, **Then** the warning is still retrievable and records that the milestone was subsequently certified. *(FR-018)*
 - **AC-024**: **Given** an operation Underwriter determines has defaulted, **When** he records a Default Declaration with its reason, **Then** the declaration exists against that operation and is retrievable with its reason. *(FR-020)*
 - **AC-025**: **Given** a Default Declaration, **When** Underwriter acts on the declared operation, **Then** no capability of this feature allows him to recover, release or hand over the machine — deciding a default and acting on the machine are separate roles. *(FR-020, FR-021)*
+- **AC-026**: **Given** a live operation whose Slippage Warning has reached the tolerance of a single Certification Milestone more than 30 days uncertified, or two milestones uncertified at once, **When** Underwriter retrieves the operation, **Then** it is shown as eligible for a Default Declaration (BR-09), and no Default Declaration exists for it unless Underwriter has separately recorded one. *(FR-023)*
 
 ## Requirements *(mandatory)*
 
@@ -250,6 +251,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **FR-020**: The system MUST allow Underwriter to record a Default Declaration with its reason against an operation, and that declaration MUST authorise recovery without performing it.
 - **FR-021**: The system MUST NOT provide Underwriter any capability to release, hand over, or recover a machine, whether or not a default has been declared.
 - **FR-022**: The system MUST allow an escalated Assessment's committee resolution to be recorded against that same Assessment, retrievable with it.
+- **FR-023**: The system MUST make it retrievable, for a live operation carrying a Slippage Warning, whether the operation has reached Default-Declaration eligibility under BR-09, and MUST NOT record a Default Declaration by itself when that threshold is reached.
 
 ### Key Entities
 
@@ -292,7 +294,7 @@ The following are real boundaries for future scope, not commitments made by this
 - Refusal and what an Applicant may do after one, including resubmission.
 - Escalation above the Authority Limit and the recording of a committee resolution (User Story 3).
 - Slippage Warnings and Default Declarations (User Story 4).
-- What happens to a schedule once a Project has slipped — the open `[CLARIFY]` in Key Product Decisions.
+- What Underwriter, or Lea$e, actually does once an operation reaches Default-Declaration eligibility (BR-09) beyond his standing option to declare a default — collections action, renegotiation, or anything short of default remains unspecified here.
 - Reassessment of a live operation when the Applicant's Credit Standing changes.
 - More than one Project, or more than one machinery need, on a single Assessment.
 - Any automated evaluation of evidence, scoring, or recommendation.
@@ -320,5 +322,6 @@ The following are real boundaries for future scope, not commitments made by this
 - `[ASSUMPTION]` An Assessment may proceed with the Payer named and its payment behaviour recorded as unknown; what is not permitted is leaving the Payer unnamed. No report on the Payer exists to require.
 - `[ASSUMPTION]` An instalment falls due a fixed number of working days after its Certification Milestone is certified, rather than at the instant of certification. The offset itself is a business decision, not fixed here.
 - `[ASSUMPTION]` A Slippage Warning is evaluated against the expected date recorded in the Certification Schedule the Applicant disclosed at application, which `personas/Carlos.MD` notes is the only forward-looking information Underwriter has.
+- `[ASSUMPTION]` Default-Declaration eligibility follows BR-09's thirty-day / two-milestone tolerance. The figures are ours — the brief fixes no tolerance — chosen to be settled in advance and identical for every operation, per `personas/Carlos.MD`'s own requirement.
 - `[ASSUMPTION]` In Stage 1 one Assessment concerns one Leasing Request, one Project and one machinery need, matching the same assumption in `001-company-machinery-leasing`.
 - `[ASSUMPTION]` The separation of duties between deciding and executing — Underwriter declares a default, Julia recovers the machine — is ours, derived from the `Permissions` sections of both personas. The brief describes no internal organisation of Lea$e.

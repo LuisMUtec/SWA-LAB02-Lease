@@ -103,20 +103,23 @@ reached its interval is due for service regardless of how long it has held the c
   reading is the accepted measure of use.]`
 - **Affects:** handover, maintenance scheduling, pricing, end of term.
 
-### BR-07 — Paying every instalment opens the option to acquire the machine
+### BR-07 — Paying every instalment opens the option to acquire the machine, at no further cost
 
 Once every instalment of a contract is paid, the client gains the option to acquire the machine it
-has been using.
+has been using, and exercising it requires no payment beyond the instalments already paid.
 
 - **Why:** it is what Lea$e promises the client at the outset, and it is what makes a contract with
   Lea$e worth more to a client than renting the same machine. It is also the only way the ownership
-  BR-01 retains ever ends.
+  BR-01 retains ever ends. A residual payment would recreate, at the finish line, the exact
+  liquidity gap the instalments already exist to avoid — the client would again need cash on hand
+  it does not have.
 - **Source:** brief — second diagram, *"Pago TODAS las cuotas → opciones de adquisición"*,
   the only element highlighted in the original
   ([`docs/lab-02-diagram-2-delivery-payment-acquisition.png`](docs/lab-02-diagram-2-delivery-payment-acquisition.png)) ·
-  `[ASSUMPTION: the brief names the options in the plural and prices none of them. Whether
-  exercising requires a residual payment, and what the options other than acquiring are, is still
-  undecided.]`
+  `[ASSUMPTION: the brief names the options in the plural and prices none of them. "Opciones" is
+  read here as the plural of choice — acquire, or do not — not as more than one distinct financial
+  instrument; and "no further cost" is our resolution of what was previously open, chosen because
+  the brief prices nothing and a silent residual charge would contradict Principle III.]`
 - **Affects:** contracting, collections, end of term, fleet planning.
 
 ### BR-08 — Instalments fall due only after the client confirms receipt
@@ -130,6 +133,41 @@ No instalment of a contract is payable before the client has confirmed it receiv
   `[ASSUMPTION: receipt is an explicit act of the client rather than something inferred from the
   supplier, so that the moment instalments become payable is one both parties agreed on.]`
 - **Affects:** contracting, instalment scheduling, collections.
+
+### BR-09 — A slipping project becomes default-eligible past a fixed tolerance
+
+A live operation becomes eligible for a Default Declaration once a single Certification Milestone
+of its Project remains uncertified more than 30 calendar days past its expected date, or once two
+Certification Milestones of the same Project are simultaneously past their expected dates
+uncertified — whichever occurs first. Reaching eligibility authorises Underwriter to consider a
+Default Declaration; it does not create one by itself.
+
+- **Why:** `personas/Carlos.MD` and the Slippage Warning (spec `002`) both need a settled line
+  between "a project is running late" and "this operation has defaulted" — settled in advance, the
+  same for every operation, not decided case by case once a client is already in difficulty.
+- **Source:** `[ASSUMPTION: the brief fixes no tolerance. Thirty calendar days is chosen because it
+  is roughly five times the six-working-day window BR-04 already treats as the shortest realistic
+  certification turnaround, giving a project one full missed cycle of slack before it counts; "two
+  milestones at once" catches a project whose slips are shorter but compounding. Both figures are
+  ours and may be revised without changing what the rule protects.]`
+- **Affects:** default handling, collections, the Slippage Warning of `002-leasing-request-underwriting`.
+
+### BR-10 — A machine significantly overdue for service is a safety cause
+
+A machine whose accumulated hours exceed its Service Interval by more than 20% of that interval,
+with no completed service in between, gives Fleet Manager safety grounds to stop it — the same
+grounds BR-06's Service Due state alone does not.
+
+- **Why:** `personas/Julia.MD` is explicit that postponing a service window costs the client
+  nothing, so nothing today stops a due service from sliding indefinitely. A machine run well past
+  its service interval is a mechanical safety risk, which is the one cause Fleet Manager may always
+  act on — this rule says when that cause is met; it does not invent a new ground for her to act,
+  it fixes when the existing one applies.
+- **Source:** `[ASSUMPTION: the brief fixes no overdue tolerance. 20% of the Service Interval is
+  ours — enough slack that an ordinary scheduling delay does not trigger it, short enough that it
+  is reached before wear becomes a likely failure. The figure may be revised without changing the
+  mechanism: overdue-past-threshold is a Safety Stop cause, not a new capability.]`
+- **Affects:** maintenance scheduling, the Safety Stop of `003-deployed-fleet-custody`.
 
 <!--
 Add new rules below, continuing the numbering. Template:

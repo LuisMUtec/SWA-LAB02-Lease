@@ -13,7 +13,7 @@
 
 ## Requirement Completeness
 
-- [x] No `[NEEDS CLARIFICATION]` markers remain — this project uses `[CLARIFY: ...]` / `[ASSUMPTION: ...]` per `evals/README.md` and the constitution instead; one `[CLARIFY: ...]` marker remains by design (see Notes)
+- [x] No `[NEEDS CLARIFICATION]` markers remain — this project uses `[CLARIFY: ...]` / `[ASSUMPTION: ...]` per `evals/README.md` and the constitution instead; no `[CLARIFY: ...]` markers remain (closed 2026-08-21, see Notes)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -37,24 +37,24 @@
   underspecified domain areas, and require that ambiguity be marked rather than resolved in
   silence. The generic Spec Kit item above is read against that convention: the check is that no
   ambiguity was filled in *without* a marker, not that zero markers exist.
-- One `[CLARIFY: ...]` marker remains in `spec.md`, in **Key Product Decisions**: what Lea$e does
-  about a service left overdue past its window. It is left open deliberately.
-  `personas/Julia.MD` is explicit that postponing a service window costs the client nothing, so a
-  consequence has to exist somewhere — but choosing it is a business decision this specification
-  has no authority to invent. It does not block Stage 1, whose happy path completes the service
-  inside its window.
-- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-024) is cited by at least
-  one Acceptance Criterion (AC-001–AC-029), and every Acceptance Scenario in User Stories 1–6 has a
+- **Closed (2026-08-21, issue #5):** the `[CLARIFY: ...]` marker this spec previously carried, in
+  **Key Product Decisions** — what Lea$e does about a service left overdue past its window — is
+  resolved by the new BR-10: overdue hours beyond 20% of the Service Interval become a Safety Stop
+  cause, reusing the capability Fleet Manager already has rather than adding a new one (FR-025,
+  AC-030). Below that threshold, the fact is recorded with no further consequence specified. This
+  does not block or move Stage 1, whose happy path completes the service inside its window.
+- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-025) is cited by at least
+  one Acceptance Criterion (AC-001–AC-030), and every Acceptance Scenario in User Stories 1–6 has a
   corresponding criterion.
 - Where an Acceptance Criterion states a business rule's effect it cites the identifier per
-  `business-rules.md`'s convention: AC-003 cites BR-05, AC-008, AC-009 and AC-013 cite BR-06, and
-  AC-018, AC-020 and AC-021 cite BR-07. BR-01 is cited in Summary and Key Product Concepts rather
-  than in a criterion, because what it establishes here is why Fleet Manager is accountable at all,
-  not a behaviour this feature exhibits.
-- No new `BR-nn` entries were needed. Every rule this feature leans on — BR-01, BR-05, BR-06,
-  BR-07 — was already catalogued, and no Functional Requirement carries an uncatalogued business
-  rule inside it. The constraints that are ours rather than the brief's are marked in
-  **Assumptions** and stated as behaviour in **Authority and Separation of Duties**.
+  `business-rules.md`'s convention: AC-003 cites BR-05, AC-008, AC-009 and AC-013 cite BR-06,
+  AC-018, AC-020 and AC-021 cite BR-07, and AC-030 cites BR-10. BR-01 is cited in Summary and Key
+  Product Concepts rather than in a criterion, because what it establishes here is why Fleet
+  Manager is accountable at all, not a behaviour this feature exhibits.
+- One new `BR-nn` entry was needed to close CLARIFY #4 of issue #5: **BR-10**, catalogued in
+  `business-rules.md`. BR-01, BR-05, BR-06 and BR-07 were already catalogued before this pass. The
+  constraints that are ours rather than the brief's are marked in **Assumptions** and stated as
+  behaviour in **Authority and Separation of Duties**.
 - **Boundary with `001-company-machinery-leasing`**: this feature occupies the interval `001`
   passes over between Company confirming receipt and exercising the Acquisition Option. The two
   meet at exactly two seams, and neither restates the other: `001`'s confirmed-receipt milestone is
