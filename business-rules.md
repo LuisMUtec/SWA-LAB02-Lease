@@ -169,6 +169,25 @@ grounds BR-06's Service Due state alone does not.
   mechanism: overdue-past-threshold is a Safety Stop cause, not a new capability.]`
 - **Affects:** maintenance scheduling, the Safety Stop of `003-deployed-fleet-custody`.
 
+### BR-11 — An available acquisition option lapses if it is not exercised
+
+Once every instalment is paid and the option to acquire opens (BR-07), the client has 30 calendar
+days to exercise it. If the client neither exercises nor declines within that window, the option
+lapses, the contract ends without acquisition, and the machine returns to Lea$e.
+
+- **Why:** BR-07 gives the client a right; a right with no expiry gives Lea$e an asset with no
+  future. Until the client decides, the machine can neither be planned into another contract nor
+  retrieved — it is owned by Lea$e, held by a client who owes nothing, and committed to nobody.
+  A stated window ends that, and it is settled in advance and identical for every contract for the
+  same reason BR-09's tolerance is: so that no client's outcome depends on when someone got round
+  to asking.
+- **Source:** `[ASSUMPTION: the brief shows the acquisition option and prices nothing around it,
+  including how long it stands. Thirty calendar days is ours — long enough that a client who has
+  just finished paying is not ambushed, short enough that a machine is not stranded for a quarter.
+  Lapsing to return rather than to acquisition is the conservative reading of BR-01: ownership
+  stays with Lea$e unless the client affirmatively takes it.]`
+- **Affects:** end of term, fleet planning, contract closure.
+
 <!--
 Add new rules below, continuing the numbering. Template:
 
