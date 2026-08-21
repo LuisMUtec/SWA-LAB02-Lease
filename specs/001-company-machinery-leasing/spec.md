@@ -32,7 +32,7 @@ Enable a Company that needs machinery now but expects project revenue later to o
 - Tax, accounting, or regulatory-compliance behavior beyond what this feature already requires to track a leasing obligation.
 - Collections management for overdue installments, and any consequence of a missed installment (deferred to a later stage; see Phased Scope).
 - Fleet management across multiple, simultaneous machinery items or projects (deferred to a later stage; see Phased Scope).
-- Carlos's and Julia's flows — they represent Lease Company-side actors (credit/risk analysis and fleet management respectively, per `personas/Carlos.MD` and `personas/Julia.MD`), not Company. Their own features are separate future work, not part of this specification.
+- Carlos's and Julia's flows — they represent Lease Company-side actors (credit/risk analysis and fleet management respectively, per `personas/Carlos.MD` and `personas/Julia.MD`), not Company. Their own features are [`002-leasing-request-underwriting`](../002-leasing-request-underwriting/spec.md) and [`003-deployed-fleet-custody`](../003-deployed-fleet-custody/spec.md), not part of this specification.
 
 ## Key Product Concepts
 
@@ -51,7 +51,7 @@ Enable a Company that needs machinery now but expects project revenue later to o
 
 This feature is written for **Company** alone. Its human perspective is [`personas/Pedro.MD`](../../personas/Pedro.MD) — `[ASSUMPTION: Pedro, as owner/responsible manager of the Company, is the human perspective used to validate this feature; the brief names Pedro without describing his role, and personas/Pedro.MD already carries this working hypothesis]`.
 
-Carlos ([`personas/Carlos.MD`](../../personas/Carlos.MD)) and Julia ([`personas/Julia.MD`](../../personas/Julia.MD)) represent Lease Company-side actors. Their needs are not addressed by this feature; they require their own, separate specifications (see Out of Scope).
+Carlos ([`personas/Carlos.MD`](../../personas/Carlos.MD)) and Julia ([`personas/Julia.MD`](../../personas/Julia.MD)) represent Lease Company-side actors. Their needs are not addressed by this feature; they are addressed by [`002-leasing-request-underwriting`](../002-leasing-request-underwriting/spec.md) and [`003-deployed-fleet-custody`](../003-deployed-fleet-custody/spec.md) respectively (see Out of Scope).
 
 Company's needs, as covered by this feature:
 
@@ -247,7 +247,7 @@ The following are real, useful boundaries for future scope, not commitments made
 - Exceptional payment scenarios (e.g., early payoff, partial Installment payment).
 - Alternative Acquisition Option outcomes beyond exercising it (e.g., declining it once available — see the open `[CLARIFY]` in Key Product Decisions).
 - Richer Supplier interactions beyond the result Company observes.
-- Carlos's and Julia's own flows, as Lease Company-side actors (see Out of Scope).
+- Carlos's and Julia's own flows, as Lease Company-side actors — specified separately in `002-leasing-request-underwriting` and `003-deployed-fleet-custody` (see Out of Scope).
 
 ## Success Criteria *(mandatory)*
 
