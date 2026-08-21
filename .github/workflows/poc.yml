@@ -1,0 +1,42 @@
+name: POC
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  thread:
+    name: El hilo de Stage 1
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: poc
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: poc/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Corre el hilo. Sin `--strict` mientras se construye: un paso todavía no implementado se
+      # reporta pendiente, no rompe el build. Para la entrega se agrega `-- --strict` y entonces
+      # un hilo incompleto sí falla.
+      - name: Correr el hilo
+        run: node src/cli/demo.ts --no-color
+
+      # La transcripción versionada tiene que corresponder a lo que el código hace hoy. El reloj
+      # es fijo, así que cualquier diferencia es un cambio real, no ruido.
+      - name: La evidencia está al día
+        run: |
+          node src/cli/demo.ts --no-color > /tmp/run.txt
+          diff -u evidence/run.txt /tmp/run.txt || {
+            echo "::error::evidence/run.txt no corresponde a la corrida actual — corré 'npm run demo:evidence' y commiteá."
+            exit 1
+          }

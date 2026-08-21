@@ -1,0 +1,19 @@
+{
+  "name": "lease-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "POC del caso de estudio Lea$e — Stage 1 de las tres specs como un solo hilo",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "demo": "node src/cli/demo.ts",
+    "demo:evidence": "node src/cli/demo.ts --no-color > evidence/run.txt; cat evidence/run.txt",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5.9.3"
+  }
+}

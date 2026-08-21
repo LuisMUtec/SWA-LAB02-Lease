@@ -60,6 +60,7 @@ distinto. **Cada afirmación ocurre una sola vez, en su altitud.**
 | Personas | [`personas/`](personas/) | Quién es cada persona y qué necesita — cinco campos fijos, ver [`_TEMPLATE.MD`](personas/_TEMPLATE.MD) |
 | Feature | `specs/<n>/spec.md` | Qué hace el sistema y qué porción de la brecha cierra |
 | Plan | `specs/<n>/plan.md`, `tasks.md` | Cómo se construye |
+| POC | [`poc/`](poc/README.md) | El código que corre el happy path, y la evidencia de que corrió |
 
 Los criterios de aceptación **enuncian el efecto de la regla y citan su ID** —*"rejects an
 instalment payment before receipt is confirmed (BR-08)"*— para que ninguna referencia sea
@@ -99,6 +100,16 @@ persona y solo permite deducciones, de modo que evaluar una sola especificación
 gate de 8/10 sin margen.
 
 Falta correr el EVAL. Las tres specs están en Draft y ninguna ha pasado por `/speckit-clarify`.
+
+El POC corre. Sus `Stage 1` no son tres entregas sino una sola corrida —lo que `001` declara fuera
+de alcance es exactamente lo que `002` y `003` producen—, y [`poc/`](poc/README.md) la construye
+completa: 30 pasos, cada uno citando la spec y el número de Stage 1 que le manda, con las siete
+reglas que Stage 1 ejerce. La transcripción queda versionada en `poc/evidence/run.txt`.
+
+Dos divergencias entre specs quedaron marcadas en [`poc/DOMAIN.md`](poc/DOMAIN.md) porque el código
+tuvo que resolverlas para compilar, y son deducciones de D4 esperando: `escalated` deja una
+solicitud sin estado válido en `001`, y la `Installment` de `001` no lleva el ancla al hito de
+certificación que BR-04 exige y `002` produce.
 
 ## Documentos
 
