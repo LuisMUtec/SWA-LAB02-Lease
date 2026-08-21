@@ -43,9 +43,9 @@
   cause, reusing the capability Fleet Manager already has rather than adding a new one (FR-025,
   AC-030). Below that threshold, the fact is recorded with no further consequence specified. This
   does not block or move Stage 1, whose happy path completes the service inside its window.
-- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-025) is cited by at least
-  one Acceptance Criterion (AC-001–AC-030, including AC-018b), and every Acceptance Scenario in
-  User Stories 1–6 has a corresponding criterion.
+- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-027, including FR-018b) is
+  cited by at least one Acceptance Criterion (AC-001–AC-032, including AC-018b and AC-022b), and
+  every Acceptance Scenario in User Stories 1–6 has a corresponding criterion.
 - **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Julia agent found that
   FR-016 — "which end is this Deployment heading for" — could only ever answer **Return** for the
   entire life of every Deployment, because it read "has the Acquisition Option been exercised", and
@@ -56,15 +56,35 @@
   distinguishes `declined` from `available` (its FR-019–FR-021), and FR-016 here reads three states
   — heading for Return, heading for Acquisition Retirement, or not yet determined (AC-018,
   AC-018b).
-- Reservations the Julia agent raised that are **not** closed, recorded rather than dropped: no
-  requirement causes an Operating-Hours Reading or a Site Departure to *arrive* (Out of Scope
-  removes how a reading or location is obtained, and the inspection the spec leans on has no FR);
-  FR-022's "last known location" is not produced by any requirement, since a Site Departure records
-  only that the machine is away and when it left, not where it went; the transport/access/route
-  that Out of Scope says is "recorded so the work can start from something" is backed by no FR; a
-  completed Recovery does not close its Deployment, so FR-002 would block redeploying that machine;
-  and no requirement lets anyone set a machine's Service Interval, though Key Entities reads it.
-  These are real and belong to this feature's later stages or to a follow-up pass, not to Stage 1.
+- **Second persona-agent pass (2026-08-21).** Julia's re-read of the corrected spec raised five more
+  defects, four now closed:
+  1. *FR-022's Recovery promised a "last known location" no requirement produced* — a Site Departure
+     recorded only that the machine had left and when. Closed: FR-014 now carries where it went when
+     known, and FR-026's Inspection records a location too.
+  2. *A recovered Deployment could never close.* FR-018 allowed only Return or Acquisition
+     Retirement, both gated on an Acquisition Option that a defaulted operation's can never reach
+     (permanently `not yet available` under `001` FR-015), so a recovered machine's Deployment stayed
+     open and FR-002 blocked its redeployment forever. Closed: FR-018/FR-018b add Recovery Close
+     (AC-022, AC-022b).
+  3. *FR-016 was silent on `not yet available`* — the state of every Deployment for most of its life.
+     Closed: FR-016 and AC-018b now account for all four of `001` FR-021's states.
+  4. *Out of Scope claimed transport, access and a route were "recorded"; no FR did so.* Closed by
+     withdrawing the claim rather than inventing scope — arranging a recovery is field logistics.
+  5. *SC-007 promised the end could be determined "before its term ends"*, which no requirement
+     delivers, since nothing forces Company to decide and neither spec fixes when a term ends.
+     Closed by restating SC-007 as what is actually guaranteed: an answer that is always present and
+     never wrong, definite from the moment Company acts.
+  Also added from her Permissions: FR-026 (inspection with notice — a right `personas/Julia.MD`
+  grants and this feature had leaned on twice without providing) and FR-027 (the age of a machine's
+  most recent reading, so a machine that stopped reporting is distinguishable from one that is idle).
+- Reservations that remain open, recorded rather than dropped: no requirement makes an
+  Operating-Hours Reading or a Site Departure *arrive* on any cadence (Out of Scope keeps the source
+  unspecified so Stage 1 is buildable without hardware; FR-027 makes the silence visible rather than
+  filling it); a return difference reaches nobody who may act on it, since settlement is out of scope
+  entirely and neither Julia (FR-020) nor Underwriter (`002` FR-015) may move money; Julia's
+  permission to *require* a service window is granted only as *agree* (FR-010), a deliberate product
+  decision — Lea$e cannot compel a jobsite — with BR-10/FR-025 as the only lever at the far end; and
+  no requirement lets anyone set a machine's Service Interval, though Key Entities reads it.
 - Where an Acceptance Criterion states a business rule's effect it cites the identifier per
   `business-rules.md`'s convention: AC-003 cites BR-05, AC-008, AC-009 and AC-013 cite BR-06,
   AC-018, AC-020 and AC-021 cite BR-07, and AC-030 cites BR-10. BR-01 is cited in Summary and Key

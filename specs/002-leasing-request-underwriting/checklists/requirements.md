@@ -45,9 +45,26 @@
   `personas/Carlos.MD`'s requirement that the tolerance be settled in advance and identical for
   every operation is what BR-09 is for. This does not block or move Stage 1: the happy path never
   reaches a slip.
-- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-024) is cited by at least
-  one Acceptance Criterion (AC-001–AC-027), and every Acceptance Scenario in User Stories 1–4 has a
+- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-025) is cited by at least
+  one Acceptance Criterion (AC-001–AC-028), and every Acceptance Scenario in User Stories 1–4 has a
   corresponding criterion.
+- **Second persona-agent pass (2026-08-21).** Carlos's re-read of the corrected spec confirmed his
+  failure scenario now runs end to end, and raised three further defects, all closed:
+  1. *"Demand further evidence before deciding" was a Permission with no capability* — his only
+     instrument for an incomplete file was to hold the Assessment silently, which is a stalemate,
+     not delegated authority. Closed: FR-025 / AC-028.
+  2. *FR-024 named no recorder* — every other Evidence Item names Underwriter, and the fact the whole
+     Slippage Warning chain hangs on was left ownerless. Closed: FR-024 now names him.
+  3. *AC-027 made a certified milestone's instalment fall due unconditionally*, contradicting `001`'s
+     FR-011/AC-009 and BR-08, which forbid an instalment falling due before the client confirms
+     receipt. A milestone can certify before the machine arrives. Closed: certification is now stated
+     as a necessary and not a sufficient condition, in both FR-024 and AC-027.
+- Reservations that remain open, recorded rather than dropped: no success criterion bounds
+  time-to-decision, which is Carlos's own hardest trade-off (*"speed is a decision too"*) — and
+  FR-010's refusal exemption relieves it only on the refusing side; a Slippage Warning carries the
+  milestone but not the Payer behaviour recorded at FR-008, so Carlos judges a slip on a thinner file
+  than he built at approval; the instalment offset after certification stays an open business
+  decision; and "which machine" (FR-012) binds no one at `003`'s handover.
 - **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Carlos agent found two
   defects against `personas/Carlos.MD`, both now closed:
   1. *Nothing recorded that a Certification Milestone had been certified.* FR-017's Slippage

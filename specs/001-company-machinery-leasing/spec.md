@@ -167,7 +167,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-004**: **Given** a Leasing Request that becomes `approved`, **When** Company checks for a corresponding Lease, **Then** exactly one Lease now exists, traceable back to that Leasing Request. *(FR-005, FR-006)*
 - **AC-005**: **Given** a Leasing Request that becomes `rejected`, **When** Company checks for a corresponding Lease, **Then** none exists for that request. *(FR-007)*
 - **AC-006**: **Given** an approved Leasing Request whose Machinery has arrived, **When** Company confirms receipt, **Then** the confirmation is recorded against that specific Leasing Operation and is retrievable afterward. *(FR-008)*
-- **AC-007**: **Given** an approved Leasing Request whose Machinery receipt has not been confirmed, **When** Company attempts to confirm receipt for it before that Machinery exists for the operation, **Then** the system does not record a receipt confirmation. *(FR-009)*
+- **AC-007**: **Given** a Leasing Request that is `pending` or `rejected`, **When** Company attempts to confirm Machinery receipt for it, **Then** the system does not record a receipt confirmation. *(FR-009)*
 - **AC-008**: **Given** a Lease, **When** Company views its Installments, **Then** every Installment belonging to that Lease is listed with its own status and its own amount. *(FR-010)*
 - **AC-008b**: **Given** an approved Leasing Operation for which Machinery has arrived that does not match what was approved, **When** Company reports the mismatch instead of confirming receipt, **Then** the report is recorded against that operation and no receipt confirmation is recorded for it. *(FR-009b)*
 - **AC-009**: **Given** a Lease whose Machinery receipt has not been confirmed, **When** Company attempts to pay any of its Installments, **Then** the system rejects the attempt — installments are not payable ahead of confirmed delivery (BR-08). *(FR-011)*
@@ -249,7 +249,8 @@ Nothing in Stage 1 assumes a rejection, a delay, a partial delivery, or more tha
 The following are real, useful boundaries for future scope, not commitments made by this feature:
 
 - Handling a `rejected` Leasing Request beyond observing its status — including whether and how Company may resubmit.
-- Cancellation of a Leasing Request or of a Lease already in progress.
+- Cancellation or withdrawal of a Leasing Request, or of a Lease already in progress.
+- How long a Leasing Request may remain `pending`, and what Company can do about a decision that is taking long enough to threaten the Project it was needed for. This feature guarantees Company always knows *which* state a request is in (FR-004); it does not yet make elapsed time visible, commit Lea$e to a turnaround, or give Company a move when waiting becomes the problem. `[ASSUMPTION: named here as deferred rather than resolved because a turnaround commitment is a business decision about what Lea$e promises applicants, not a fact this specification can derive.]`
 - Overdue Installments and any consequence of a missed payment.
 - A Leasing Request or Lease spanning more than one Machinery item.
 - Multiple concurrent Projects or Leases for the same Company.

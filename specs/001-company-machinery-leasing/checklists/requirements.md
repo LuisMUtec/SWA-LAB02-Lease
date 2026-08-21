@@ -68,6 +68,24 @@
   to Company at all — is **not** closed here. It is a genuine scope question (whether Company sees
   Lea$e's internal risk assessment of its own operation), not an oversight, and Out of Scope
   already defers "any consequence of a missed installment." Recorded rather than silently dropped.
+- **Second persona-agent pass (2026-08-21).** Pedro's re-read of the corrected spec confirmed all
+  three fixes landed, and raised three further defects, all closed:
+  1. *A genuine cross-spec contradiction*: `002`'s AC-027 made a certified milestone's instalment
+     fall due unconditionally, while FR-011/AC-009 here forbid any instalment falling due before
+     Company confirms receipt (BR-08) — and a milestone can certify before the machine arrives.
+     Closed in `002` (FR-024, AC-027): certification is necessary, never sufficient.
+  2. *AC-007 did not test the FR-009 it cited* — its Given was an already-approved request, so
+     Pedro's "must not confirm receipt on a request that is not approved" had a requirement and no
+     valid criterion. Closed: AC-007 now tests a `pending` or `rejected` request.
+  3. *"Pending too long" was absorbed in silence* — this feature guarantees Company always knows
+     which state a request is in, but nothing makes elapsed time visible, commits Lea$e to a
+     turnaround, or gives Company a move when waiting itself becomes the problem, and unlike every
+     other gap it was not even named. Closed as *named deferred scope* in Later stages, not resolved:
+     a turnaround commitment is a business decision about what Lea$e promises applicants.
+- Reservations that remain open, recorded rather than dropped: an Installment has `pending`/`paid`
+  and no `due` state, so the moment payment is owed — anchored in `002` to a Certification Record —
+  is not visible to Company; and `002`'s FR-012 requires every approval to carry Conditions
+  including a down payment, which FR-004 never surfaces to Company before it is in a Lease.
 - Where an Acceptance Criterion states a business rule's effect, it cites the rule's identifier per
   `business-rules.md`'s convention (AC-001 cites BR-02, AC-016 cites BR-01, AC-009 cites BR-08,
   AC-014 cites BR-07). **Resolved (2026-08-20):** the deferral noted in the first pass — waiting on
