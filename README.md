@@ -110,6 +110,7 @@ Seis iteraciones registradas, cada una en [`evals/iterations/`](evals/iterations
 | [04](evals/iterations/2026-08-21-04.md) | **3.0** | **2.5** | **1.5** | **1.25** | **8.25** |
 | [05](evals/iterations/2026-08-21-05.md) | 2.5 | 2.5 | 1.5 | 1.25 | 7.75 |
 | [06](evals/iterations/2026-08-21-06.md) | 2.5 | 2.5 | 1.75 | 1.25 | **8.0** |
+| [07](evals/iterations/2026-08-21-07.md) | **3.0** | 2.5 | 1.5 | 1.0 | **8.0** |
 
 Lo que movió el puntaje, en orden: darle `BR-04` a `001` —la spec del actor cuyo problema *es* la
 brecha no ancla­ba ninguna cuota al avance de su proyecto y habría sobrevivido sin cambios si la
