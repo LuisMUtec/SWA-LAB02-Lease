@@ -1,6 +1,12 @@
 # Iteration NN — YYYY-MM-DD
 
-Evaluated: `specs/<n>-<feature>/spec.md` @ `<short-sha>`
+Evaluated (amended 2026-08-21, issue #5 — all three specs, one `main` SHA):
+
+- `specs/001-company-machinery-leasing/spec.md`
+- `specs/002-leasing-request-underwriting/spec.md`
+- `specs/003-deployed-fleet-custody/spec.md`
+
+@ `<short-sha>`
 
 ## Score
 

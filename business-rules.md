@@ -103,20 +103,23 @@ reached its interval is due for service regardless of how long it has held the c
   reading is the accepted measure of use.]`
 - **Affects:** handover, maintenance scheduling, pricing, end of term.
 
-### BR-07 — Paying every instalment opens the option to acquire the machine
+### BR-07 — Paying every instalment opens the option to acquire the machine, at no further cost
 
 Once every instalment of a contract is paid, the client gains the option to acquire the machine it
-has been using.
+has been using, and exercising it requires no payment beyond the instalments already paid.
 
 - **Why:** it is what Lea$e promises the client at the outset, and it is what makes a contract with
   Lea$e worth more to a client than renting the same machine. It is also the only way the ownership
-  BR-01 retains ever ends.
+  BR-01 retains ever ends. A residual payment would recreate, at the finish line, the exact
+  liquidity gap the instalments already exist to avoid — the client would again need cash on hand
+  it does not have.
 - **Source:** brief — second diagram, *"Pago TODAS las cuotas → opciones de adquisición"*,
   the only element highlighted in the original
   ([`docs/lab-02-diagram-2-delivery-payment-acquisition.png`](docs/lab-02-diagram-2-delivery-payment-acquisition.png)) ·
-  `[ASSUMPTION: the brief names the options in the plural and prices none of them. Whether
-  exercising requires a residual payment, and what the options other than acquiring are, is still
-  undecided.]`
+  `[ASSUMPTION: the brief names the options in the plural and prices none of them. "Opciones" is
+  read here as the plural of choice — acquire, or do not — not as more than one distinct financial
+  instrument; and "no further cost" is our resolution of what was previously open, chosen because
+  the brief prices nothing and a silent residual charge would contradict Principle III.]`
 - **Affects:** contracting, collections, end of term, fleet planning.
 
 ### BR-08 — Instalments fall due only after the client confirms receipt
@@ -130,6 +133,96 @@ No instalment of a contract is payable before the client has confirmed it receiv
   `[ASSUMPTION: receipt is an explicit act of the client rather than something inferred from the
   supplier, so that the moment instalments become payable is one both parties agreed on.]`
 - **Affects:** contracting, instalment scheduling, collections.
+
+### BR-09 — A slipping project becomes default-eligible past a fixed tolerance
+
+A live operation becomes eligible for a Default Declaration once a single Certification Milestone
+of its Project remains uncertified more than 30 calendar days past its expected date, or once two
+Certification Milestones of the same Project are simultaneously past their expected dates
+uncertified — whichever occurs first. Reaching eligibility authorises Underwriter to consider a
+Default Declaration; it does not create one by itself.
+
+- **Why:** `personas/Carlos.MD` and the Slippage Warning (spec `002`) both need a settled line
+  between "a project is running late" and "this operation has defaulted" — settled in advance, the
+  same for every operation, not decided case by case once a client is already in difficulty.
+- **Source:** `[ASSUMPTION: the brief fixes no tolerance. Thirty calendar days is chosen because it
+  is roughly five times the six-working-day window BR-04 already treats as the shortest realistic
+  certification turnaround, giving a project one full missed cycle of slack before it counts; "two
+  milestones at once" catches a project whose slips are shorter but compounding. Both figures are
+  ours and may be revised without changing what the rule protects.]`
+- **Affects:** default handling, collections, the Slippage Warning of `002-leasing-request-underwriting`.
+
+### BR-10 — A machine significantly overdue for service is a safety cause
+
+A machine whose accumulated hours exceed its Service Interval by more than 20% of that interval,
+with no completed service in between, gives Fleet Manager safety grounds to stop it — the same
+grounds BR-06's Service Due state alone does not.
+
+- **Why:** `personas/Julia.MD` is explicit that postponing a service window costs the client
+  nothing, so nothing today stops a due service from sliding indefinitely. A machine run well past
+  its service interval is a mechanical safety risk, which is the one cause Fleet Manager may always
+  act on — this rule says when that cause is met; it does not invent a new ground for her to act,
+  it fixes when the existing one applies.
+- **Source:** `[ASSUMPTION: the brief fixes no overdue tolerance. 20% of the Service Interval is
+  ours — enough slack that an ordinary scheduling delay does not trigger it, short enough that it
+  is reached before wear becomes a likely failure. The figure may be revised without changing the
+  mechanism: overdue-past-threshold is a Safety Stop cause, not a new capability.]`
+- **Affects:** maintenance scheduling, the Safety Stop of `003-deployed-fleet-custody`.
+
+### BR-11 — An available acquisition option lapses if it is not exercised
+
+Once every instalment is paid and the option to acquire opens (BR-07), the client has 30 calendar
+days to exercise it. If the client neither exercises nor declines within that window, the option
+lapses, the contract ends without acquisition, and the machine returns to Lea$e.
+
+- **Why:** BR-07 gives the client a right; a right with no expiry gives Lea$e an asset with no
+  future. Until the client decides, the machine can neither be planned into another contract nor
+  retrieved — it is owned by Lea$e, held by a client who owes nothing, and committed to nobody.
+  A stated window ends that, and it is settled in advance and identical for every contract for the
+  same reason BR-09's tolerance is: so that no client's outcome depends on when someone got round
+  to asking.
+- **Source:** `[ASSUMPTION: the brief shows the acquisition option and prices nothing around it,
+  including how long it stands. Thirty calendar days is ours — long enough that a client who has
+  just finished paying is not ambushed, short enough that a machine is not stranded for a quarter.
+  Lapsing to return rather than to acquisition is the conservative reading of BR-01: ownership
+  stays with Lea$e unless the client affirmatively takes it.]`
+- **Affects:** end of term, fleet planning, contract closure.
+
+### BR-12 — Any upfront payment is capped and cannot exceed a tenth of the machine
+
+Where a contract requires the client to pay anything before its instalment schedule begins, that
+amount may not exceed 10% of the machine's value.
+
+- **Why:** the client comes to Lea$e precisely because it cannot produce the machine's price before
+  its project pays. An unbounded upfront demand recreates that shortfall at the start line, which is
+  the same objection BR-07 answers at the finish line — and a client who could pay a third of a
+  machine up front did not need Lea$e for that third. A cap keeps the down payment a risk instrument
+  for underwriting rather than a way of shifting the gap back onto the client.
+- **Source:** `[ASSUMPTION: the brief fixes no pricing at all. Ten per cent is ours — small enough
+  that it does not reproduce the problem the product exists to solve, large enough to remain a real
+  condition an underwriter can set against a weaker case.]`
+- **Affects:** underwriting conditions, contracting, the start of the instalment schedule.
+
+### BR-13 — A deployed machine must stay worth at least what its contract still owes
+
+For as long as a contract is running, the machine securing it must remain worth at least the amount
+the client has still to pay. A machine that has fallen below that line leaves Lea$e lending against
+less than it is owed.
+
+- **Why:** this is the rule that separates Lea$e's interest in a machine's condition from a rental
+  firm's. A rental company watches wear to price its next rental; if a machine deteriorates it
+  charges less next time and loses nothing already committed. Lea$e has *already paid the supplier*
+  in full (BR-01, and the brief's third diagram) and is recovering that money over instalments the
+  client pays as its project certifies (BR-04). The machine is the security for money already out
+  the door. Wear is therefore not a pricing input here — it is an erosion of the only collateral
+  behind an outstanding balance, and it is why hours, condition and servicing are watched at all.
+- **Source:** brief — Lea$e buys the equipment from the supplier before the client has paid for it ·
+  `[ASSUMPTION: that the machine is the security for that outlay, and that its value should track
+  the balance down rather than fall below it, is ours. The brief fixes no valuation method and this
+  rule deliberately does not invent one: what it requires is that the comparison be possible and
+  visible, not how a value is arrived at.]`
+- **Consequence:** a machine below the line is serviced before machines above it. An operation whose **cover** is below the line is treated as impaired, and Lea$e may require the client to restore cover — by additional security, or by bringing the machine's condition back above the line. **Cover** is what stands behind the balance: the machine's worth, plus any additional security recorded against that operation **after the decision to lend**. Security taken as a condition of that decision is not counted again here — it was already priced into the judgement that the machine plus that security was worth lending against. Naming it is what lets either remedy actually end the impairment — a rule measured on the machine alone would let Lea$e demand security and then hold the operation impaired forever whatever the client gave. What Lea$e may not do is move what the client owes or when: the shortfall is Lea$e's to address, not the client's to pay for early. Nor may it demand more than the shortfall: a demand larger than the gap it closes recreates mid-contract the shortfall BR-12 keeps out of the start line.
+- **Affects:** custody, maintenance priority, underwriting of a live operation, end of term.
 
 <!--
 Add new rules below, continuing the numbering. Template:
