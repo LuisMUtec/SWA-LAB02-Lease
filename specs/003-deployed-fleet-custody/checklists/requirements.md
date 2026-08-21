@@ -43,9 +43,18 @@
   cause, reusing the capability Fleet Manager already has rather than adding a new one (FR-025,
   AC-030). Below that threshold, the fact is recorded with no further consequence specified. This
   does not block or move Stage 1, whose happy path completes the service inside its window.
-- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-027, including FR-018b) is
-  cited by at least one Acceptance Criterion (AC-001–AC-032, including AC-018b and AC-022b), and
-  every Acceptance Scenario in User Stories 1–6 has a corresponding criterion.
+- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-027, including FR-017b and
+  FR-018b) is cited by at least one Acceptance Criterion (AC-001–AC-032, including AC-018b, AC-020b
+  and AC-022b), and every Acceptance Scenario in User Stories 1–6 has a corresponding criterion.
+- **Third persona-agent pass (2026-08-21).** Julia confirmed both failure paths now resolve and
+  raised three further concrete gaps, all closed: Acquisition Retirement carried no condition-and-
+  hours settlement though her Permissions grant it and her own flow ends by handing that record over
+  (closed, FR-017 / AC-020, following FR-015's precedent of recording a difference without deciding
+  who pays); no requirement let anyone set a machine's Service Interval though FR-007 depends on it
+  (closed, FR-017b / AC-020b); and `001`'s FR-008 let a machine be delivered, confirmed and paid
+  against with no Deployment ever opened, which is the one route by which her worst case — nothing
+  recorded at handover — was still reachable across the seam (closed in `001` FR-008, which now
+  states that Company's receipt confirmation and its acceptance of the handover record are one act).
 - **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Julia agent found that
   FR-016 — "which end is this Deployment heading for" — could only ever answer **Return** for the
   entire life of every Deployment, because it read "has the Acquisition Option been exercised", and

@@ -59,10 +59,18 @@
      FR-011/AC-009 and BR-08, which forbid an instalment falling due before the client confirms
      receipt. A milestone can certify before the machine arrives. Closed: certification is now stated
      as a necessary and not a sufficient condition, in both FR-024 and AC-027.
+- **Third persona-agent pass (2026-08-21).** Carlos confirmed his failure case now runs to its end
+  without a gap, and raised one sharp concrete defect, now closed: a Certification Milestone carried
+  its date but never its amount, so an instalment could be anchored to a milestone (FR-014) with no
+  way to check the milestone covers it — the date answered "on time" and nothing answered "enough",
+  which is the whole of the judgement `personas/Carlos.MD` describes. Closed: FR-007 / AC-006 and the
+  Certification Milestone entity now carry the amount each milestone is expected to release.
 - Reservations that remain open, recorded rather than dropped: no success criterion bounds
   time-to-decision, which is Carlos's own hardest trade-off (*"speed is a decision too"*) — and
   FR-010's refusal exemption relieves it only on the refusing side; a Slippage Warning carries the
-  milestone but not the Payer behaviour recorded at FR-008, so Carlos judges a slip on a thinner file
+  milestone but not the Payer behaviour recorded at FR-008, and no Payer accumulates history across
+  Assessments even though AC-023's own rationale calls a past slip "evidence for the next decision"
+  — portfolio-level views are deferred in Later stages, so Carlos judges a slip on a thinner file
   than he built at approval; the instalment offset after certification stays an open business
   decision; and "which machine" (FR-012) binds no one at `003`'s handover.
 - **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Carlos agent found two
