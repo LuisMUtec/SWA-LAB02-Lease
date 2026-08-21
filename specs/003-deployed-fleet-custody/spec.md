@@ -237,6 +237,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-003**: **Given** a Deployment, **When** its Handover Record is retrieved, **Then** it names the Custodian who holds the machine, who answers for its custody and for damage caused by or with it (BR-05). *(FR-004)*
 - **AC-004**: **Given** an accepted Handover Record, **When** any party attempts to alter its contents, **Then** the system does not allow the change. *(FR-005)*
 - **AC-005**: **Given** a machine whose Deployment is open, **When** a second handover is attempted for it, **Then** no second Deployment opens. *(FR-002)*
+- **AC-005b**: **Given** an approved operation whose Conditions name a particular machine, **When** a handover is attempted with a different machine, **Then** no Deployment opens. *(FR-001b)*
 - **AC-006**: **Given** a Deployment, **When** an Operating-Hours Reading is recorded, **Then** it is retrievable with the moment it refers to and the machine's accumulated hours reflect it. *(FR-006)*
 - **AC-007**: **Given** a machine's accumulated hours, **When** a reading lower than them is submitted, **Then** the accumulated hours do not decrease. *(FR-006)*
 - **AC-008**: **Given** a deployed machine whose accumulated hours since its last completed service reach its Service Interval, **When** its state is evaluated, **Then** it is Service Due — maintenance falls due on hours run, not on time elapsed (BR-06). *(FR-007)*
@@ -275,6 +276,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 ### Functional Requirements
 
 - **FR-001**: The system MUST allow Fleet Manager to open a Deployment by handing a machine over for an approved operation, and MUST make the Deployment traceable to both.
+- **FR-001b**: The system MUST NOT allow a Deployment to open for a machine other than the one that operation's approval Conditions name (`002` FR-012). **Added 2026-08-21, per EVAL iteration 02:** "which machine" is a Condition Underwriter sets, and nothing checked it at the one moment it could be checked — the only backstop was Company reporting a mismatch after the machine reached the site (`001` FR-009b), which is after the fact and is Company's act, not Lea$e's.
 - **FR-002**: The system MUST NOT allow a machine to have more than one open Deployment at a time.
 - **FR-003**: The system MUST require a handover to carry the machine's condition, an Operating-Hours Reading, a named Custodian and a Contracted Site, each accepted by both Lea$e and the client, and MUST NOT open a Deployment when any is missing.
 - **FR-004**: The system MUST record the Custodian as the person on the client's side holding the machine and answering for its custody and for damage (BR-05).
