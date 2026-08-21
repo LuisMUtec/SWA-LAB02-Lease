@@ -1,0 +1,368 @@
+# Feature Specification: Deployed Fleet Custody
+
+**Feature Branch**: `003-deployed-fleet-custody`
+
+**Created**: 2026-08-20
+
+**Status**: Draft
+
+**Input**: User description: "Custodia y seguimiento de la flota desplegada para el actor Julia (responsable de flota de Lea$e): entrega de la maquina con condicion y horas acordadas por ambas partes y un responsable nombrado del lado del cliente (BR-05), seguimiento de las horas-motor acumuladas que son el reloj de mantenimiento (BR-06), acordar y cumplir la ventana de servicio, saber cuando la maquina sale del sitio contratado, y cerrar el contrato por uno de sus dos finales: devolucion contra el registro de entrega, o adquisicion por el cliente que pago todas las cuotas (BR-07). Incluye recuperar la maquina cuando Carlos declara el incumplimiento, sin poder declararlo ella."
+
+## Summary
+
+Lea$e owns the machine for the life of the contract (BR-01), and the machine spends that life on ground Lea$e does not control, run by operators who do not work for it. This feature is written for the person who answers for it anyway: Fleet Manager, whose human perspective is [`personas/Julia.MD`](../../personas/Julia.MD).
+
+Its subject is the interval that `001-company-machinery-leasing` passes over in a single step. In `001`, Company confirms it received the Machinery and later exercises the Acquisition Option; between those two events lies a year or more in which the machine wears, is serviced or is not, moves or does not, and either comes back or does not. Ownership without custody is only bearable if what happens in that interval is recorded rather than remembered.
+
+The feature therefore covers: handing the machine over against a condition and hours record both parties accepted, with a named person on the client side holding it (BR-05); following the accumulated operating hours that are the machine's real maintenance clock (BR-06); raising a service when the interval is reached and completing it inside an agreed window; knowing when a machine leaves the site it was contracted to; recording incidents while the machine is deployed rather than discovering them at the end; and closing the deployment by one of its two ends — return settled against the handover record, or retirement from the fleet because the client paid every instalment and acquired it (BR-07). It also covers recovering a machine after a default has been declared — a default Fleet Manager acts on and may never declare herself.
+
+## Problem
+
+Between handover and the end of a contract, Lea$e's asset is invisible to the party that owns it. Its use is learned when someone chooses to report it, which is usually after something has broken. Its maintenance falls due on accumulated hours (BR-06), so the clock advances at a speed only the site knows, and a service window costs the client a day of production and costs him nothing to postpone — he is optimising his project, Lea$e is optimising an asset he gives back. Damage is discovered at return, which is the worst possible moment to establish when it happened: with no condition both parties accepted at handover, every claim becomes a negotiation Lea$e loses by default.
+
+The consequences land on the same asset the financing gap was closed with. A machine that comes back worth less than the next contract needs it to be worth makes the next contract more expensive, which raises the cost of closing the gap for the next Company. And when an operation fails, recovery is logistics rather than law: by the time anyone decides a machine must come back, Lea$e still needs transport, access and a route, and starts from nothing.
+
+## Goal
+
+Enable Fleet Manager to know the condition, use, location and maintenance state of every deployed machine without depending on the site to volunteer it, to settle what changed against a record both parties accepted rather than against memory, and to close every deployment by one of its two defined ends with the asset's state unambiguous.
+
+## Out of Scope
+
+- Software architecture, technology selection, and any implementation detail (Constitution, Principle I) — this belongs to `/speckit-plan`.
+- Telemetry hardware, sensors, GPS units and how an hours reading or a location is physically obtained. This feature specifies that a reading exists, what it means and what depends on it; where it comes from is not specified here. `[ASSUMPTION: readings may be captured by an inspection, by the client, or by a device — this specification is deliberately indifferent, so that Stage 1 is buildable without hardware.]`
+- Maintenance execution itself: parts, labour, workshop scheduling, technician assignment, cost of a service. That a service falls due, is scheduled into a window and is completed is in scope; how it is performed is not.
+- Insurance: policies, premiums, claims and their settlement. BR-05 places the cost of cover on the client; this feature records the incidents a claim would be built from and goes no further.
+- Pricing consequences of wear, depreciation and residual value.
+- The financing decision, the authority to make it, and the declaration that a contract has defaulted. That is `002-leasing-request-underwriting`, and Fleet Manager is barred from all of it (see Authority and Separation of Duties).
+- Company's own journey — requesting, confirming receipt, paying, exercising acquisition. That is `001-company-machinery-leasing`.
+- Procurement of machines into the fleet, and disposal of machines out of it other than by acquisition.
+- Transport contracting and route planning for a recovery. That a recovery needs transport, access and a route is recorded so the work can start from something; arranging them is not this feature.
+
+## Key Product Concepts
+
+- **Fleet Manager**: the person at Lea$e accountable for machines that are deployed on clients' sites. The actor this feature is written for; her human perspective is [`personas/Julia.MD`](../../personas/Julia.MD).
+- **Machine**: one machinery unit owned by Lea$e (BR-01). It has an identity that outlives any single contract, an accumulated operating-hours figure, a condition history, and a fleet state (available, deployed, or retired).
+- **Deployment**: one machine placed with one client under one operation, from handover to close. The thread this feature tracks. A Machine has at most one open Deployment at a time.
+- **Contracted Site**: the location a Deployment's machine is contracted to work at, recorded at handover.
+- **Custodian**: the named person on the client's side who is holding the machine and answers for its custody (BR-05). A Deployment always has one.
+- **Handover Record**: the machine's condition and its operating-hours reading at the moment of handover, accepted by both Lea$e and the client. It is the baseline every later claim is settled against, and it is what turns a dispute into an assessment.
+- **Operating-Hours Reading**: a recorded figure of the machine's accumulated running hours at a moment in time. The measure of wear, and the only clock that governs maintenance (BR-06).
+- **Service Interval**: the number of accumulated operating hours between services for a machine. Expressed in hours, never in elapsed time (BR-06).
+- **Service Due**: the state a Deployment's machine enters when its accumulated hours reach its Service Interval. It is a fact about the machine, not a request to the client.
+- **Service Window**: an agreed period during which the client will release the machine so a due service can be completed.
+- **Site Departure**: a recorded fact that a Deployment's machine is no longer at its Contracted Site.
+- **Incident**: a recorded event affecting a deployed machine — damage, a safety event, a breakdown — with when it was recorded and what was known then. Recorded in flight, so that condition at return is assessed rather than argued.
+- **Safety Stop**: Fleet Manager's recorded instruction that a machine must not work, on a safety cause. The only cause on which she may stop a working machine absent a declared default.
+- **Close**: the end of a Deployment, by exactly one of two ends — **Return**, where the machine comes back and its condition is settled against the Handover Record, or **Acquisition Retirement**, where the client has paid every instalment and acquired the machine (BR-07) and it leaves the fleet.
+- **Recovery**: the work of bringing a machine back after a Default Declaration recorded in `002-leasing-request-underwriting`. Fleet Manager performs it; she never declares the default that authorises it.
+
+## Users and Their Needs
+
+This feature is written for **Fleet Manager** alone. Her human perspective is [`personas/Julia.MD`](../../personas/Julia.MD).
+
+Pedro ([`personas/Pedro.MD`](../../personas/Pedro.MD)) appears here as the client side of a handover and as the party who may acquire the machine; his own journey is `001-company-machinery-leasing`. Carlos ([`personas/Carlos.MD`](../../personas/Carlos.MD)) appears only as the person whose Default Declaration authorises a Recovery; his flows are `002-leasing-request-underwriting`.
+
+Fleet Manager's needs, as covered by this feature:
+
+- Hand a machine over against a condition and hours record both sides accepted, with the Custodian named, because custody and damage sit with the client (BR-05).
+- Know the accumulated operating hours of every deployed machine without having to ask the site for them.
+- Know when a machine's service falls due, in hours (BR-06), while there is still time to schedule it.
+- Agree a Service Window with a site that has no reason to stop, and know whether the service was completed inside it.
+- Record an incident while the machine is deployed, so condition at return is assessed against a record rather than argued from memory.
+- Know when a machine has left the site it was contracted to, at the time it happens.
+- Know, before a term ends, whether a machine is coming back or leaving the fleet by acquisition (BR-07), so the next contract is not planned around a machine that will never return.
+- Settle a return against the same Handover Record both parties accepted.
+- Retire an acquired machine from the fleet cleanly, without being able to hold it back.
+- Stop a machine from working on a safety cause — and on no other cause, unless a default has been declared.
+- Recover a machine once a default has been declared, starting from what is already known about where it is and what getting it back requires.
+- Never be the one who decides that a client has stopped paying.
+
+## Key Product Decisions
+
+- **What a Deployment is anchored to**: exactly one machine and one approved operation. A Deployment opens at handover and closes at exactly one end. `[ASSUMPTION: in Stage 1 one operation concerns one machine, matching the same assumption in 001 and 002.]`
+- **What a handover requires**: a condition record, an Operating-Hours Reading, a named Custodian, and a Contracted Site — all four, accepted by both sides. A handover missing any of them is not a handover this feature performs, because the whole value of the record is that it was agreed before there was anything to argue about.
+- **What "accepted by both sides" means**: both Lea$e and the client are recorded as having accepted the Handover Record's contents at handover, and the record is thereafter immutable. It may be superseded by a later record, never edited. `[ASSUMPTION: acceptance is an explicit act by a named person on each side. The brief describes no handover procedure; this is ours, and it is the minimum that makes a later assessment possible.]`
+- **What governs maintenance**: accumulated operating hours, never elapsed time (BR-06). A machine reaches Service Due when its accumulated hours since its last completed service reach its Service Interval, regardless of how long it has held the contract.
+- **What a Service Due is and is not**: it is a fact about the machine's state, raised by the hours. It is not an instruction to the client and it does not by itself stop the machine. Agreeing the Service Window is a separate act, and a client who postpones is not thereby in breach of anything this feature defines.
+- **What happens when a service is not completed in its window**: the Deployment records that the window passed with the service outstanding, and the machine remains Service Due with its overdue hours visible. `[CLARIFY: how many overdue hours past a Service Interval constitute a condition Lea$e will act on, and what that action is — a stoppage, a charge, or a matter for the contract? personas/Julia.MD is explicit that a service window costs the client nothing to postpone, so a consequence must exist somewhere; but choosing it is a business decision this specification has no authority to invent. Stage 1 records the fact and stops there.]`
+- **Where the hours come from**: an Operating-Hours Reading is recorded against a Deployment with the moment it refers to. This feature does not specify who or what records it, and deliberately supports a reading taken at an inspection as well as one arriving continuously — so that Stage 1 does not depend on hardware.
+- **What a Site Departure means**: that the machine is not at its Contracted Site. This feature records the fact and makes it known to Fleet Manager; it does not decide whether the departure was permitted. `[ASSUMPTION: a machine working a second site is common and not by itself a breach — personas/Julia.MD's complaint is that she does not know, not that it is forbidden. Whether the contract permits it is a matter for the contract, not for this feature.]`
+- **How a Deployment closes**: by exactly one of Return or Acquisition Retirement, never both and never neither. Which one applies is determined by whether the operation's Acquisition Option was exercised (BR-07), which is `001`'s behaviour, not this feature's. What this feature adds is that Fleet Manager can see which end a live Deployment is heading for before the term ends.
+- **What Fleet Manager may withhold at close**: nothing. A Return settles condition against the Handover Record and may record a difference; an Acquisition Retirement may not be refused, delayed, or made conditional on a damage or missed-service claim. On a machine the client is acquiring there is no return condition left to protect, and the client's right to it does not depend on Lea$e's satisfaction (BR-07).
+- **What a Recovery is**: work authorised by a Default Declaration recorded elsewhere. It carries the machine's last known location, its last Operating-Hours Reading, its Custodian, and its Contracted Site, so that the work starts from what is already known.
+- **What belongs to Stage 1**: exactly the happy path in Phased Scope below — handover recorded and accepted, hours followed, a service raised and completed inside its window, and the Deployment closed by the end its operation reached. Departures, incidents, safety stops and recovery are specified here but are not what the POC demonstrates.
+
+## Authority and Separation of Duties
+
+This section exists because Fleet Manager's authority is bounded in a way that is behaviour, not advice — and because it is the mirror of a bound specified in `002-leasing-request-underwriting`.
+
+**She executes; she does not decide.** Fleet Manager may recover a machine once a default has been declared. She may not declare one, and she may not record that a client has stopped paying. That determination belongs to Underwriter, in `002`, whose FR-021 correspondingly denies him any capability to act on a machine. Neither of them can both decide an operation's fate and act on its asset, and neither feature may create a path that lets them.
+
+**She may stop a machine only on safety.** Absent a declared default, a Safety Stop is the only ground on which Fleet Manager may stop a working machine. She may not stop one to force a service window, to settle a dispute, or to apply pressure over a payment.
+
+**She may not move money.** Fleet Manager may not change what a client owes or when it falls due — not to compensate for a service stop, not for a breakdown, not for damage. What a client owes is fixed by the operation's Instalment Schedule and anchored to the project's certification milestones (BR-04); a machine's condition is not an input to it in this feature.
+
+**She may not hold what is owed to the client.** Once a client has met the contract, Fleet Manager may not hold the machine or refuse its release; where the client has acquired it under BR-07, she may not refuse or delay the acquisition at all.
+
+## Expected User Experience
+
+From Fleet Manager's side, this feature is defined by what she can always establish about a machine she cannot see:
+
+- **The baseline exists before the dispute.** For every deployed machine, the condition and hours both sides accepted at handover are retrievable, and nobody can revise them after the fact.
+- **The clock is hers, not the site's.** The accumulated hours of every deployed machine are known to her without her having to ask for them.
+- **A service is news before it is a problem.** She learns a service is due while there is still time to schedule it, not after it has been missed.
+- **Damage has a date.** An incident recorded in flight is what a return is assessed against, so condition at return is a comparison rather than an argument.
+- **A machine is where she believes it is.** If it is not, she knows that at the time it happens.
+- **The end is known before it arrives.** She can tell which of the two ends a live Deployment is heading for before its term runs out.
+- **Recovery starts from something.** When a default is declared, what is already known about the machine — where it was, who held it, how many hours it had run — is already in her hands.
+
+## User Scenarios & Testing *(mandatory)*
+
+Each user story below is independently testable and is written from Fleet Manager's side. Each Acceptance Scenario is the atomic Given/When/Then form of the corresponding need; the **Acceptance Criteria** section restates and cross-references the same guarantees against Functional Requirements for traceability, without repeating their narrative.
+
+### User Story 1 - Fleet Manager hands a machine over against a record both sides accepted (Priority: P1)
+
+Julia hands a machine to a client for an approved operation. Its condition and its operating-hours reading are recorded and accepted by both sides, a Custodian on the client's side is named, and the Contracted Site is recorded. From that moment the machine is deployed, and the record is fixed.
+
+**Why this priority**: every other guarantee in this feature is settled against this record. Without it, wear cannot be attributed, damage cannot be dated, and a return is a negotiation. It is also what makes the client's custody under BR-05 mean something concrete rather than a clause.
+
+**Independent Test**: can be fully tested by handing over one machine for one approved operation, recording its condition, hours, Custodian and Contracted Site, having both sides accept, and confirming the record is thereafter retrievable and immutable — delivers the baseline that every later assessment depends on.
+
+**Acceptance Scenarios**:
+
+1. **Given** an approved operation and an available machine, **When** Fleet Manager records the handover with condition, hours, a named Custodian and a Contracted Site, and both sides accept, **Then** a Deployment exists and the Handover Record is retrievable from it.
+2. **Given** a handover missing the condition, the hours, the Custodian, or the Contracted Site, **When** Fleet Manager attempts to complete it, **Then** the system does not open a Deployment.
+3. **Given** an accepted Handover Record, **When** anyone attempts to alter its contents, **Then** the system does not allow the change.
+
+---
+
+### User Story 2 - Fleet Manager follows the hours and learns a service is due before it is missed (Priority: P2)
+
+Julia follows the operating hours a deployed machine accumulates. When those hours reach the machine's Service Interval, the machine becomes Service Due and she knows it — because the hours say so, not because the site called.
+
+**Why this priority**: it is the only clock that governs wear (BR-06), and it is the difference between servicing on time and servicing after damage. It comes second because a reading is meaningless without the handover baseline it counts from.
+
+**Independent Test**: can be fully tested by recording successive Operating-Hours Readings against one Deployment until its Service Interval is reached, and confirming the machine becomes Service Due and appears among the machines needing a service, with its overdue hours visible as they grow.
+
+**Acceptance Scenarios**:
+
+1. **Given** a Deployment, **When** an Operating-Hours Reading is recorded, **Then** the machine's accumulated hours reflect it and the reading is retrievable with the moment it refers to.
+2. **Given** a deployed machine whose accumulated hours since its last completed service reach its Service Interval, **When** its state is evaluated, **Then** it is Service Due regardless of how long it has held the contract.
+3. **Given** any deployed machine, **When** Fleet Manager queries its accumulated hours, **Then** they are available to her without a request to the site.
+4. **Given** a machine that is Service Due, **When** further hours accumulate, **Then** the hours it is overdue by are retrievable.
+
+---
+
+### User Story 3 - Fleet Manager gets a due service completed inside an agreed window (Priority: P3)
+
+Julia agrees a Service Window with the client for a machine that is Service Due, and the service is completed inside it. If the window passes with the service outstanding, that fact is recorded and the machine stays due.
+
+**Why this priority**: a Service Due that never becomes a completed service protects nothing. It is third because it presupposes the due state that Story 2 produces.
+
+**Independent Test**: can be fully tested by taking one Service Due machine, agreeing a Service Window, recording the service as completed within it, and confirming the machine's service clock restarts from the hours at completion — then repeating with a window that passes uncompleted and confirming the machine remains due.
+
+**Acceptance Scenarios**:
+
+1. **Given** a machine that is Service Due, **When** Fleet Manager and the client agree a Service Window, **Then** the window is recorded against the Deployment.
+2. **Given** an agreed Service Window, **When** the service is recorded as completed within it, **Then** the machine is no longer Service Due and its Service Interval counts from the hours at completion.
+3. **Given** an agreed Service Window that passes with the service outstanding, **When** the Deployment is retrieved, **Then** it records that the window passed uncompleted and the machine is still Service Due.
+
+---
+
+### User Story 4 - Fleet Manager closes a deployment by the end its operation reached (Priority: P4)
+
+The term ends. Julia can already tell which of the two ends this Deployment is heading for. If the machine returns, its condition is settled against the Handover Record and any difference is recorded. If the client paid every instalment and acquired it (BR-07), the machine is retired from the fleet and Julia cannot hold it back.
+
+**Why this priority**: it is what she is measured on, and it is where the value of every earlier record is realised. It is fourth because it presupposes all of them.
+
+**Independent Test**: can be fully tested twice over one Deployment each — once closing by Return with a condition difference recorded against the Handover Record, once closing by Acquisition Retirement with the machine leaving the fleet — confirming that exactly one end applies and that neither can be refused.
+
+**Acceptance Scenarios**:
+
+1. **Given** a live Deployment, **When** Fleet Manager asks which end it is heading for, **Then** the answer is Return or Acquisition Retirement, determined by whether the operation's Acquisition Option has been exercised (BR-07).
+2. **Given** a Deployment closing by Return, **When** the machine's condition and hours at return are recorded, **Then** they are settled against the Handover Record and any difference is retrievable.
+3. **Given** a Deployment whose client has acquired the machine, **When** it closes, **Then** the machine is retired from the fleet and no damage or missed-service claim can delay or refuse the acquisition (BR-07).
+4. **Given** a closed Deployment, **When** it is retrieved, **Then** it closed by exactly one end.
+
+---
+
+### User Story 5 - Fleet Manager knows a machine has left its contracted site (Priority: P5)
+
+The machine is working somewhere other than the site it was contracted to. Julia knows, at the time it happens, rather than when it comes back from a place nobody mentioned.
+
+**Why this priority**: it is a standing hole in her knowledge rather than a step in her flow — a machine at an unknown location is one she cannot inspect, service or recover. It is fifth because the Deployment must exist before its location can be wrong.
+
+**Independent Test**: can be fully tested by recording a Site Departure against one live Deployment and confirming Fleet Manager can retrieve, for that Deployment, that the machine is away from its Contracted Site and when it left.
+
+**Acceptance Scenarios**:
+
+1. **Given** a live Deployment, **When** a Site Departure is recorded, **Then** the Deployment shows the machine as away from its Contracted Site, with when it left.
+2. **Given** a Deployment with a recorded Site Departure, **When** Fleet Manager retrieves her deployed machines, **Then** that machine is distinguishable from those at their Contracted Sites.
+
+---
+
+### User Story 6 - Fleet Manager recovers a machine after a default is declared (Priority: P6)
+
+Carlos declares a contract in default. Julia recovers the machine — and can only do so because he declared it. What she needs to start is already in her hands: where the machine was, who was holding it, and how many hours it had run.
+
+**Why this priority**: it is the end nobody plans for and the one that costs most when unprepared. It is last because it is the exceptional path, and it depends on a declaration that another feature produces.
+
+**Independent Test**: can be fully tested by recording a Default Declaration against one live Deployment's operation, confirming a Recovery becomes available to Fleet Manager carrying the machine's last known location, Custodian and hours, and confirming that no Recovery is available for a Deployment without such a declaration.
+
+**Acceptance Scenarios**:
+
+1. **Given** a live Deployment whose operation has a recorded Default Declaration, **When** Fleet Manager opens a Recovery, **Then** it carries the machine's last known location, its last Operating-Hours Reading, its Custodian and its Contracted Site.
+2. **Given** a live Deployment with no Default Declaration, **When** Fleet Manager attempts to open a Recovery, **Then** the system does not open one.
+3. **Given** any Deployment, **When** Fleet Manager attempts to declare a default or to record that a client has stopped paying, **Then** the system provides her no capability to do so.
+
+### Edge Cases
+
+- **Handover attempted for a machine already deployed**: no second Deployment opens for a machine whose Deployment is still open (FR-002).
+- **An hours reading lower than the machine's accumulated hours**: the reading is rejected rather than lowering the machine's accumulated total, because hours only ever go up (FR-006).
+- **A machine reaches its Service Interval while it is away from its Contracted Site**: it becomes Service Due exactly as it would at home; being away does not suspend the hours clock (BR-06, FR-007).
+- **A service completed outside its agreed window**: the completion is recorded with the hours at completion and the machine is no longer due; the record still shows the window passed uncompleted (FR-011).
+- **Damage discovered at return that was never recorded as an Incident**: the difference against the Handover Record is recorded as a difference; this feature does not decide who pays for it, because custody and cover sit with the client (BR-05) and the settlement itself is out of scope (FR-015).
+- **Client acquires a machine that is Service Due or has an open Incident**: the acquisition proceeds and the machine is retired; neither can be used to refuse or delay it (BR-07, FR-017).
+- **A Safety Stop on a machine whose client is current**: permitted, because safety is the one ground that does not depend on the state of the contract (FR-019).
+- **Fleet Manager attempts to stop a machine over an unpaid instalment**: no capability of this feature allows it, whether or not she believes the client has stopped paying (FR-019, FR-021).
+
+## Acceptance Criteria
+
+Each criterion is atomic, observable, and traceable to a Functional Requirement. Where a criterion states a business rule's effect, it cites the rule's identifier per `business-rules.md`'s convention.
+
+- **AC-001**: **Given** an approved operation and an available machine, **When** Fleet Manager completes a handover with condition, hours, a named Custodian and a Contracted Site accepted by both sides, **Then** a Deployment exists, traceable to that operation and that machine. *(FR-001, FR-003)*
+- **AC-002**: **Given** a handover missing any of condition, hours, Custodian or Contracted Site, **When** Fleet Manager attempts to complete it, **Then** no Deployment opens and the missing element is stated. *(FR-003)*
+- **AC-003**: **Given** a Deployment, **When** its Handover Record is retrieved, **Then** it names the Custodian who holds the machine, who answers for its custody and for damage caused by or with it (BR-05). *(FR-004)*
+- **AC-004**: **Given** an accepted Handover Record, **When** any party attempts to alter its contents, **Then** the system does not allow the change. *(FR-005)*
+- **AC-005**: **Given** a machine whose Deployment is open, **When** a second handover is attempted for it, **Then** no second Deployment opens. *(FR-002)*
+- **AC-006**: **Given** a Deployment, **When** an Operating-Hours Reading is recorded, **Then** it is retrievable with the moment it refers to and the machine's accumulated hours reflect it. *(FR-006)*
+- **AC-007**: **Given** a machine's accumulated hours, **When** a reading lower than them is submitted, **Then** the accumulated hours do not decrease. *(FR-006)*
+- **AC-008**: **Given** a deployed machine whose accumulated hours since its last completed service reach its Service Interval, **When** its state is evaluated, **Then** it is Service Due — maintenance falls due on hours run, not on time elapsed (BR-06). *(FR-007)*
+- **AC-009**: **Given** two deployed machines with the same elapsed contract time and different accumulated hours, **When** their states are evaluated, **Then** only the one that reached its Service Interval is Service Due (BR-06). *(FR-007)*
+- **AC-010**: **Given** any deployed machine, **When** Fleet Manager queries its accumulated hours, **Then** they are available to her without a request to the client. *(FR-008)*
+- **AC-011**: **Given** a machine that is Service Due, **When** further hours accumulate, **Then** the hours it is overdue by are retrievable. *(FR-009)*
+- **AC-012**: **Given** a Service Due machine, **When** Fleet Manager and the client agree a Service Window, **Then** it is recorded against the Deployment with its period. *(FR-010)*
+- **AC-013**: **Given** an agreed Service Window, **When** the service is recorded as completed, **Then** the machine is no longer Service Due and its Service Interval counts from the accumulated hours at completion (BR-06). *(FR-011)*
+- **AC-014**: **Given** an agreed Service Window that passes with the service outstanding, **When** the Deployment is retrieved, **Then** it records that the window passed uncompleted and the machine remains Service Due. *(FR-012)*
+- **AC-015**: **Given** a live Deployment, **When** Fleet Manager records an Incident, **Then** it is retrievable against that Deployment with when it was recorded and what was known then. *(FR-013)*
+- **AC-016**: **Given** a live Deployment, **When** a Site Departure is recorded, **Then** the Deployment shows the machine as away from its Contracted Site with when it left. *(FR-014)*
+- **AC-017**: **Given** deployed machines, **When** Fleet Manager retrieves them, **Then** those away from their Contracted Sites are distinguishable from those at them. *(FR-014)*
+- **AC-018**: **Given** a live Deployment, **When** Fleet Manager asks which end it is heading for, **Then** the answer is Return or Acquisition Retirement, determined by whether every instalment has been paid and the Acquisition Option exercised (BR-07). *(FR-016)*
+- **AC-019**: **Given** a Deployment closing by Return, **When** the machine's condition and hours at return are recorded, **Then** the difference against the Handover Record is retrievable. *(FR-015)*
+- **AC-020**: **Given** a Deployment whose client has acquired the machine, **When** it closes, **Then** the machine is retired from the fleet — the client's right to acquire follows from having paid every instalment (BR-07). *(FR-017)*
+- **AC-021**: **Given** a Deployment whose client has acquired the machine and which has an open Incident or a Service Due state, **When** Fleet Manager attempts to refuse, delay or condition the acquisition on either, **Then** the system does not allow it (BR-07). *(FR-017)*
+- **AC-022**: **Given** a closed Deployment, **When** it is retrieved, **Then** it closed by exactly one of Return or Acquisition Retirement. *(FR-018)*
+- **AC-023**: **Given** a live Deployment, **When** Fleet Manager records a Safety Stop with its cause, **Then** the machine is recorded as not to be worked and the stop is retrievable. *(FR-019)*
+- **AC-024**: **Given** a live Deployment with no declared default, **When** Fleet Manager attempts to stop the machine for a cause that is not safety, **Then** the system does not allow it. *(FR-019)*
+- **AC-025**: **Given** any Deployment, **When** Fleet Manager attempts to change what the client owes or when it falls due, **Then** the system provides her no capability to do so. *(FR-020)*
+- **AC-026**: **Given** any Deployment, **When** Fleet Manager attempts to declare a default or record that a client has stopped paying, **Then** the system provides her no capability to do so. *(FR-021)*
+- **AC-027**: **Given** a live Deployment whose operation has a recorded Default Declaration, **When** Fleet Manager opens a Recovery, **Then** it carries the machine's last known location, its last Operating-Hours Reading, its Custodian and its Contracted Site. *(FR-022)*
+- **AC-028**: **Given** a live Deployment with no Default Declaration, **When** Fleet Manager attempts to open a Recovery, **Then** no Recovery opens. *(FR-023)*
+- **AC-029**: **Given** a client who has met the contract, **When** Fleet Manager attempts to hold the machine or refuse its release, **Then** the system does not allow it. *(FR-024)*
+
+## Requirements *(mandatory)*
+
+### Functional Requirements
+
+- **FR-001**: The system MUST allow Fleet Manager to open a Deployment by handing a machine over for an approved operation, and MUST make the Deployment traceable to both.
+- **FR-002**: The system MUST NOT allow a machine to have more than one open Deployment at a time.
+- **FR-003**: The system MUST require a handover to carry the machine's condition, an Operating-Hours Reading, a named Custodian and a Contracted Site, each accepted by both Lea$e and the client, and MUST NOT open a Deployment when any is missing.
+- **FR-004**: The system MUST record the Custodian as the person on the client's side holding the machine and answering for its custody and for damage (BR-05).
+- **FR-005**: The system MUST keep an accepted Handover Record immutable after acceptance, allowing it to be superseded by a later record but never edited.
+- **FR-006**: The system MUST allow an Operating-Hours Reading to be recorded against a Deployment with the moment it refers to, MUST reflect it in the machine's accumulated hours, and MUST NOT allow accumulated hours to decrease.
+- **FR-007**: The system MUST place a machine in Service Due when its accumulated hours since its last completed service reach its Service Interval, independently of elapsed contract time (BR-06).
+- **FR-008**: The system MUST make every deployed machine's accumulated operating hours available to Fleet Manager without requiring a request to the client.
+- **FR-009**: The system MUST make retrievable, for a Service Due machine, the number of hours by which it is overdue.
+- **FR-010**: The system MUST allow a Service Window to be agreed and recorded against a Deployment for a Service Due machine.
+- **FR-011**: The system MUST allow a service to be recorded as completed with the accumulated hours at completion, MUST clear the Service Due state, and MUST count the next Service Interval from those hours (BR-06).
+- **FR-012**: The system MUST record that an agreed Service Window passed with the service outstanding, and MUST keep the machine Service Due when it does.
+- **FR-013**: The system MUST allow Fleet Manager to record an Incident against a live Deployment, retrievable afterward with when it was recorded and what was known then.
+- **FR-014**: The system MUST allow a Site Departure to be recorded against a live Deployment, and MUST make a machine away from its Contracted Site distinguishable from one at it.
+- **FR-015**: The system MUST allow a Deployment closing by Return to record the machine's condition and hours at return, and MUST make the difference against the Handover Record retrievable.
+- **FR-016**: The system MUST make retrievable, for a live Deployment, which of Return or Acquisition Retirement it is heading for, determined by whether the operation's Acquisition Option has been exercised (BR-07).
+- **FR-017**: The system MUST retire a machine from the fleet when its client has acquired it, and MUST NOT allow Fleet Manager to refuse, delay, or condition that retirement on a damage or missed-service claim (BR-07).
+- **FR-018**: The system MUST close every Deployment by exactly one of Return or Acquisition Retirement.
+- **FR-019**: The system MUST allow Fleet Manager to record a Safety Stop with its cause against a live Deployment, and MUST NOT allow her to stop a machine on any other cause unless a Default Declaration exists for its operation.
+- **FR-020**: The system MUST NOT provide Fleet Manager any capability to change what a client owes or when it falls due.
+- **FR-021**: The system MUST NOT provide Fleet Manager any capability to declare a default or to record that a client has stopped paying.
+- **FR-022**: The system MUST allow Fleet Manager to open a Recovery for a Deployment whose operation has a recorded Default Declaration, carrying the machine's last known location, last Operating-Hours Reading, Custodian and Contracted Site.
+- **FR-023**: The system MUST NOT allow a Recovery to be opened for a Deployment whose operation has no recorded Default Declaration.
+- **FR-024**: The system MUST NOT allow Fleet Manager to hold a machine or refuse its release once the client has met the contract.
+
+### Key Entities
+
+- **Machine**: one unit owned by Lea$e (BR-01). Has an identity outliving any contract, accumulated operating hours, a Service Interval in hours, a condition history, and a fleet state of available, deployed or retired.
+- **Deployment**: one machine with one client under one operation, from handover to close. Holds the Handover Record, readings, service history, incidents, departures, and exactly one Close.
+- **Handover Record**: condition, Operating-Hours Reading, Custodian and Contracted Site at handover, accepted by both sides. Immutable; supersedable.
+- **Custodian**: the named person on the client's side holding the machine and answering for custody and damage (BR-05).
+- **Operating-Hours Reading**: an accumulated-hours figure with the moment it refers to. Monotonic.
+- **Service Interval**: the hours between services for a machine. Counted from the hours at the last completed service.
+- **Service Window**: an agreed period for completing a due service, recorded against a Deployment, with whether the service was completed inside it.
+- **Incident**: a recorded event affecting a deployed machine, with when it was recorded and what was known then.
+- **Site Departure**: a recorded fact that the machine is away from its Contracted Site, with when it left.
+- **Safety Stop**: Fleet Manager's recorded instruction, with cause, that a machine must not be worked.
+- **Close**: the single end of a Deployment — Return, carrying condition and hours at return and the difference against the Handover Record, or Acquisition Retirement, carrying the machine's retirement from the fleet.
+- **Recovery**: work authorised by a Default Declaration recorded in `002-leasing-request-underwriting`, carrying the machine's last known location, hours, Custodian and Contracted Site.
+
+## Phased Scope
+
+### Stage 1 — POC Happy Path
+
+Stage 1 is exactly the happy path User Stories 1 to 4 describe together, and is exactly what the POC referenced by Constitution Principle V builds for this actor:
+
+1. An operation has been approved and its machine is available.
+2. Fleet Manager records the handover — condition, hours, named Custodian, Contracted Site — and both sides accept.
+3. The Deployment is open and the Handover Record is fixed.
+4. Operating-Hours Readings accumulate against the Deployment.
+5. The machine reaches its Service Interval and becomes Service Due.
+6. Fleet Manager sees it among the machines needing a service, with its hours.
+7. A Service Window is agreed with the client.
+8. The service is completed inside the window; the machine is no longer due and its next interval counts from the hours at completion.
+9. Before the term ends, Fleet Manager can tell which end the Deployment is heading for.
+10. The Deployment closes by that end — Return settled against the Handover Record, or Acquisition Retirement with the machine leaving the fleet (BR-07).
+
+The closing step covers both ends because it is one behaviour with two outcomes, and Fleet Manager's whole difficulty is not knowing which applies. The end-to-end POC run shared with `001-company-machinery-leasing` exercises the acquisition end, because that is where `001`'s own Stage 1 finishes; the return end is exercised by its own scenario.
+
+Nothing in Stage 1 assumes a site departure, an incident, a safety stop, a missed window, or a default.
+
+### Later stages (not Stage 1)
+
+The following are real boundaries for future scope, not commitments made by this feature:
+
+- Incidents recorded in flight (FR-013). How a difference at return is then settled between the parties is out of scope entirely, not merely deferred.
+- Site Departures (User Story 5).
+- Safety Stops.
+- Default and Recovery (User Story 6).
+- What Lea$e does about a service left overdue — the open `[CLARIFY]` in Key Product Decisions.
+- Continuous or device-sourced hours readings, as opposed to readings recorded at a moment.
+- More than one machine on a single operation.
+- Fleet-wide planning: which machine goes to which next contract, and utilisation across the fleet.
+- Machines idle on site while another contract waits.
+
+## Success Criteria *(mandatory)*
+
+### Measurable Outcomes
+
+- **SC-001**: For one approved operation and one machine, the entire Stage 1 deployment — from an accepted handover through a completed service to a closed Deployment — can be walked through end to end using only the capabilities this feature defines.
+- **SC-002**: Every open Deployment has a Handover Record that both sides accepted, and no accepted Handover Record in the system has been altered after acceptance.
+- **SC-003**: For every deployed machine, Fleet Manager can obtain its accumulated operating hours without a request to the client.
+- **SC-004**: No machine is Service Due because of elapsed time, and no machine that has reached its Service Interval in hours is anything other than Service Due.
+- **SC-005**: Every difference recorded at a Return is a difference against that Deployment's own Handover Record, not against an unrecorded expectation.
+- **SC-006**: Every closed Deployment closed by exactly one of Return or Acquisition Retirement, and no acquisition was refused, delayed or made conditional.
+- **SC-007**: For every live Deployment, the end it is heading for can be determined before its term ends.
+- **SC-008**: No Recovery exists without a Default Declaration recorded against its operation, and no capability of this feature let Fleet Manager declare one.
+
+## Assumptions
+
+- `[ASSUMPTION]` Julia represents Fleet Manager; see Users and Their Needs.
+- Machines belong to Lea$e for the life of the contract — this restates BR-01, not an invented assumption.
+- Custody and damage sit with the client, who also bears the cost of insuring the machine — this restates BR-05, not an invented assumption.
+- Maintenance falls due on accumulated operating hours rather than elapsed time — this restates BR-06, not an invented assumption.
+- A client who has paid every instalment may acquire the machine — this restates BR-07, not an invented assumption.
+- `[ASSUMPTION]` Acceptance of a Handover Record is an explicit act by a named person on each side. The brief describes no handover procedure; this is the minimum that makes a later assessment possible.
+- `[ASSUMPTION]` Operating-Hours Readings are recorded against a moment and may originate from an inspection, from the client, or from a device. Stage 1 is deliberately buildable without hardware.
+- `[ASSUMPTION]` Accumulated operating hours are monotonic: a lower reading is an error, not a correction. Replacing a machine's hour meter is outside Stage 1.
+- `[ASSUMPTION]` A machine working away from its Contracted Site is not by itself a breach; whether the contract permits it is a matter for the contract. What this feature fixes is that Fleet Manager does not know.
+- `[ASSUMPTION]` A Service Interval is a property of the machine rather than of the contract, so it does not change when a machine moves between operations.
+- `[ASSUMPTION]` The separation of duties between deciding and executing — Underwriter declares a default, Fleet Manager recovers the machine — is ours, derived from the `Permissions` sections of both personas. It is specified from both sides: here in FR-021 and FR-023, and in `002-leasing-request-underwriting`'s FR-021.
+- `[ASSUMPTION]` In Stage 1 one operation concerns one machine, matching the same assumption in `001-company-machinery-leasing` and `002-leasing-request-underwriting`.
