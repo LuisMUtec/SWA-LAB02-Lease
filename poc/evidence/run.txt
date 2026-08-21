@@ -1,0 +1,39 @@
+Lea$e — POC · Stage 1 de extremo a extremo
+Pasos declarados: 30 · 001 Pedro · 002 Carlos · 003 Julia
+
+  ✓ S01  Pedro  001· 2  registra la necesidad de maquinaria del proyecto                     
+  ✓ S02  Pedro  001· 3  envía la solicitud de leasing                                        
+  ✓ S03  Pedro  001· 4  consulta el estado: pendiente                                        
+  ✓ S04  Carlos 002· 2  ve la solicitud entre las que lo esperan y la toma                   
+  ✓ S05  Carlos 002· 3  registra al solicitante como empresa por proyecto      BR-02         
+  ✓ S06  Carlos 002· 4  registra el standing crediticio                                      
+  ✓ S07  Carlos 002· 5  registra el proyecto y su calendario de certificación                
+  ✓ S08  Carlos 002· 6  registra al pagador y su comportamiento de pago                      
+  ✓ S09  Lea$e  002· 7  declara el expediente plenamente evidenciado                         
+  ✓ S10  Lea$e  002· 8  verifica el valor contra el límite de autoridad                      
+  ✓ S11  Carlos 002· 9  registra la aprobación con razón y condiciones                       
+  ✓ S12  Lea$e  002·10  produce el calendario anclado a hitos                  BR-04         
+  ✓ S13  Pedro  001· 5  consulta el estado: aprobada                                         
+  ✓ S14  Lea$e  001· 6  compra la máquina al proveedor                         BR-01         
+  ✓ S15  Julia  003· 2  registra la entrega y ambos lados la aceptan           BR-05         
+  ✓ S16  Lea$e  003· 3  abre el despliegue y fija el acta de entrega           BR-05         
+  ✓ S17  Pedro  001· 8  confirma la recepción: las cuotas se hacen exigibles   BR-08         
+  ✓ S18  Pedro  001· 9  ve sus cuotas y el estado de cada una                                
+  ✓ S19  Julia  003· 4  acumula lecturas de horas-motor                        BR-06         
+  ✓ S20  Lea$e  003· 5  marca servicio debido al alcanzar el intervalo         BR-06         
+  ✓ S21  Julia  003· 6  la ve entre las que necesitan servicio, con sus horas                
+  ✓ S22  Julia  003· 7  acuerda una ventana de servicio con el cliente                       
+  ✓ S23  Julia  003· 8  completa el servicio dentro de la ventana              BR-06         
+  ✓ S24  Pedro  001·10  paga cada cuota al certificarse su hito                BR-04         
+  ✓ S25  Pedro  001·11  distingue pagadas de pendientes en cualquier punto                   
+  ✓ S26  Lea$e  001·12  abre la opción de adquisición al pagarse todas         BR-07         
+  ✓ S27  Julia  003· 9  sabe a qué final se dirige el despliegue                             
+  ✓ S28  Pedro  001·13  ejerce la opción de adquisición                        BR-07         
+  ✓ S29  Julia  003·10  cierra el despliegue y retira la máquina de la flota   BR-01 BR-07   
+  ✓ S30  Pedro  001·14  la operación llega a estado completo                                 
+
+Resumen
+  30 pasos · 30 corridos · 0 pendientes · 0 fallidos
+  Reglas ejercidas: 7/7
+
+El hilo corre de extremo a extremo.
