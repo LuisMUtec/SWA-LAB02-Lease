@@ -221,6 +221,7 @@ less than it is owed.
   the balance down rather than fall below it, is ours. The brief fixes no valuation method and this
   rule deliberately does not invent one: what it requires is that the comparison be possible and
   visible, not how a value is arrived at.]`
+- **Consequence:** a machine below the line is serviced before machines above it, and its operation is treated as impaired — Lea$e does not wait for a missed payment to act on security it can already see eroding.
 - **Affects:** custody, maintenance priority, underwriting of a live operation, end of term.
 
 <!--

@@ -179,14 +179,16 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-009**: **Given** a Lease whose Machinery receipt has not been confirmed, **When** Company attempts to pay any of its Installments, **Then** the system rejects the attempt — installments are not payable ahead of confirmed delivery (BR-08). *(FR-011)*
 - **AC-010**: **Given** a Lease and one of its `due` Installments, **When** Company pays it, **Then** that Installment's status becomes `paid`, and no other Installment's status changes. *(FR-012)*
 - **AC-010b**: **Given** an Installment that is still `pending` because its Certification Milestone has not been certified, **When** Company attempts to pay it, **Then** the system rejects the attempt — an instalment is not payable before the project progress it is anchored to has been certified (BR-04). *(FR-012)*
-- **AC-011**: **Given** an Installment already `paid`, **When** Company attempts to pay it again, **Then** the system rejects the attempt and the Installment's status and the Lease's paid/pending counts remain unchanged. *(FR-013)*
+- **AC-011**: **Given** an Installment already `paid`, **When** Company attempts to pay it again, **Then** the system rejects the attempt. *(FR-013)*
+- **AC-011b**: **Given** a rejected second payment on a `paid` Installment, **When** Company retrieves the Lease, **Then** that Installment's status and the Lease's paid, due and pending counts are unchanged. *(FR-013)*
 - **AC-012**: **Given** a Lease, **When** Company requests the counts of its `paid`, `due` and `pending` Installments, **Then** the three counts sum to the Lease's total number of Installments. *(FR-014)*
 - **AC-012b**: **Given** a Lease, **When** Company requests the total amounts of its `paid`, `due` and `pending` Installments, **Then** the three amounts sum to the Lease's total obligation. *(FR-014)*
 - **AC-013**: **Given** a Lease with at least one Installment not yet `paid`, **When** Company checks the Acquisition Option, **Then** it is `not yet available`. *(FR-015)*
 - **AC-014**: **Given** a Lease whose Installments are all `paid`, **When** Company checks the Acquisition Option, **Then** it is `available` (BR-07). *(FR-015)*
 - **AC-014b**: **Given** an `available` Acquisition Option, **When** Company exercises it, **Then** the system requires no payment beyond the Installments already paid — the option to acquire costs nothing further once every instalment is settled (BR-07). *(FR-017)*
 - **AC-015**: **Given** an Acquisition Option that is `not yet available`, **When** Company attempts to exercise it, **Then** the system rejects the attempt and the Leasing Operation does not reach a completed state. *(FR-016)*
-- **AC-016**: **Given** an Acquisition Option that is `available`, **When** Company exercises it, **Then** the exercise is confirmed and the Leasing Operation's state becomes unambiguously completed, distinguishable from every non-terminal state used in this feature. *(FR-017)*
+- **AC-016**: **Given** an `available` Acquisition Option, **When** Company exercises it, **Then** the exercise is confirmed. *(FR-017)*
+- **AC-016c**: **Given** an exercised Acquisition Option, **When** Company retrieves the Leasing Operation, **Then** it is `Acquired` — a terminal state distinguishable from every non-terminal state this feature defines. *(FR-017)*
 - **AC-017**: **Given** two different Companies, **When** either queries Leasing Requests, Leases, or Installments, **Then** each sees only the records associated with itself. *(FR-018)*
 - **AC-018**: **Given** an Acquisition Option that is `available`, **When** Company declines it, **Then** the decline is confirmed and the Leasing Operation's state becomes unambiguously `Returned`, distinguishable from `Acquired` and from `available` (undecided). *(FR-019)*
 - **AC-019**: **Given** an Acquisition Option that is `not yet available`, **When** Company attempts to decline it, **Then** the system rejects the attempt. *(FR-020)*
@@ -254,7 +256,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 
 ### Stage 1 — POC Happy Path
 
-Stage 1 is exactly the happy path User Story 1 describes, and is exactly what the POC referenced by Constitution Principle V builds:
+Stage 1 is the happy path User Story 1 describes, taken in order and with the two points where it touches the other stories made explicit — step 4 is where User Story 2's status check lands once the decision is made, and step 13 is User Story 3's mid-lease view. It is exactly what the POC referenced by Constitution Principle V builds:
 
 1. Company has a Project that requires Machinery.
 2. Company records the machinery need.
