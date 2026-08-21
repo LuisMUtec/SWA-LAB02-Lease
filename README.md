@@ -98,8 +98,8 @@ El EVAL se corre contra las tres juntas, no contra una: `evals/README.md` da un 
 persona y solo permite deducciones, de modo que evaluar una sola especificación deja el total en el
 gate de 8/10 sin margen.
 
-**EVAL corrido: [8.25/10](evals/iterations/2026-08-21-04.md) — pasa el gate.** Cuatro iteraciones, de
-4.5 a 8.25, cada una registrada en [`evals/iterations/`](evals/iterations/) y resumida en
+**EVAL corrido: [8.25/10](evals/iterations/2026-08-21-04.md) en la cuarta iteración — pasa el gate.**
+Seis iteraciones registradas, cada una en [`evals/iterations/`](evals/iterations/) y resumida en
 [`HISTORY.md`](evals/HISTORY.md).
 
 | Iter | D1 | D2 | D3 | D4 | Total |
@@ -108,6 +108,8 @@ gate de 8/10 sin margen.
 | [02](evals/iterations/2026-08-21-02.md) | 1.5 | 2.25 | 0.75 | 0.50 | 5.0 |
 | [03](evals/iterations/2026-08-21-03.md) | 1.5 | 2.25 | 1.25 | 0.50 | 5.5 |
 | [04](evals/iterations/2026-08-21-04.md) | **3.0** | **2.5** | **1.5** | **1.25** | **8.25** |
+| [05](evals/iterations/2026-08-21-05.md) | 2.5 | 2.5 | 1.5 | 1.25 | 7.75 |
+| [06](evals/iterations/2026-08-21-06.md) | 2.5 | 2.5 | 1.75 | 1.25 | 7.75 |
 
 Lo que movió el puntaje, en orden: darle `BR-04` a `001` —la spec del actor cuyo problema *es* la
 brecha no ancla­ba ninguna cuota al avance de su proyecto y habría sobrevivido sin cambios si la
@@ -116,8 +118,15 @@ final; y un barrido de propagación, que fue el hallazgo de fondo: se enmendaba 
 quedaban la decisión de producto, la entidad, la historia de usuario o el criterio de éxito
 afirmando lo viejo.
 
-En la cuarta iteración los tres agentes de persona devolvieron `Works` sin deducciones. Las specs
-siguen en Draft y ninguna ha pasado por `/speckit-clarify`.
+En la cuarta iteración los tres agentes de persona devolvieron `Works` sin deducciones. Las
+iteraciones 05 y 06 bajaron a 7.75 persiguiendo el 10, y la causa vale registrarla: casi todas sus
+deducciones fueron defectos que introdujeron las correcciones de la ronda anterior. Tres rondas
+seguidas encontraron la misma forma —un requisito apoyado en una cifra que nada produce: el
+calendario «firmado», el valor tasado, y el valor de la maquinaria del que depende el propio límite
+de autoridad—, y las tres se cerraron dándole un productor a la cifra, nunca reescribiendo el
+criterio que la usaba.
+
+Las specs siguen en Draft y ninguna ha pasado por `/speckit-clarify`.
 
 ## Documentos
 
