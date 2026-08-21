@@ -45,9 +45,26 @@
   `personas/Carlos.MD`'s requirement that the tolerance be settled in advance and identical for
   every operation is what BR-09 is for. This does not block or move Stage 1: the happy path never
   reaches a slip.
-- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-023) is cited by at least
-  one Acceptance Criterion (AC-001–AC-026), and every Acceptance Scenario in User Stories 1–4 has a
+- Coverage was checked by hand. Every Functional Requirement (FR-001–FR-024) is cited by at least
+  one Acceptance Criterion (AC-001–AC-027), and every Acceptance Scenario in User Stories 1–4 has a
   corresponding criterion.
+- **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Carlos agent found two
+  defects against `personas/Carlos.MD`, both now closed:
+  1. *Nothing recorded that a Certification Milestone had been certified.* FR-017's Slippage
+     Warning tested for its absence, FR-018 depended on it arriving, FR-023/BR-09 computed
+     eligibility from it, and FR-014's whole due condition rested on it — but no requirement let
+     anyone create it. Read literally, every milestone slipped on every operation and no instalment
+     ever fell due. Closed: FR-024 / AC-027 and the Certification Record concept.
+  2. *The fast refusal was blocked.* FR-010 forbade recording any Decision — including `refused` —
+     on an incompletely evidenced Assessment, so the applicant with no certification schedule, the
+     case most deserving an immediate no, could not be closed at all. This contradicted Carlos's
+     stated permission to "refuse with a reason" and his stated obstacle that speed is itself a
+     decision. Closed: FR-010 now bounds only `approved` and `escalated` (AC-008, AC-009).
+  Reservations the agent raised that are **not** closed, and why: the instalment due-date offset
+  stays an open business decision (Assumptions); cross-Assessment Payer history stays deferred
+  (Later stages, "Portfolio-level views"); committee-approved operations are not explicitly bound
+  by FR-012's Conditions or FR-014's anchoring; and no requirement backs "demand further evidence
+  before deciding." Each is recorded here rather than silently dropped.
 - Where an Acceptance Criterion states a business rule's effect it cites the identifier per
   `business-rules.md`'s convention: AC-003 and AC-004 cite BR-02, AC-016 and AC-017 cite BR-04,
   AC-026 cites BR-09. BR-01 is cited in the Problem statement rather than in a criterion, because

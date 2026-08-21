@@ -47,12 +47,27 @@
      `003-deployed-fleet-custody`'s behavior, not this feature's.
   Neither resolution moves Stage 1: Stage 1's happy path (User Story 1) always exercises the option
   once available and never exercises it before all installments are paid.
-- Every Functional Requirement (FR-001–FR-018) is cited by at least one Acceptance Criterion
-  (AC-001–AC-017), and every Acceptance Scenario in User Stories 1–3 is covered by the
-  corresponding Functional Requirements. **Correction (PR #1 review, 2026-08-20):** the first pass
-  of this checklist claimed this was checked by hand and found no gaps — that was false. FR-011 had
-  no citing AC. AC-009 was added to close the gap; this note is left here, rather than silently
-  rewritten, so the correction is traceable.
+- Every Functional Requirement (FR-001–FR-021, including FR-009b) is cited by at least one
+  Acceptance Criterion (AC-001–AC-020, including AC-008b), and every Acceptance Scenario in User
+  Stories 1–3 is covered by the corresponding Functional Requirements. **Correction (PR #1 review,
+  2026-08-20):** the first pass of this checklist claimed this was checked by hand and found no
+  gaps — that was false. FR-011 had no citing AC. AC-009 was added to close the gap; this note is
+  left here, rather than silently rewritten, so the correction is traceable.
+- **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Pedro agent found four
+  gaps against `personas/Pedro.MD`, three of which are now closed in this spec:
+  1. *Installment amounts were never visible to Company* — Key Entities gave an Installment only a
+     status, and FR-014 gave counts, while Users and Their Needs promised "how much of the Lease's
+     obligation remains." Closed: FR-010 and FR-014 now carry amounts (AC-008, AC-012).
+  2. *A Machinery mismatch had nowhere to go* — Company's only action at delivery was to confirm
+     receipt, though Out of Scope names "that the *expected* machinery arrived" as an observable
+     result. Closed: FR-009b / AC-008b.
+  3. *An unexercised Acquisition Option was indistinguishable from a declined one*, which made
+     `003`'s FR-016 answer "Return" for every live Deployment. Closed: FR-019–FR-021 and
+     AC-018–AC-020 split `available` (undecided) from `exercised` and `declined`.
+  The fourth — that the slippage/default/recovery path specified in `002` and `003` is not visible
+  to Company at all — is **not** closed here. It is a genuine scope question (whether Company sees
+  Lea$e's internal risk assessment of its own operation), not an oversight, and Out of Scope
+  already defers "any consequence of a missed installment." Recorded rather than silently dropped.
 - Where an Acceptance Criterion states a business rule's effect, it cites the rule's identifier per
   `business-rules.md`'s convention (AC-001 cites BR-02, AC-016 cites BR-01, AC-009 cites BR-08,
   AC-014 cites BR-07). **Resolved (2026-08-20):** the deferral noted in the first pass — waiting on

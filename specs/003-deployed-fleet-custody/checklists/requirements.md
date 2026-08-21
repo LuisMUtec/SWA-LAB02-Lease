@@ -44,8 +44,27 @@
   AC-030). Below that threshold, the fact is recorded with no further consequence specified. This
   does not block or move Stage 1, whose happy path completes the service inside its window.
 - Coverage was checked by hand. Every Functional Requirement (FR-001–FR-025) is cited by at least
-  one Acceptance Criterion (AC-001–AC-030), and every Acceptance Scenario in User Stories 1–6 has a
-  corresponding criterion.
+  one Acceptance Criterion (AC-001–AC-030, including AC-018b), and every Acceptance Scenario in
+  User Stories 1–6 has a corresponding criterion.
+- **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Julia agent found that
+  FR-016 — "which end is this Deployment heading for" — could only ever answer **Return** for the
+  entire life of every Deployment, because it read "has the Acquisition Option been exercised", and
+  under `001` that cannot become true until the final instalment is paid. The requirement whose
+  whole purpose was to let Fleet Manager plan around a machine that will not come back reproduced
+  her stated obstacle instead of solving it, and it threatened her hardest Must-nots: closing by
+  Return while a client still held a live, unexercised right to acquire. Closed: `001` now
+  distinguishes `declined` from `available` (its FR-019–FR-021), and FR-016 here reads three states
+  — heading for Return, heading for Acquisition Retirement, or not yet determined (AC-018,
+  AC-018b).
+- Reservations the Julia agent raised that are **not** closed, recorded rather than dropped: no
+  requirement causes an Operating-Hours Reading or a Site Departure to *arrive* (Out of Scope
+  removes how a reading or location is obtained, and the inspection the spec leans on has no FR);
+  FR-022's "last known location" is not produced by any requirement, since a Site Departure records
+  only that the machine is away and when it left, not where it went; the transport/access/route
+  that Out of Scope says is "recorded so the work can start from something" is backed by no FR; a
+  completed Recovery does not close its Deployment, so FR-002 would block redeploying that machine;
+  and no requirement lets anyone set a machine's Service Interval, though Key Entities reads it.
+  These are real and belong to this feature's later stages or to a follow-up pass, not to Stage 1.
 - Where an Acceptance Criterion states a business rule's effect it cites the identifier per
   `business-rules.md`'s convention: AC-003 cites BR-05, AC-008, AC-009 and AC-013 cite BR-06,
   AC-018, AC-020 and AC-021 cite BR-07, and AC-030 cites BR-10. BR-01 is cited in Summary and Key
