@@ -75,7 +75,7 @@ Fleet Manager's needs, as covered by this feature:
 - Hand a machine over against a condition and hours record both sides accepted, with the Custodian named, because custody and damage sit with the client (BR-05).
 - Know the accumulated operating hours of every deployed machine without having to ask the site for them.
 - Know when a machine's service falls due, in hours (BR-06), while there is still time to schedule it.
-- Agree a Service Window with a site that has no reason to stop, and know whether the service was completed inside it.
+- Ask a site that has no reason to stop for a Service Window, have that ask on the record whether or not it is answered, and know whether the service was completed inside the window that was agreed.
 - Record an incident while the machine is deployed, so condition at return is assessed against a record rather than argued from memory.
 - Know when a machine has left the site it was contracted to, at the time it happens.
 - Know, before a term ends, whether a machine is coming back or leaving the fleet by acquisition (BR-07), so the next contract is not planned around a machine that will never return.
@@ -254,6 +254,8 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-010**: **Given** any deployed machine, **When** Fleet Manager queries its accumulated hours, **Then** they are available to her without a request to the client. *(FR-008)*
 - **AC-011**: **Given** a machine that is Service Due, **When** further hours accumulate, **Then** the hours it is overdue by are retrievable. *(FR-009)*
 - **AC-012**: **Given** a Service Due machine, **When** Fleet Manager and the client agree a Service Window, **Then** it is recorded against the Deployment with its period. *(FR-010)*
+- **AC-012b**: **Given** a machine that reaches Service Due, **When** its state is evaluated, **Then** that state is observable to its Custodian. *(FR-010b)*
+- **AC-012c**: **Given** a Service Due machine whose Custodian has agreed no window, **When** Fleet Manager records a request for one, **Then** the request is retrievable against the Deployment — a client who did not answer is distinguishable from one who was never asked. *(FR-010b)*
 - **AC-013**: **Given** an agreed Service Window, **When** the service is recorded as completed, **Then** the machine is no longer Service Due. *(FR-011)*
 - **AC-013b**: **Given** a service recorded as completed, **When** the machine's next Service Due is evaluated, **Then** its Service Interval counts from the accumulated hours at completion, not from the hours at which it fell due (BR-06). *(FR-011)*
 - **AC-014**: **Given** an agreed Service Window that passes with the service outstanding, **When** the Deployment is retrieved, **Then** it records that the window passed uncompleted. *(FR-012)*
@@ -312,6 +314,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **FR-008**: The system MUST make every deployed machine's accumulated operating hours available to Fleet Manager without requiring a request to the client.
 - **FR-009**: The system MUST make retrievable, for a Service Due machine, the number of hours by which it is overdue.
 - **FR-010**: The system MUST allow a Service Window to be agreed and recorded against a Deployment for a Service Due machine.
+- **FR-010b**: The system MUST make a machine's Service Due state observable to its Custodian when it is reached, and MUST allow Fleet Manager to record a request for a Service Window against the Deployment, retrievable afterward whether or not the client agrees one. **Added 2026-08-21, per EVAL iteration 07:** `personas/Julia.MD` permits her to "set when a machine is due for service and require a window for it", and the requirement to *agree* one had no path to the client at all — Service Due reached nobody outside Lea$e and an unanswered ask left no trace, so a client who never responded was indistinguishable from one who was never asked. This does not make a Service Due an instruction, and it does not put the client in breach: it gives the ask a producer and a record, which is what the same defect got at FR-014b, FR-030 and `001` FR-025.
 - **FR-011**: The system MUST allow a service to be recorded as completed with the accumulated hours at completion, MUST clear the Service Due state, and MUST count the next Service Interval from those hours (BR-06).
 - **FR-012**: The system MUST record that an agreed Service Window passed with the service outstanding, and MUST keep the machine Service Due when it does.
 - **FR-013**: The system MUST allow Fleet Manager to record an Incident against a live Deployment, retrievable afterward with when it was recorded and what was known then.
