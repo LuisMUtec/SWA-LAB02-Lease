@@ -47,9 +47,22 @@
      `003-deployed-fleet-custody`'s behavior, not this feature's.
   Neither resolution moves Stage 1: Stage 1's happy path (User Story 1) always exercises the option
   once available and never exercises it before all installments are paid.
-- Every Functional Requirement (FR-001–FR-022, including FR-009b) is cited by at least one
-  Acceptance Criterion (AC-001–AC-021, including AC-008b), and every Acceptance Scenario in User
-  Stories 1–3 is covered by the corresponding Functional Requirements. **Correction (PR #1 review,
+- Every Functional Requirement (FR-001–FR-022, including FR-009b, FR-010b and FR-010c) is cited by
+  at least one Acceptance Criterion (AC-001–AC-021, including AC-008b, AC-008c and AC-010b), and
+  every Acceptance Scenario in User Stories 1–3 is covered by the corresponding Functional
+  Requirements.
+- **EVAL iteration 01 → 02 (2026-08-21).** The aggregator's central finding was that this spec never
+  cited BR-04 and gave an Installment no due condition at all — so the actor whose entire problem is
+  that his project pays at the end had a payment model that never mentioned his project, and the
+  whole feature would have survived unchanged if the financing gap disappeared, which is verbatim
+  what Constitution Principle III forbids. Closed: an Installment is now anchored to a named
+  Certification Milestone and carries a third state, `due` (FR-010, FR-010b, FR-010c; AC-008,
+  AC-008c, AC-010b), reached only when both the Milestone is certified (BR-04) and receipt is
+  confirmed (BR-08). **This moved Stage 1** — steps 9–12 — and therefore what the POC builds; it is
+  flagged for Luis in issue #5 rather than merged silently. Two further repairs from the same
+  iteration: FR-015's biconditional contradicted this spec's own four-state Option model, and
+  FR-009b/AC-008b rested on an undefined "does not match" — now stated as the machine named in the
+  approval's conditions, which FR-022 makes visible to Company. **Correction (PR #1 review,
   2026-08-20):** the first pass of this checklist claimed this was checked by hand and found no
   gaps — that was false. FR-011 had no citing AC. AC-009 was added to close the gap; this note is
   left here, rather than silently rewritten, so the correction is traceable.

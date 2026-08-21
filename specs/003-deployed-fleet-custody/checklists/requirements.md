@@ -94,6 +94,17 @@
   permission to *require* a service window is granted only as *agree* (FR-010), a deliberate product
   decision — Lea$e cannot compel a jobsite — with BR-10/FR-025 as the only lever at the far end. The
   Service Interval gap noted in this pass is closed by FR-017b; the rest stand.
+- **EVAL iteration 01 → 02 (2026-08-21).** Three fixes. (1) The aggregator found that most of this
+  feature would survive the financing gap disappearing — custody, wear and servicing being any
+  machinery business's concerns. The Problem section now answers that head-on rather than leaning on
+  a second-order argument: Lea$e holds title (BR-01) *only* because Company could not pay up front,
+  so without the gap there is no Lea$e-owned fleet on ground Lea$e does not control and this feature
+  has no subject; and both of its terminal states are financing events — acquisition because
+  instalments finished (BR-07), recovery because they stopped. (2) FR-019's "a cause that is not
+  safety" was undefined while carrying all of AC-024's weight; the class is now stated by what it
+  protects — people or the machine — with the three recorded sources that can evidence it. (3) Stage
+  1 step 9 still promised the end was knowable "before the term ends", a claim SC-007's own earlier
+  amendment had already withdrawn as undeliverable; the step now matches the criterion.
 - Where an Acceptance Criterion states a business rule's effect it cites the identifier per
   `business-rules.md`'s convention: AC-003 cites BR-05, AC-008, AC-009 and AC-013 cite BR-06,
   AC-018, AC-020 and AC-021 cite BR-07, and AC-030 cites BR-10. BR-01 is cited in Summary and Key

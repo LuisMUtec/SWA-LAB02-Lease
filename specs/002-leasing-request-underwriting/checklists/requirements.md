@@ -48,6 +48,17 @@
 - Coverage was checked by hand. Every Functional Requirement (FR-001–FR-025) is cited by at least
   one Acceptance Criterion (AC-001–AC-028), and every Acceptance Scenario in User Stories 1–4 has a
   corresponding criterion.
+- **EVAL iteration 01 → 02 (2026-08-21).** Three fixes from the aggregator's findings. (1) **Stage 1
+  gained step 12** — Underwriter recording each Certification Milestone as certified. FR-024 existed
+  but was staged nowhere, so `001`'s Stage 1, which pays every instalment, could not complete: no
+  milestone would ever certify, so no instalment would ever fall due. The POC would have had to
+  either skip the BR-04 anchoring or pay instalments that never became payable. **This moves what the
+  POC builds** and is flagged for Luis in issue #5. (2) AC-026 restated BR-09's second limb as "two
+  milestones uncertified at once", which is true of every project with two future milestones and so
+  could never be declared unmet; it now says "simultaneously past their expected dates", matching the
+  rule, and restores "calendar days". (3) FR-024 ended "whichever of the two happens first" while
+  describing a condition that is the *later* of certification and receipt — corrected, and AC-021's
+  undefined "still current" is now stated as not-yet-closed and carrying no Default Declaration.
 - **Second persona-agent pass (2026-08-21).** Carlos's re-read of the corrected spec confirmed his
   failure scenario now runs end to end, and raised three further defects, all closed:
   1. *"Demand further evidence before deciding" was a Permission with no capability* — his only
