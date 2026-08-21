@@ -86,10 +86,19 @@ puedan divergir.
 Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio con ocho
 entradas (BR-01 a BR-08). Las tres personas están redactadas: Pedro, Carlos y Julia.
 
-De las especificaciones existe la primera, `specs/001-company-machinery-leasing`, escrita para el
-actor Empresa. Faltan las de Carlos y Julia, una por actor. El EVAL se corre contra las tres
-juntas: `evals/README.md` da un punto de D1 por persona y solo permite deducciones, de modo que
-evaluar una sola especificación deja el total en el gate de 8/10 sin margen.
+Las tres especificaciones están escritas, una por actor:
+
+| Spec | Actor | Cubre |
+|---|---|---|
+| `001-company-machinery-leasing` | Empresa (Pedro) | Solicitud, entrega, cuotas y adquisición, desde el lado del cliente |
+| `002-leasing-request-underwriting` | Analista de riesgo (Carlos) | La decisión que la 001 declara fuera de alcance: evidencia, límite de autoridad, calendario anclado a hitos (BR-04) y alerta de atraso |
+| `003-deployed-fleet-custody` | Responsable de flota (Julia) | El intervalo que la 001 salta: entrega con registro aceptado (BR-05), horas-motor (BR-06), servicio, y cierre por devolución o adquisición (BR-07) |
+
+El EVAL se corre contra las tres juntas, no contra una: `evals/README.md` da un punto de D1 por
+persona y solo permite deducciones, de modo que evaluar una sola especificación deja el total en el
+gate de 8/10 sin margen.
+
+Falta correr el EVAL. Las tres specs están en Draft y ninguna ha pasado por `/speckit-clarify`.
 
 ## Documentos
 
