@@ -1,0 +1,66 @@
+# Specification Quality Checklist: Company Machinery Leasing
+
+**Purpose**: Validate specification completeness and quality before proceeding to planning
+**Created**: 2026-08-20
+**Feature**: [spec.md](../spec.md)
+
+## Content Quality
+
+- [x] No implementation details (languages, frameworks, APIs)
+- [x] Focused on user value and business needs
+- [x] Written for non-technical stakeholders
+- [x] All mandatory sections completed
+
+## Requirement Completeness
+
+- [x] No `[NEEDS CLARIFICATION]` markers remain — this project uses `[CLARIFY: ...]` / `[ASSUMPTION: ...]` per `evals/README.md` and the constitution instead; two `[CLARIFY: ...]` markers remain by design (see Notes) and are intentionally *not* resolved silently
+- [x] Requirements are testable and unambiguous
+- [x] Success criteria are measurable
+- [x] Success criteria are technology-agnostic (no implementation details)
+- [x] All acceptance scenarios are defined
+- [x] Edge cases are identified
+- [x] Scope is clearly bounded
+- [x] Dependencies and assumptions identified
+
+## Feature Readiness
+
+- [x] All functional requirements have clear acceptance criteria
+- [x] User scenarios cover primary flows
+- [x] Feature meets measurable outcomes defined in Success Criteria
+- [x] No implementation details leak into specification
+
+## Notes
+
+- Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`.
+- This project's governing documents (`evals/README.md`, `.specify/memory/constitution.md`)
+  define `[CLARIFY: specific question]` and `[ASSUMPTION: statement]` as the two markers for
+  underspecified domain areas, and require that ambiguity be marked rather than resolved in
+  silence. The generic Spec Kit item above is read against that convention: the check is that no
+  ambiguity was filled in *without* a marker, not that zero markers exist.
+- Two `[CLARIFY: ...]` markers remain in `spec.md`, both in **Key Product Decisions**:
+  1. Whether exercising the Acquisition Option requires anything beyond every Installment being
+     paid (e.g. a residual-value payment).
+  2. What terminal state a Leasing Operation reaches if Company does not exercise an available
+     Acquisition Option.
+  Both are flagged as candidates for `/speckit-clarify`. Neither blocks Stage 1, because Stage 1's
+  happy path (User Story 1) always exercises the option once available and never exercises it
+  before all installments are paid — so both open questions sit outside the POC's demonstrated
+  path, not inside it.
+- Every Functional Requirement (FR-001–FR-018) is cited by at least one Acceptance Criterion
+  (AC-001–AC-017), and every Acceptance Scenario in User Stories 1–3 is covered by the
+  corresponding Functional Requirements. **Correction (PR #1 review, 2026-08-20):** the first pass
+  of this checklist claimed this was checked by hand and found no gaps — that was false. FR-011 had
+  no citing AC. AC-009 was added to close the gap; this note is left here, rather than silently
+  rewritten, so the correction is traceable.
+- Where an Acceptance Criterion states a business rule's effect, it now cites the rule's identifier
+  per `business-rules.md`'s convention (AC-001 cites BR-02, AC-009 and AC-016 cite BR-01). Only
+  BR-01 and BR-02 exist in `business-rules.md` as of this spec; several other invented rules
+  currently live only as FRs (FR-011, FR-013, FR-015, FR-018) and are candidates to move to
+  `business-rules.md` as new `BR-nn` entries — deferred until the numbering already in progress
+  there (reported as BR-03–BR-06, not yet committed) lands, to avoid a collision.
+- Carlos and Julia are intentionally absent from Users and Their Needs, Acceptance Criteria, and
+  Functional Requirements — they are Lease Company-side actors, out of scope for this feature by
+  design (see spec.md's Out of Scope). This is a scope decision, not an omission. It carries a
+  measurable cost against `evals/README.md`'s D1 (their persona agents can only deduct, never
+  certify, and score 0 for a flow this spec does not cover), capping D1 at ≤ 1/3 until either actor
+  gets its own feature. See the PR discussion for the explicit acknowledgment this decision needs.
