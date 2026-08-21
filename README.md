@@ -83,8 +83,8 @@ puedan divergir.
 
 ## Estado
 
-Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio con ocho
-entradas (BR-01 a BR-08). Las tres personas están redactadas: Pedro, Carlos y Julia.
+Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio con diez
+entradas (BR-01 a BR-10). Las tres personas están redactadas: Pedro, Carlos y Julia.
 
 Las tres especificaciones están escritas, una por actor:
 
@@ -98,7 +98,18 @@ El EVAL se corre contra las tres juntas, no contra una: `evals/README.md` da un 
 persona y solo permite deducciones, de modo que evaluar una sola especificación deja el total en el
 gate de 8/10 sin margen.
 
-Falta correr el EVAL. Las tres specs están en Draft y ninguna ha pasado por `/speckit-clarify`.
+**Primera iteración corrida: [4.5/10](evals/iterations/2026-08-21-01.md) — no pasa el gate.** Los
+cuatro `[CLARIFY]` que quedaban abiertos están cerrados, dos de ellos catalogados como BR-09 y
+BR-10, y los tres agentes de persona dan `Works with reservations` con sus flujos corriendo de
+punta a punta. El agregador es donde se rompe: `001` no cita `BR-04` en ninguna parte, de modo que
+la spec del actor cuyo problema *es* la brecha de financiamiento no ancla ninguna cuota al avance
+de su proyecto y sobreviviría sin cambios si la brecha desapareciera —justamente lo que el
+Principio III prohíbe—; y el Stage 1 de `001` depende de `002` FR-024, que no está en ninguna
+etapa. Las correcciones están listadas en la iteración, por orden de lo que valen.
+
+La segunda corrección **mueve el Stage 1 y por lo tanto lo que el POC construye**, así que hay que
+acordarla antes de mergear. Las tres specs siguen en Draft y ninguna ha pasado por
+`/speckit-clarify`.
 
 ## Documentos
 
