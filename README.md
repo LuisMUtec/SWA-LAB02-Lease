@@ -83,8 +83,8 @@ puedan divergir.
 
 ## Estado
 
-Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio con diez
-entradas (BR-01 a BR-10). Las tres personas están redactadas: Pedro, Carlos y Julia.
+Constitución v1.0.0 escrita, aparato de EVAL definido y catálogo de reglas de negocio con doce
+entradas (BR-01 a BR-12). Las tres personas están redactadas: Pedro, Carlos y Julia.
 
 Las tres especificaciones están escritas, una por actor:
 
@@ -92,7 +92,7 @@ Las tres especificaciones están escritas, una por actor:
 |---|---|---|
 | `001-company-machinery-leasing` | Empresa (Pedro) | Solicitud, entrega, cuotas y adquisición, desde el lado del cliente |
 | `002-leasing-request-underwriting` | Analista de riesgo (Carlos) | La decisión que la 001 declara fuera de alcance: evidencia, límite de autoridad, calendario anclado a hitos (BR-04) y alerta de atraso |
-| `003-deployed-fleet-custody` | Responsable de flota (Julia) | El intervalo que la 001 salta: entrega con registro aceptado (BR-05), horas-motor (BR-06), servicio, y cierre por devolución o adquisición (BR-07) |
+| `003-deployed-fleet-custody` | Responsable de flota (Julia) | El intervalo que la 001 salta: entrega con registro aceptado (BR-05), horas-motor (BR-06), servicio, y cierre por devolución, adquisición (BR-07) o recuperación |
 
 El EVAL se corre contra las tres juntas, no contra una: `evals/README.md` da un punto de D1 por
 persona y solo permite deducciones, de modo que evaluar una sola especificación deja el total en el
