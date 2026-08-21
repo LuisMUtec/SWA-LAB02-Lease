@@ -47,8 +47,8 @@
      `003-deployed-fleet-custody`'s behavior, not this feature's.
   Neither resolution moves Stage 1: Stage 1's happy path (User Story 1) always exercises the option
   once available and never exercises it before all installments are paid.
-- Every Functional Requirement (FR-001–FR-021, including FR-009b) is cited by at least one
-  Acceptance Criterion (AC-001–AC-020, including AC-008b), and every Acceptance Scenario in User
+- Every Functional Requirement (FR-001–FR-022, including FR-009b) is cited by at least one
+  Acceptance Criterion (AC-001–AC-021, including AC-008b), and every Acceptance Scenario in User
   Stories 1–3 is covered by the corresponding Functional Requirements. **Correction (PR #1 review,
   2026-08-20):** the first pass of this checklist claimed this was checked by hand and found no
   gaps — that was false. FR-011 had no citing AC. AC-009 was added to close the gap; this note is
@@ -82,10 +82,19 @@
      turnaround, or gives Company a move when waiting itself becomes the problem, and unlike every
      other gap it was not even named. Closed as *named deferred scope* in Later stages, not resolved:
      a turnaround commitment is a business decision about what Lea$e promises applicants.
+- **Third persona-agent pass (2026-08-21).** Pedro confirmed every earlier fix landed and his whole
+  main flow now runs end to end. One further concrete gap, now closed: `002`'s FR-012 forbids an
+  approval without Conditions and a down payment is one of them, yet FR-004 surfaced only the word
+  `approved` — so the actor whose defining constraint is that he cannot front cash could learn of an
+  upfront charge late, and FR-014's "total obligation" (the sum of Installment amounts) does not
+  include it. Closed: FR-022 / AC-021.
 - Reservations that remain open, recorded rather than dropped: an Installment has `pending`/`paid`
   and no `due` state, so the moment payment is owed — anchored in `002` to a Certification Record —
-  is not visible to Company; and `002`'s FR-012 requires every approval to carry Conditions
-  including a down payment, which FR-004 never surfaces to Company before it is in a Lease.
+  is not visible to Company; and "pending too long to threaten the Project" remains detectable only
+  as a state, never as elapsed time, which is named deferred scope in Later stages rather than
+  resolved, because a turnaround commitment is a business decision about what Lea$e promises.
+  `002`'s FR-025 (a request for further evidence, observable to the Applicant) covers one cause of
+  the silence but not a complete file simply sitting undecided.
 - Where an Acceptance Criterion states a business rule's effect, it cites the rule's identifier per
   `business-rules.md`'s convention (AC-001 cites BR-02, AC-016 cites BR-01, AC-009 cites BR-08,
   AC-014 cites BR-07). **Resolved (2026-08-20):** the deferral noted in the first pass — waiting on

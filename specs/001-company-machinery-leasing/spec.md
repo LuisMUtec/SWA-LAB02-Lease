@@ -182,6 +182,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **AC-018**: **Given** an Acquisition Option that is `available`, **When** Company declines it, **Then** the decline is confirmed and the Leasing Operation's state becomes unambiguously `Returned`, distinguishable from `Acquired` and from `available` (undecided). *(FR-019)*
 - **AC-019**: **Given** an Acquisition Option that is `not yet available`, **When** Company attempts to decline it, **Then** the system rejects the attempt. *(FR-020)*
 - **AC-020**: **Given** any of Company's Leases, **When** Company queries its Acquisition Option, **Then** the result is exactly one of `not yet available`, `available`, `exercised`, or `declined` — never more than one, never none. *(FR-021)*
+- **AC-021**: **Given** a Leasing Request that becomes `approved`, **When** Company retrieves it, **Then** the conditions it was approved under are retrievable with it, including any amount payable before the Installment schedule begins. *(FR-022)*
 
 ## Requirements *(mandatory)*
 
@@ -209,6 +210,7 @@ Each criterion is atomic, observable, and traceable to a Functional Requirement.
 - **FR-019**: The system MUST allow Company to explicitly decline an `available` Acquisition Option, bringing the Leasing Operation to a `Returned` terminal state distinct from the `Acquired` state FR-017 produces. **Added 2026-08-21, per persona-agent review of issue #5:** without an explicit decline, `003-deployed-fleet-custody` had no way to distinguish "not yet exercised, still open" from "not exercised, will not be" — every Deployment read as heading for `Return` for its entire life, which defeated Julia's need to know which end applies before the term ends. A decline is Company's own act, symmetric with exercising: neither is inferred from the mere passage of time.
 - **FR-020**: The system MUST NOT allow Company to decline an Acquisition Option that is `not yet available`, mirroring FR-016.
 - **FR-021**: The system MUST make it retrievable, for any of Company's Leases, whether its Acquisition Option is `not yet available`, `available` (undecided), `exercised`, or `declined`.
+- **FR-022**: The system MUST make the conditions an approved Leasing Request was granted under — including any amount Company must pay before the Installment schedule begins — observable to Company at the moment the request becomes `approved`. **Added 2026-08-21, per persona-agent review of issue #5:** `002`'s FR-012 forbids an approval without Conditions, and a down payment is one of them; FR-004 previously surfaced only the word `approved`. An upfront charge Company learns about late is the same liquidity gap this feature exists to close (Constitution, Principle III), arriving at the front instead of the finish line — and FR-014's total obligation, being the sum of Installment amounts, does not include it.
 
 ### Key Entities
 
