@@ -84,13 +84,24 @@ export interface Assessment {
 }
 
 /** El conjunto exigido a *toda* evaluación, para que dos casos se comparen por contenido y no por forma. */
-const REQUIRED_EVIDENCE = ['elegibilidad', 'standing crediticio', 'proyecto', 'pagador'] as const
+const REQUIRED_EVIDENCE = [
+  'elegibilidad',
+  'standing crediticio',
+  'proyecto con su calendario de certificación',
+  'pagador',
+] as const
 
 export function missingEvidence(assessment: Assessment): readonly string[] {
   const missing: string[] = []
   if (!assessment.eligibility) missing.push(REQUIRED_EVIDENCE[0])
   if (!assessment.creditStanding) missing.push(REQUIRED_EVIDENCE[1])
-  if (!assessment.project) missing.push(REQUIRED_EVIDENCE[2])
+  // Un proyecto sin calendario de certificación no es evidencia de un proyecto: BR-04 ancla cada
+  // cuota a un hito, así que sin hitos no hay nada contra lo que la cuota pueda vencer. Exigirlo
+  // recién al producir el calendario deja la aprobación ya registrada sobre evidencia que no
+  // sostiene una operación.
+  if (!assessment.project || assessment.project.schedule.length === 0) {
+    missing.push(REQUIRED_EVIDENCE[2])
+  }
   if (!assessment.payer) missing.push(REQUIRED_EVIDENCE[3])
   return missing
 }

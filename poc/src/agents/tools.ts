@@ -336,7 +336,8 @@ const CARLOS: readonly ToolDef[] = [
             fechaEsperada: z.string().describe('Fecha ISO en que se espera certificar y pagar, ej. 2026-09-30'),
           }),
         )
-        .describe('Las valorizaciones esperadas del proyecto'),
+        .min(1)
+        .describe('Las valorizaciones esperadas del proyecto. Al menos una.'),
     },
     run: (w, input) => {
       const a = w.assessments.byId(input.expedienteId as AssessmentId)

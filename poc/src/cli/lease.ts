@@ -129,13 +129,20 @@ function explainMissing(actor: ActorName, name: string): string {
 function coerce(schema: z.ZodType, raw: string, flag: string): unknown {
   const direct = schema.safeParse(raw)
   if (direct.success) return direct.data
+
+  // Si era JSON válido y aun así el esquema lo rechazó, el que sabe por qué es el esquema. Decir
+  // «se esperaba <array>» sobre un `[]` es mentir: era un array, y el problema era otro.
+  let issue: string | undefined
   try {
     const parsed = schema.safeParse(JSON.parse(raw))
     if (parsed.success) return parsed.data
+    issue = parsed.error.issues[0]?.message
   } catch {
-    // No era JSON; vale el error del esquema sobre el texto, que es el que explica qué se esperaba.
+    // No era JSON.
   }
-  return die(`--${flag}: se esperaba <${typeOf(schema)}> y llegó ${JSON.stringify(raw)}`)
+
+  const detail = issue ?? `se esperaba <${typeOf(schema)}> y llegó ${JSON.stringify(raw)}`
+  return die(`--${flag}: ${detail}\n      forma: '${shapeOf(schema)}'`)
 }
 
 function parseFlags(tool: ToolDef, argv: readonly string[]): Record<string, unknown> {
