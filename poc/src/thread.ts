@@ -23,7 +23,7 @@
  * reglas imponen viven en el dominio, que es donde son la regla y no una prueba de ella.
  */
 
-import { check, type Step } from './evidence/transcript.ts'
+import { check, type SpecId, type Step } from './evidence/transcript.ts'
 import type { World } from './ports/world.ts'
 import type { CompanyId, LeasingRequestId, MachineryNeedId, ProjectId } from './domain/leasing.ts'
 import { statusOf } from './domain/leasing.ts'
@@ -136,6 +136,34 @@ function deployment(w: World) {
   const found = w.deployments.byId(CASE.deployment)
   check(found !== undefined, 'el despliegue no existe')
   return found
+}
+
+/**
+ * Los pasos de Stage 1 que ningún paso del hilo carga, y por qué.
+ *
+ * `src/cli/citations.ts` exige que cada paso de las tres specs esté citado por el hilo o declarado
+ * acá. Un paso nuevo que aparezca en una spec cae sin declarar y rompe el build — que es lo que no
+ * pasó cuando `001` insertó dos pasos y seis citas quedaron corridas.
+ *
+ * Una declaración no es una excusa: dice si el paso lo construye otra spec desde su lado, si es una
+ * precondición del caso, o si sencillamente no está hecho.
+ */
+export const UNCOVERED: Readonly<Record<SpecId, Readonly<Record<number, string>>>> = {
+  '001': {
+    1: 'precondición: el caso arranca con el proyecto ya adjudicado',
+    7: 'el mismo momento que `003`·2, y el hilo lo construye desde el lado de Julia (S15)',
+    9: 'NO CONSTRUIDO — liquidar las condiciones antes de que arranque el calendario',
+    11: 'el hilo afirma la transición a `due` dentro de S24, que cita el paso 12; merecería paso propio',
+  },
+  '002': {
+    1: 'precondición: la solicitud la envía `001`, y el hilo la construye ahí (S02)',
+    11: 'NO CONSTRUIDO — registrar como cumplida una condición de la aprobación',
+    12: 'el hilo relee el expediente en pasos posteriores, así que la retención se ejerce sin paso propio',
+    13: 'la certificación ocurre dentro de S24, que cita `001`·12; merecería paso propio',
+  },
+  '003': {
+    1: 'precondición: la aprobación es de `002` y la compra de la máquina es S14',
+  },
 }
 
 export const THREAD: readonly Step<World>[] = [

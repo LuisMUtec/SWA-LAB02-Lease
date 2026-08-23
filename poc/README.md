@@ -24,6 +24,7 @@ npm run demo
 | `npm run mcp:smoke` | Levanta los tres servidores MCP y comprueba que sirven su superficie — **sin llave** |
 | `npm run e2e` | Recorre Stage 1 por CLI y afirma el estado final regla por regla — **sin llave** |
 | `npm run generate` | Proyecta los subagentes y los skills de Claude Code desde la definición |
+| `npm run citations` | Escribe la correspondencia Stage 1 ↔ hilo; `-- --check` falla si dejó de valer |
 | `npm run lease -- <actor> [herramienta] [--bandera valor]` | Una herramienta suelta; sin argumentos, lista lo que hay |
 | `npm run agent` | La corrida vía SDK de Anthropic (requiere `ANTHROPIC_API_KEY`) |
 
@@ -293,10 +294,29 @@ Las otras cuatro las excluyen las specs mismas: BR-09 y BR-10 gobiernan el incum
 parada por seguridad; BR-11 acota la opción pero su caducidad queda fuera; y de BR-13 Stage 1
 ejerce el dato —el `Assessed Value`— pero no su invariante.
 
-**La deriva de citas no tiene guardián.** Cada paso del hilo cita `spec` y número de Stage 1, y esos
-números se corrieron cuando `001` insertó dos pasos: seis de doce citas quedaron apuntando al lugar
-equivocado, y nada falló. El diff de evidencia y `generate --check` cuidan los artefactos generados;
-las citas a las specs siguen sin cuidar. Es el hueco más caro que queda.
+### El guardián de las citas
+
+Cada paso del hilo cita una spec y un número de paso de Stage 1, y esa cita **es** la afirmación de
+D4. Hasta ahora no la cuidaba nadie: cuando `001` insertó dos pasos, seis citas quedaron apuntando
+al lugar equivocado y el build siguió verde.
+
+Un guardián no puede verificar significado. `npm run citations -- --check` verifica tres cosas:
+
+1. **Que el paso citado exista.**
+2. **Que su texto sea el que era** la última vez que alguien lo leyó — [`evidence/citations.md`](evidence/citations.md)
+   es un snapshot versionado, el mismo trato que `evidence/run.txt`. Cuando una spec cambia, el
+   diff muestra el texto nuevo y obliga a releer. No afirma que la correspondencia siga valiendo;
+   afirma que hay que volver a mirarla.
+3. **Que ningún paso de Stage 1 quede sin cubrir en silencio.** Un paso puede no tener paso de hilo
+   —una precondición, algo que otra spec construye desde su lado, algo sin hacer— pero entonces
+   hay que declararlo en `UNCOVERED` y decir cuál de las tres cosas es. Un paso nuevo aparece sin
+   declarar y el build cae.
+
+El archivo generado es la correspondencia D4 impresa: los 39 pasos de las tres specs, cada uno con
+su texto y con el paso del hilo que lo construye, o con la razón de que no lo construya ninguno.
+
+Sabe fallar. Tres mutaciones, tres cazadas: una cita corrida —lo que pasó de verdad—, una cita a un
+paso inexistente, y una spec que inserta un paso.
 
 ## Un paso sin construir se reporta pendiente
 

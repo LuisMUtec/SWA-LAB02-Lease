@@ -14,6 +14,7 @@
     "e2e": "bash scripts/happy-path.sh",
     "typecheck": "tsc --noEmit",
     "generate": "node src/cli/generate.ts",
+    "citations": "node src/cli/citations.ts",
     "agent": "node src/cli/agent.ts",
     "agent:matrix": "node src/cli/agent.ts --matrix",
     "mcp:smoke": "node src/mcp/smoke.ts"
