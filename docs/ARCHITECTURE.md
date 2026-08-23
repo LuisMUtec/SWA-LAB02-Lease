@@ -1,6 +1,10 @@
 # Arquitectura — Lea$e
 
-La arquitectura del sistema se describe en cuatro vistas complementarias.
+Dónde se sitúan las fronteras del sistema y en qué fundamento se apoyan, en cuatro vistas
+complementarias. Cada componente y cada relación citan el requisito funcional (`FR-nnn`) o la regla
+de negocio (`BR-nn`) del que se derivan, conforme al Principio I de la
+[constitución](../.specify/memory/constitution.md); el
+[procedimiento de verificación](#procedimiento-de-verificación) comprueba esas citas.
 
 | Vista | Objeto |
 |---|---|
@@ -8,26 +12,6 @@ La arquitectura del sistema se describe en cuatro vistas complementarias.
 | [V2 · Frontera de autoridad](#v2--frontera-de-autoridad) | Distribución de capacidades por actor y cruces prohibidos |
 | [V3 · Capas y transportes](#v3--capas-y-transportes) | Estructura del código y dirección de sus dependencias |
 | [V4 · Recorrido de Stage 1](#v4--recorrido-de-stage-1) | Secuencia de los pasos implementados |
-
-## Objeto y delimitación
-
-Este documento afirma dónde se sitúan las fronteras del sistema y en qué fundamento se apoyan.
-
-No redefine reglas de negocio, que cita a [`business-rules.md`](../business-rules.md); no establece
-qué hace el sistema, atribución exclusiva de [`specs/`](../specs/) conforme al Principio IV; y no
-documenta la ejecución del POC, materia de [`poc/README.md`](../poc/README.md).
-
-Ocupa la posición del *design record* que el Principio I designa sin ubicar:
-
-> *No architecture decision, component boundary, diagram, or line of POC code may be produced before
-> the requirement it serves exists in the spec chain.* […] *A queue, a cloud product, or a topology
-> named inside a requirement is a design decision in disguise: it is moved to the **design record**,
-> not deleted.*
-
-De dicho principio se deriva la regla de redacción que el documento observa: todo componente y toda
-relación representados citan el requisito funcional (`FR-nnn`) o la regla de negocio (`BR-nn`) que
-los origina. Un elemento sin cita es un defecto. El
-[procedimiento de verificación](#procedimiento-de-verificación) permite comprobarlo.
 
 ---
 
@@ -77,23 +61,23 @@ flowchart TB
 
 Las siete primeras relaciones proceden del enunciado; la 7bis es el aporte de esta vista.
 
-Puesto que las cuotas vencen contra la certificación del proyecto (BR-04), la capacidad de repago no
-depende del solicitante sino del agente que le paga. `002` FR-008 exige nombrarlo aun cuando su
+Puesto que las cuotas vencen contra la certificación del proyecto (BR-04), la capacidad de repago
+depende del agente que paga al solicitante. `002` FR-008 exige nombrarlo aun cuando su
 comportamiento de pago se registre como desconocido; un pagador sin nombrar impide la decisión. La
 persona [`Carlos.MD`](../personas/Carlos.MD) formula la misma condición: *«He is underwriting two
 companies and only has a file on one»*.
 
-La omisión de esta relación priva a BR-04 de fundamento y reduce el sistema a la administración de
-contratos que el Principio III excluye: una que deja intacta la causa por la que el cliente no puede
-financiar el equipo por adelantado.
+Esta relación es la que sostiene a BR-04. Representarla mantiene el sistema sobre la causa que le da
+origen —la imposibilidad del cliente de financiar el equipo por adelantado— y lo distingue de la
+administración de contratos que el Principio III excluye.
 
 ### Naturaleza de BR-03
 
-BR-03 es una restricción sobre la forma del contrato, no una integración con terceros. Lea$e no es
-banco, financiera, cooperativa registrada ni empresa inscrita en el registro SBS de arrendamiento,
+BR-03 restringe la forma del contrato. Lea$e no es banco, financiera, cooperativa registrada ni
+empresa inscrita en el registro SBS de arrendamiento,
 por lo que el régimen del D.L. 299 le resulta inaplicable. Ello deja abierta la adquisición al
-término de un arrendamiento comercial, que es estipulación civil. La regla figura en el catálogo, pero el código no
-la ejerce: gobierna el régimen bajo el que se contrata, materia ajena a la conducta del sistema.
+término de un arrendamiento comercial, que es estipulación civil. La regla figura en el catálogo y
+gobierna el régimen bajo el que se contrata; el código ejerce las que gobiernan su conducta.
 
 ---
 
@@ -122,11 +106,10 @@ flowchart TB
 | Cruce | Capacidades excluidas | Fundamento |
 |---|---|---|
 | Carlos → `flota` | `registrar_entrega`, `cerrar_despliegue_por_adquisicion`. Decidir el préstamo y ejecutarlo no pueden corresponder a la misma persona | `002` FR-021 |
-| Julia → `decision` | `registrar_aprobacion`, `pagar_cuota`. Ejecuta sobre la máquina y no determina el incumplimiento del cliente | `003` FR-021 |
+| Julia → `decision` | `registrar_aprobacion`, `pagar_cuota`. Ejecuta sobre la máquina; la determinación del incumplimiento corresponde a Carlos | `003` FR-021 |
 
-La superficie `cliente` queda fuera de los cruces prohibidos, por situarse fuera de Lea$e. La
-frontera que las especificaciones establecen es interna a la empresa y separa la decisión de la
-ejecución.
+Ambos cruces son internos a Lea$e y separan la decisión de la ejecución. La superficie `cliente`
+pertenece a la empresa contratante, y por ello permanece al margen de esta frontera.
 
 ### Correspondencia en tres capas
 
@@ -134,23 +117,22 @@ ejecución.
 |---|---|---|
 | Dominio | Se cumple por ausencia: `underwriting.ts` no exporta operación alguna sobre la flota, ni `fleet.ts` sobre la decisión | [`poc/src/domain/`](../poc/src/domain/) |
 | Actores | `SURFACE_OF_ACTOR` asigna exactamente una superficie a cada actor | [`authority.ts`](../poc/src/agents/authority.ts) |
-| Herramientas | El acotamiento reside en el binario: `mcp/server.ts` publica únicamente `TOOLS[actor]` y `lease.ts` no reconoce herramientas ajenas | [`mcp/server.ts`](../poc/src/mcp/server.ts) |
+| Herramientas | El acotamiento reside en el binario: `mcp/server.ts` publica únicamente `TOOLS[actor]`, y `lease.ts` despacha únicamente las de su actor | [`mcp/server.ts`](../poc/src/mcp/server.ts) |
 
-`npm run agent:matrix` emite la matriz de autoridad y falla si la frontera no se sostiene. Se trata
-de una comprobación estructural sobre datos, que no requiere credenciales ni acceso a la red.
-`npm run mcp:smoke` inicia los tres servidores y verifica que cada uno sirva exclusivamente su
-superficie.
+`npm run agent:matrix` emite la matriz de autoridad y falla en cuanto un actor sostiene una
+herramienta de otra superficie. Es una comprobación estructural sobre datos, ejecutable en local y
+sin credenciales. `npm run mcp:smoke` inicia los tres servidores y verifica que cada uno sirva
+exclusivamente su superficie.
 
 ### Criterio de asignación de superficie
 
-`consultar_estado_servicio` pertenece a la superficie `cliente` y no a `flota`. `003` FR-010b
-requiere que el estado `Service Due` sea observable por el custodio, que se sitúa del lado del
-cliente.
+`consultar_estado_servicio` pertenece a la superficie `cliente`. `003` FR-010b requiere que el estado
+`Service Due` sea observable por el custodio, que se sitúa del lado del cliente.
 
 El criterio de asignación es la naturaleza del acto, con independencia del actor al que la
-herramienta se refiera. Ésta consulta el estado de una máquina que la empresa mantiene en custodia y
-carece de efecto sobre la flota: no incorpora máquinas, no entrega, no acuerda ventanas de servicio
-ni cierra despliegues. Dichos actos permanecen en la superficie `flota`.
+herramienta se refiera. Ésta se limita a leer el estado de una máquina que la empresa mantiene en
+custodia; los actos sobre la flota —incorporación, entrega, ventana de servicio y cierre— permanecen
+en la superficie `flota`.
 
 ### Naturaleza de la frontera
 
@@ -165,14 +147,14 @@ registrar_entrega es una herramienta de Julia, no de Carlos.
 ```
 
 El campo `tools:` del frontmatter de los subagentes en `.claude/agents/` opera como refuerzo: la
-garantía no depende de que el entorno de ejecución respete una lista de permitidos.
+garantía reside en el binario, que publica exclusivamente las herramientas de su actor.
 
 ---
 
 ## V3 · Capas y transportes
 
-Arquitectura hexagonal. Toda arista representa una relación de importación, y ninguna procede del
-dominio hacia el exterior.
+Arquitectura hexagonal. Toda arista representa una relación de importación, y todas convergen en el
+dominio.
 
 ```mermaid
 flowchart TB
@@ -218,46 +200,47 @@ flowchart TB
 ### Entradas al dominio
 
 [`poc/README.md`](../poc/README.md) describe tres transportes sobre una definición única de
-herramientas. El sistema presenta cinco entradas, dos de las cuales no atraviesan `tools.ts`.
+herramientas. El sistema presenta cinco entradas: tres a través de `tools.ts` y dos directamente
+sobre el dominio.
 
 | Entrada | Vía `tools.ts` | Mundo | Requiere credencial |
 |---|---|---|---|
 | `cli/lease.ts` — CLI | sí | SQLite, uno por proceso | no |
 | `mcp/server.ts` ×3 — MCP | sí | SQLite, uno por llamada | no |
 | `cli/agent.ts` — SDK | sí, mediante `sdk-adapter.ts` | memoria, en proceso | sí |
-| `cli/demo.ts` + `thread.ts` | no: invoca el dominio directamente | memoria, reloj fijo | no |
-| `cli/verify.ts` | no: acceso de solo lectura | SQLite, proceso independiente | no |
+| `cli/demo.ts` + `thread.ts` | directa al dominio | memoria, reloj fijo | no |
+| `cli/verify.ts` | directa al dominio, solo lectura | SQLite, proceso independiente | no |
 
-La cuarta entrada es la vía determinista del entregable: se ejecuta sin acceso a la red y su
-transcripción, versionada en [`poc/evidence/run.txt`](../poc/evidence/run.txt), es comparada byte a
-byte por la integración continua.
+La cuarta entrada es la vía determinista del entregable: se ejecuta en local y su transcripción,
+versionada en [`poc/evidence/run.txt`](../poc/evidence/run.txt), es comparada byte a byte por la
+integración continua.
 
 ### Provisión del World a las herramientas
 
 `ToolDef.run` recibe el `World` como parámetro en lugar de capturarlo por clausura. Esta decisión
-permite que un servidor MCP abra una instancia por llamada, opere y confirme, de modo que la misma
-definición sirve tanto a un proceso de vida larga como a uno de invocación única sin bifurcarse.
+permite que un servidor MCP abra una instancia por llamada, opere y confirme. Una definición única
+sirve así tanto a un proceso de vida larga como a uno de invocación única.
 
 ### Ubicación de Milestones en World
 
 Los hitos de certificación atraviesan agregados y procesos: `002` los crea al registrar el proyecto y
 los certifica conforme avanza la obra, y `001` los consulta para determinar la exigibilidad de una
 cuota (BR-04). Al ejecutarse tres servidores MCP como procesos independientes, los hitos requieren
-tratamiento de estado compartido, y por ello se sitúan en `World`, fuera de los repositorios.
+tratamiento de estado compartido, y por ello se sitúan en `World`, junto al reloj y al generador de
+identificadores.
 
 ### Estado compartido
 
-El estado compartido entre agentes reside en el dominio y no en la conversación. Cada turno inicia
-con contexto vacío y obtiene el estado consultando al mundo. En consecuencia, el recorrido atraviesa
-los tres agentes sin que ninguno arrastre el historial de los demás, y el costo no crece en función
-de su extensión.
+El estado compartido entre agentes reside en el dominio. Cada turno inicia con contexto vacío y
+obtiene el estado consultando al mundo, de modo que cada agente opera sobre el estado vigente y el
+costo permanece constante respecto de la extensión del recorrido.
 
 ### Evolución de la persistencia
 
-El almacén SQLite conserva el estado completo como un documento en una única fila: es un almacén de
-prueba de concepto, no un modelo de datos. La incorporación de Postgres o Neon se resuelve mediante
-un adaptador adicional tras `ports/world.ts`, sin modificación del dominio ni del hilo determinista.
-Esta propiedad es la finalidad de la costura.
+El almacén SQLite conserva el estado completo como un documento en una única fila, a título de
+prueba de concepto. La incorporación de Postgres o Neon se resuelve mediante un adaptador adicional
+tras `ports/world.ts`, dejando intactos el dominio y el hilo determinista. Esta propiedad es la
+finalidad de la costura.
 
 ---
 
@@ -321,40 +304,39 @@ sequenceDiagram
     Note right of J: 001·15-16 / 003·9-10 — S35-S38 · BR-01 BR-07 BR-11
 ```
 
-Resultado de la ejecución: 38 pasos declarados, 38 ejecutados, ninguno pendiente ni fallido, con 9 de
-9 reglas ejercidas.
+Resultado de la ejecución: 38 pasos declarados y 38 ejecutados, con 9 de 9 reglas ejercidas.
 
 ### Guardas de dominio
 
-Dos rechazos determinan el diseño:
+Dos condiciones determinan el diseño:
 
-- `payInstalment` rechaza el pago de una cuota sin recepción confirmada (BR-08) o sin hito
-  certificado (BR-04).
-- `exerciseAcquisitionOption` rechaza el ejercicio de la opción con cuotas pendientes (BR-07) o fuera
+- `payInstalment` exige recepción confirmada (BR-08) e hito certificado (BR-04) para aceptar el pago
+  de una cuota.
+- `exerciseAcquisitionOption` exige la totalidad de las cuotas pagadas (BR-07) y el ejercicio dentro
   del plazo de treinta días (BR-11).
 
-Ambas validaciones residen en el código y no en las instrucciones del agente. En consecuencia, una
-respuesta errónea del modelo no puede infringir una regla de negocio.
+Ambas validaciones residen en el código, de modo que una respuesta errónea del modelo no puede
+infringir una regla de negocio.
 
 ### Verificabilidad de D4
 
 D4 exige que la primera etapa del alcance corresponda exactamente al recorrido que el POC construye.
-Esta vista se deriva de [`poc/evidence/run.txt`](../poc/evidence/run.txt), la transcripción
-versionada de la ejecución, y no de la especificación que dicha ejecución debe satisfacer.
+Esta vista se deriva de [`poc/evidence/run.txt`](../poc/evidence/run.txt), la transcripción versionada
+de la ejecución, y cita en cada paso la especificación que dicha ejecución satisface.
 
-`npm run citations -- --check` verifica dicha correspondencia en tres extremos: que el paso citado
-exista, que su texto coincida con el registrado en el último snapshot versionado, y que ningún paso
-de Stage 1 quede sin cubrir sin declaración expresa. El guardián se incorporó tras detectarse que la
-inserción de dos pasos en `001` dejó seis citas apuntando a pasos incorrectos sin que la integración
-continua lo advirtiera.
+`npm run citations -- --check` verifica esa correspondencia en tres extremos: que el paso citado
+exista, que su texto coincida con el registrado en el último snapshot versionado, y que todo paso de
+Stage 1 figure cubierto por el hilo o declarado expresamente como pendiente. El guardián se incorporó
+tras detectarse que la inserción de dos pasos en `001` dejó seis citas apuntando a pasos incorrectos
+mientras la integración continua permanecía en verde.
 
 ### Cobertura de reglas en Stage 1
 
 `STAGE_1_RULES` comprende nueve reglas: BR-01, BR-02, BR-04, BR-05, BR-06, BR-07, BR-08, BR-11 y
 BR-12. Las cuatro restantes quedan excluidas conforme a lo que las propias especificaciones
-establecen: BR-03 no produce comportamiento; BR-09 y BR-10 rigen el incumplimiento y la parada por
-seguridad, supuestos que ningún Stage 1 contempla; y de BR-13 el recorrido ejerce el dato —el
-`Assessed Value`— pero no su invariante, dado que `003` excluye el deterioro de forma expresa.
+establecen: BR-03 gobierna el régimen de contratación; BR-09 y BR-10 rigen el incumplimiento y la
+parada por seguridad, materia de etapas posteriores; y de BR-13 el recorrido ejerce el dato —el
+`Assessed Value`— reservando su invariante para cuando `003` incorpore el deterioro.
 
 ---
 
@@ -365,7 +347,7 @@ La correspondencia entre este documento y el sistema se verifica por ejecución.
 ```sh
 cd poc && npm ci
 
-npm run agent:matrix           # V2 — emite la frontera y falla si no se sostiene
+npm run agent:matrix           # V2 — emite la frontera y falla ante una herramienta fuera de lugar
 npm run demo                   # V4 — 38/38 pasos, 9/9 reglas
 npm run mcp:smoke              # V3 — los tres servidores sirven su superficie y comparten el mundo
 npm run e2e                    # V3 y V4 — Stage 1 por CLI y estado final afirmado regla por regla
