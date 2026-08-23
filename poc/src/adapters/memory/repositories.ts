@@ -43,6 +43,7 @@ export function memoryOperations(): Operations {
   return {
     save: (operation) => void rows.set(operation.id, operation),
     byId: (id) => rows.get(id),
+    byRequest: (id) => [...rows.values()].find((o) => o.requestId === id),
   }
 }
 

@@ -36,6 +36,7 @@ export interface Assessments {
 export interface Operations {
   save(operation: LeasingOperation): void
   byId(id: OperationId): LeasingOperation | undefined
+  byRequest(id: LeasingRequestId): LeasingOperation | undefined
 }
 
 export interface Machines {
