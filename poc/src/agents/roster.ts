@@ -20,9 +20,18 @@ efecto.
 Responde en español, breve, diciendo qué quedó hecho y en qué estado quedaron las cosas.
 `.trim()
 
-export const ROSTER: Readonly<Record<ActorName, { title: string; system: string }>> = {
+/**
+ * Quién es cada actor y bajo qué reglas trabaja.
+ *
+ * `description` es lo que Claude Code lee para decidir cuándo cargar un subagente o un skill, así
+ * que vive acá y no en el archivo generado: la identidad de un actor se declara una vez, y
+ * `src/cli/generate.ts` la proyecta.
+ */
+export const ROSTER: Readonly<Record<ActorName, { title: string; description: string; system: string }>> = {
   Pedro: {
     title: 'Pedro — empresa cliente',
+    description:
+      'La empresa cliente de Lea$e. Registra la necesidad de maquinaria, solicita el financiamiento, confirma la recepción, paga las cuotas y ejerce la opción de adquirir la máquina. Úsalo para cualquier acto del lado del cliente.',
     system: `Eres el asistente de Pedro, dueño de una constructora peruana que trabaja por proyecto.
 
 La constructora necesita maquinaria para ejecutar un proyecto, pero cobra recién cuando el
@@ -42,6 +51,8 @@ ${COMMON}`,
 
   Carlos: {
     title: 'Carlos — analista de crédito y riesgo',
+    description:
+      'El analista de crédito y riesgo de Lea$e. Arma el expediente de una solicitud, verifica la evidencia y su límite de autoridad, aprueba con condiciones y produce el calendario de cuotas anclado a los hitos del proyecto. Úsalo para decidir una solicitud de leasing.',
     system: `Eres el asistente de Carlos, analista de crédito y riesgo dentro de Lea$e.
 
 Decides qué empresas reciben una máquina. Como Lea$e es dueña de lo que presta, una mala decisión
@@ -72,6 +83,8 @@ ${COMMON}`,
 
   Julia: {
     title: 'Julia — responsable de la flota desplegada',
+    description:
+      'La responsable de la flota desplegada de Lea$e. Incorpora máquinas, entrega contra acta aceptada por ambos lados, sigue las horas-motor, agenda y completa servicios, y cierra el despliegue por devolución o por adquisición. Úsalo para cualquier acto sobre la máquina física.',
     system: `Eres el asistente de Julia, responsable de las máquinas de Lea$e que están paradas en
 obras que ella no controla, operadas por gente que no trabaja para ella.
 

@@ -23,6 +23,7 @@ npm run demo
 | `npm run agent:matrix` | Imprime y verifica la frontera de autoridad — **sin llave de API** |
 | `npm run mcp:smoke` | Levanta los tres servidores MCP y comprueba que sirven su superficie — **sin llave** |
 | `npm run e2e` | Recorre Stage 1 por CLI y afirma el estado final regla por regla — **sin llave** |
+| `npm run generate` | Proyecta los subagentes y los skills de Claude Code desde la definición |
 | `npm run lease -- <actor> [herramienta] [--bandera valor]` | Una herramienta suelta; sin argumentos, lista lo que hay |
 | `npm run agent` | La corrida vía SDK de Anthropic (requiere `ANTHROPIC_API_KEY`) |
 
@@ -139,6 +140,34 @@ agente da igual —lo lee y reintenta—, pero un script veía código 0 sobre u
 23 sitios ahora lanzan `NotFound`, que MCP marca `isError` y el CLI convierte en código 1.
 
 Ninguno se veía compilando. Los tres se vieron corriendo.
+
+### El catálogo se proyecta, no se escribe
+
+Un agente que trabaja por CLI gasta la mitad de sus comandos averiguando qué puede hacer. En la
+corrida con modelo, certificar seis valorizaciones costó trece comandos: siete de descubrimiento y
+seis de trabajo.
+
+Un skill lo resuelve, pero un `SKILL.md` escrito a mano sería el cuarto lugar donde vive la firma de
+veintisiete herramientas, y la primera bandera que alguien agregue lo deja mintiendo en silencio.
+Así que `npm run generate` los proyecta desde `roster.ts` —la identidad— y `tools.ts` —el catálogo—,
+compartiendo el renderizador que imprime `--help`: **lo que el agente lee en el skill es literalmente
+lo que el `--help` le diría.** `generate.ts --check` está en CI.
+
+| Artefacto | Para qué camino |
+|---|---|
+| `.claude/agents/lease-<actor>.md` | El subagente que trabaja por MCP, donde las herramientas ya llegan tipadas |
+| `.claude/skills/lease-<actor>/SKILL.md` | Trabajar por CLI, donde el catálogo es lo que evita gastar turnos |
+
+Cada skill lleva además algo que el `--help` no puede dar: **«Lo que no vas a encontrar»**, con los
+nombres de las herramientas ajenas y la cita que las prohíbe. Carlos lee de entrada que las ocho de
+flota son de Julia por *002 FR-021*, en vez de descubrirlo chocando.
+
+Medido sobre el mismo turno, mismo estado de partida y mismo encargo:
+
+| | Comandos | De descubrimiento |
+|---|---|---|
+| Sin skill | 13 | 7 |
+| Con skill | 6 | 0 |
 
 ### La prueba de extremo a extremo
 

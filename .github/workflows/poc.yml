@@ -49,6 +49,12 @@ jobs:
       - name: El e2e corre por CLI y el estado final se sostiene
         run: npm run e2e -- --no-color
 
+      # Los subagentes y los skills de Claude Code se proyectan desde `roster.ts` y `tools.ts`. Si
+      # alguien agrega una bandera y no regenera, el catálogo que lee el agente miente — y miente
+      # en silencio, que es lo peor que puede hacer. Esto no lo deja pasar.
+      - name: Los artefactos de Claude Code están al día
+        run: node src/cli/generate.ts --check
+
       # La transcripción versionada tiene que corresponder a lo que el código hace hoy. El reloj
       # es fijo, así que cualquier diferencia es un cambio real, no ruido.
       - name: La evidencia está al día
