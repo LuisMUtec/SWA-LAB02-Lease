@@ -137,13 +137,14 @@ El POC corre por tres vías sobre una sola definición de herramientas: línea d
 (`npm run e2e`, sin llave ni red), tres servidores MCP acotados por actor, y el SDK de
 Anthropic. Sus `Stage 1` no son tres entregas sino una sola corrida —lo que `001` declara fuera
 de alcance es exactamente lo que `002` y `003` producen—, y [`poc/`](poc/README.md) la construye
-completa: 30 pasos, cada uno citando la spec y el número de Stage 1 que le manda, con las siete
+completa: 30 pasos, cada uno citando la spec y el número de Stage 1 que le manda, con las ocho
 reglas que Stage 1 ejerce. La transcripción queda versionada en `poc/evidence/run.txt`.
 
-Dos divergencias entre specs quedaron marcadas en [`poc/DOMAIN.md`](poc/DOMAIN.md) porque el código
-tuvo que resolverlas para compilar, y son deducciones de D4 esperando: `escalated` deja una
-solicitud sin estado válido en `001`, y la `Installment` de `001` no lleva el ancla al hito de
-certificación que BR-04 exige y `002` produce.
+Las dos divergencias que [`poc/DOMAIN.md`](poc/DOMAIN.md) marcaba **quedaron resueltas** en la
+iteración del 2026-08-21: `001` ahora enumera sus tres estados y su `Installment` lleva el ancla al
+hito que BR-04 exige. Sigue abierta la ortografía —`Installment` en `001`, `Instalment` en `002` y
+`003`— y el POC quedó del lado minoritario. Lo que Stage 1 pide y el POC todavía no construye está
+listado en [`poc/README.md`](poc/README.md).
 
 ## Documentos
 

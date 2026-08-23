@@ -269,6 +269,35 @@ Las guardas que las reglas imponen sí viven en el dominio —`payInstalment` ve
 (BR-08) y la certificación del hito (BR-04) antes de aceptar un pago— porque ahí no son una prueba
 de la regla: son la regla.
 
+## Lo que Stage 1 pide y este POC todavía no construye
+
+Las specs se movieron el 2026-08-21 —nueve iteraciones de EVAL, cinco reglas de negocio nuevas y
+los tres `Stage 1` reescritos— y el POC quedó detrás en puntos concretos. Están acá porque un POC
+que calla lo que no hace no es evidencia de nada:
+
+| Ahora manda | Estado |
+|---|---|
+| `001`·10-13 — la cuota en `pending` / `due` / `paid`, y de una pendiente se sabe qué espera | **construido** |
+| BR-12 — el inicial no pasa de un décimo de la máquina | **construido**, y el caso se corrigió: eran 25.600 sobre 128.000 |
+| `001`·14-15 — la opción en `not yet available` / `available` / `exercised` / `declined` / `lapsed` | dos estados y un timestamp |
+| `001`·16 — el estado terminal se llama `Acquired` | se llama `completed` |
+| `001`·9 y `002`·11 — las condiciones se liquidan antes de arrancar el calendario | no existe |
+| `002`·4 — confirmar el valor de maquinaria que el solicitante declaró | no existe |
+| `003`·2 y `003`·8 — el `Assessed Value` al entregar, y revaluado al completar el servicio | no existe |
+| `003`·7 — la ventana se pide (FR-010b) y después se acuerda (FR-010) | un solo acto |
+| `003`·5 — `Service Due` observable por el custodio, no solo por Julia | solo por Julia |
+| BR-11 — treinta días para ejercer la opción | sin ventana |
+
+De las cinco reglas nuevas, solo **BR-12** cae dentro de Stage 1 y por eso entró a `STAGE_1_RULES`.
+Las otras cuatro las excluyen las specs mismas: BR-09 y BR-10 gobiernan el incumplimiento y la
+parada por seguridad; BR-11 acota la opción pero su caducidad queda fuera; y de BR-13 Stage 1
+ejerce el dato —el `Assessed Value`— pero no su invariante.
+
+**La deriva de citas no tiene guardián.** Cada paso del hilo cita `spec` y número de Stage 1, y esos
+números se corrieron cuando `001` insertó dos pasos: seis de doce citas quedaron apuntando al lugar
+equivocado, y nada falló. El diff de evidencia y `generate --check` cuidan los artefactos generados;
+las citas a las specs siguen sin cuidar. Es el hueco más caro que queda.
+
 ## Un paso sin construir se reporta pendiente
 
 No se omite ni se finge. La transcripción dice la verdad sobre cuánto del hilo está construido, y

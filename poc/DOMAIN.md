@@ -19,7 +19,7 @@ corresponding row here.
 | Concepto | `001` (Pedro) | `002` (Carlos) | `003` (Julia) | En código | Por qué |
 |---|---|---|---|---|---|
 | El cliente | `Company` | `Applicant` | "client" | `Company` | Una entidad. `Applicant` es el **rol** que `Company` juega dentro de un Assessment, no otra cosa. |
-| La cuota | `Installment` (83×) | `Instalment` (57×) | `instalment` (8×) | `Instalment` | Dos specs de tres, y es `002` quien **produce** el calendario. `[PENDIENTE Johar]` — unificar la ortografía en las specs; en código es un rename de un símbolo. |
+| La cuota | `Installment` (108×) | `Instalment` (30×) | `Instalment` (2×) | `Instalment` | Dos specs de tres, y es `002` quien **produce** el calendario — pero `001` la usa 108 veces contra 32 de las otras dos juntas, así que el código quedó del lado minoritario. `[PENDIENTE Johar]` — unificar la ortografía en las specs; en código es un rename de un símbolo. |
 | El hilo completo | `Leasing Operation` | "operation" | "operation" | `LeasingOperation` | `001` ya lo nombra; es la raíz que las tres specs comparten. |
 | El acuerdo financiero | `Lease` | `Instalment Schedule` | — | `Lease` | El `Lease` posee el `InstalmentSchedule`; no son sinónimos. |
 | La máquina en sitio | — | — | `Deployment` | `Deployment` | Intervalo *dentro* de un `Lease`, de la entrega al cierre. No es el `Lease`. |
@@ -28,41 +28,26 @@ corresponding row here.
 
 ## Divergencias que el código tuvo que resolver
 
-### D-1 — `escalated` no existe para Pedro `[PENDIENTE Johar]`
+### D-1 — `escalated` no existe para Pedro — **RESUELTA 2026-08-21**
 
-`001` fija que una `Leasing Request` está siempre en exactamente uno de `pending` / `approved` /
-`rejected`, y que ningún estado queda indeterminado. `002` permite que una `Decision` sea
-`approved` / `refused` / `escalated`.
+`001` ahora enumera exactamente `pending` / `approved` / `rejected` y afirma que ningún estado
+queda indeterminado. `002` sigue produciendo `escalated` como desenlace de una `Decision`, pero eso
+ya no deja a una solicitud sin estado visible: la escalación es un estado del expediente, no de la
+solicitud, y `001` no la ofrece porque para Pedro sigue estando pendiente. El mapeo que el código
+eligió —`escalated` → `pending`— es el que las specs ahora describen.
 
-Un caso escalado deja a Pedro sin estado válido: `escalated` no es ninguno de sus tres.
+`visibleStatus()` se queda como está. Deja de ser una resolución del POC y pasa a ser una
+proyección de lo que `001` dice.
 
-**Resolución en código:** la `Decision` conserva sus tres valores; lo que Pedro ve es una
-proyección.
+### D-2 — La `Installment` de `001` no tiene ancla — **RESUELTA 2026-08-21**
 
-| `Decision` (002) | `LeasingRequest.status` (001) |
-|---|---|
-| `approved` | `approved` |
-| `refused` | `rejected` |
-| `escalated` | `pending` — sigue en decisión |
-| *(sin decisión)* | `pending` |
+`001` ahora define la `Installment` como *"anchored to one Certification Milestone of Company's
+Project (BR-04)"*, y su paso 13 de Stage 1 exige que de una cuota pendiente se sepa **qué** está
+esperando. Era exactamente el hallazgo: el ancla que BR-04 exige y `002` produce no existía del
+lado de `001`.
 
-Se sostiene porque, desde donde Pedro está, un caso escalado **sigue esperando resolución**. Fuera
-de Stage 1 de todos modos (`002` lo manda a etapas posteriores), pero el tipo tenía que cerrar.
-
-### D-2 — La `Installment` de `001` no tiene ancla `[PENDIENTE Johar]`
-
-BR-04 es *la* regla que cierra la brecha del problema: las cuotas vencen contra el avance
-certificado del proyecto, no contra el calendario. `002` la implementa — cada instalment se ancla a
-un `Certification Milestone`.
-
-Pero `Installment` en `001` solo tiene `pending` / `paid`. Ni fecha, ni ancla, ni referencia al
-hito. La entidad que Pedro ve no lleva rastro de la única regla que hace que Lea$e exista.
-
-**Resolución en código:** `Instalment` lleva `anchoredTo: CertificationMilestoneId`, poblado por
-`002`. Es lo que `002` ya afirma producir.
-
-> Esta es la más cara de las dos. `002` cita BR-04 y `001` no puede — D2 mide "fit to the problem"
-> sobre las tres juntas, y es la spec de Pedro la que se lee primero.
+`anchoredTo` deja de ser una decisión del POC. Y con el mismo cambio llegó el tri-estado
+`pending` / `due` / `paid`, que el código ahora deriva en `instalmentState()`.
 
 ### D-3 — La adquisición se cierra en dos specs
 
