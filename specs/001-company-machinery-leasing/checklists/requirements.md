@@ -83,8 +83,8 @@
   already defers "any consequence of a missed installment." Recorded rather than silently dropped.
 - **Second persona-agent pass (2026-08-21).** Pedro's re-read of the corrected spec confirmed all
   three fixes landed, and raised three further defects, all closed:
-  1. *A genuine cross-spec contradiction*: `002`'s AC-027 made a certified milestone's instalment
-     fall due unconditionally, while FR-011/AC-009 here forbid any instalment falling due before
+  1. *A genuine cross-spec contradiction*: `002`'s AC-027 made a certified milestone's installment
+     fall due unconditionally, while FR-011/AC-009 here forbid any installment falling due before
      Company confirms receipt (BR-08) — and a milestone can certify before the machine arrives.
      Closed in `002` (FR-024, AC-027): certification is necessary, never sufficient.
   2. *AC-007 did not test the FR-009 it cited* — its Given was an already-approved request, so

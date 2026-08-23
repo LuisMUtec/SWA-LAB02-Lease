@@ -1,0 +1,31 @@
+{
+  "name": "lease-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "POC del caso de estudio Lea$e — Stage 1 de las tres specs como un solo hilo",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "demo": "node src/cli/demo.ts",
+    "demo:evidence": "node src/cli/demo.ts --no-color > evidence/run.txt; cat evidence/run.txt",
+    "lease": "node src/cli/lease.ts",
+    "e2e": "bash scripts/happy-path.sh",
+    "typecheck": "tsc --noEmit",
+    "generate": "node src/cli/generate.ts",
+    "citations": "node src/cli/citations.ts",
+    "agent": "node src/cli/agent.ts",
+    "agent:matrix": "node src/cli/agent.ts --matrix",
+    "mcp:smoke": "node src/mcp/smoke.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  }
+}

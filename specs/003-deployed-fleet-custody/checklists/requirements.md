@@ -58,7 +58,7 @@
 - **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Julia agent found that
   FR-016 — "which end is this Deployment heading for" — could only ever answer **Return** for the
   entire life of every Deployment, because it read "has the Acquisition Option been exercised", and
-  under `001` that cannot become true until the final instalment is paid. The requirement whose
+  under `001` that cannot become true until the final installment is paid. The requirement whose
   whole purpose was to let Fleet Manager plan around a machine that will not come back reproduced
   her stated obstacle instead of solving it, and it threatened her hardest Must-nots: closing by
   Return while a client still held a live, unexercised right to acquire. Closed: `001` now
@@ -100,7 +100,7 @@
   a second-order argument: Lea$e holds title (BR-01) *only* because Company could not pay up front,
   so without the gap there is no Lea$e-owned fleet on ground Lea$e does not control and this feature
   has no subject; and both of its terminal states are financing events — acquisition because
-  instalments finished (BR-07), recovery because they stopped. (2) FR-019's "a cause that is not
+  installments finished (BR-07), recovery because they stopped. (2) FR-019's "a cause that is not
   safety" was undefined while carrying all of AC-024's weight; the class is now stated by what it
   protects — people or the machine — with the three recorded sources that can evidence it. (3) Stage
   1 step 9 still promised the end was knowable "before the term ends", a claim SC-007's own earlier

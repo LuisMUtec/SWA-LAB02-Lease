@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "lease-pedro": {
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/poc/src/mcp/server.ts", "Pedro"],
+      "env": { "LEASE_DB": "${CLAUDE_PROJECT_DIR:-.}/poc/lease.db" }
+    },
+    "lease-carlos": {
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/poc/src/mcp/server.ts", "Carlos"],
+      "env": { "LEASE_DB": "${CLAUDE_PROJECT_DIR:-.}/poc/lease.db" }
+    },
+    "lease-julia": {
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/poc/src/mcp/server.ts", "Julia"],
+      "env": { "LEASE_DB": "${CLAUDE_PROJECT_DIR:-.}/poc/lease.db" }
+    }
+  }
+}

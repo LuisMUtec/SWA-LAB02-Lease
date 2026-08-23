@@ -1,0 +1,73 @@
+name: POC
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  thread:
+    name: El hilo de Stage 1
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: poc
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: poc/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # Corre el hilo con `--strict`: un paso declarado y sin construir hace fallar el build. Se
+      # corría sin la bandera mientras quedaban pasos pendientes; desde que no quedan, dejarla
+      # afuera solo serviría para que volvieran a aparecer sin que nadie se enterara.
+      - name: Correr el hilo
+        run: node src/cli/demo.ts --no-color --strict
+
+      # La frontera de autoridad de los agentes. Es una comprobacion estructural sobre datos, asi
+      # que corre sin llave de API y sin red: si un agente llegara a sostener una herramienta
+      # fuera de su superficie, el build falla.
+      - name: La frontera de autoridad se sostiene
+        run: node src/cli/agent.ts --matrix
+
+      # Levanta los tres servidores MCP de verdad y comprueba que cada uno sirve solo su
+      # superficie y que los tres comparten el mundo. Sin llave de API y sin red.
+      - name: Los servidores MCP sirven su superficie
+        run: node src/mcp/smoke.ts
+
+      # Recorre Stage 1 de punta a punta por línea de comandos —un proceso por paso, un solo mundo
+      # en SQLite— y después abre el mundo en un proceso nuevo y afirma el estado final regla por
+      # regla. Comprueba lo que el hilo determinista no puede: que las tres superficies de
+      # herramientas alcanzan para llevar el caso completo, y que el estado cruza procesos.
+      - name: El e2e corre por CLI y el estado final se sostiene
+        run: npm run e2e -- --no-color
+
+      # Cada paso del hilo cita una spec y un numero de paso de Stage 1, y esa cita es la afirmacion
+      # de D4. Esto comprueba que el paso exista, que su texto siga siendo el que alguien leyo, y
+      # que ningun paso de Stage 1 quede sin cubrir en silencio. Cuando `001` inserto dos pasos,
+      # seis citas quedaron corridas y nada fallo; esto no lo deja pasar de nuevo.
+      - name: Las citas a Stage 1 se sostienen
+        run: node src/cli/citations.ts --check
+
+      # Los subagentes y los skills de Claude Code se proyectan desde `roster.ts` y `tools.ts`. Si
+      # alguien agrega una bandera y no regenera, el catálogo que lee el agente miente — y miente
+      # en silencio, que es lo peor que puede hacer. Esto no lo deja pasar.
+      - name: Los artefactos de Claude Code están al día
+        run: node src/cli/generate.ts --check
+
+      # La transcripción versionada tiene que corresponder a lo que el código hace hoy. El reloj
+      # es fijo, así que cualquier diferencia es un cambio real, no ruido.
+      - name: La evidencia está al día
+        run: |
+          node src/cli/demo.ts --no-color > /tmp/run.txt
+          diff -u evidence/run.txt /tmp/run.txt || {
+            echo "::error::evidence/run.txt no corresponde a la corrida actual — corré 'npm run demo:evidence' y commiteá."
+            exit 1
+          }

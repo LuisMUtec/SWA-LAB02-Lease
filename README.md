@@ -60,9 +60,10 @@ distinto. **Cada afirmación ocurre una sola vez, en su altitud.**
 | Personas | [`personas/`](personas/) | Quién es cada persona y qué necesita — cinco campos fijos, ver [`_TEMPLATE.MD`](personas/_TEMPLATE.MD) |
 | Feature | `specs/<n>/spec.md` | Qué hace el sistema y qué porción de la brecha cierra |
 | Plan | `specs/<n>/plan.md`, `tasks.md` | Cómo se construye |
+| POC | [`poc/`](poc/README.md) | El código que corre el happy path, y la evidencia de que corrió |
 
 Los criterios de aceptación **enuncian el efecto de la regla y citan su ID** —*"rejects an
-instalment payment before receipt is confirmed (BR-08)"*— para que ninguna referencia sea
+installment payment before receipt is confirmed (BR-08)"*— para que ninguna referencia sea
 portante.
 
 ## EVAL
@@ -131,6 +132,21 @@ de autoridad—, y las tres se cerraron dándole un productor a la cifra, nunca 
 criterio que la usaba.
 
 Las specs siguen en Draft y ninguna ha pasado por `/speckit-clarify`.
+
+El POC corre por tres vías sobre una sola definición de herramientas: línea de comandos
+(`npm run e2e`, sin llave ni red), tres servidores MCP acotados por actor, y el SDK de
+Anthropic. Sus `Stage 1` no son tres entregas sino una sola corrida —lo que `001` declara fuera
+de alcance es exactamente lo que `002` y `003` producen—, y [`poc/`](poc/README.md) la construye
+completa: 38 pasos, cada uno citando la spec y el número de Stage 1 que le manda, con las nueve
+reglas que Stage 1 ejerce. La transcripción queda versionada en `poc/evidence/run.txt`, y CI corre
+el hilo con `--strict`: un paso declarado y sin construir rompe el build.
+
+Las divergencias que [`poc/DOMAIN.md`](poc/DOMAIN.md) marcaba **quedaron todas resueltas**, y en las
+specs, que es donde correspondía: en la iteración del 2026-08-21 `001` pasó a enumerar sus tres
+estados y su `Installment` a llevar el ancla al hito que BR-04 exige; el 2026-08-23 se unificó la
+ortografía de la cuota, que `001` escribía de una manera y `002` y `003` de otra. **No queda ningún
+punto de Stage 1 sin construir** — `poc/src/cli/citations.ts` lo comprueba paso por paso contra el
+texto de las tres specs, y falla si aparece uno nuevo sin declarar.
 
 ## Documentos
 

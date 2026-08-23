@@ -1,0 +1,47 @@
+Lea$e — POC · Stage 1 de extremo a extremo
+Pasos declarados: 38 · 001 Pedro · 002 Carlos · 003 Julia
+
+  ✓ S01  Pedro  001· 2  registra la necesidad de maquinaria del proyecto                                    
+  ✓ S02  Pedro  001· 3  envía la solicitud de leasing                                                       
+  ✓ S03  Pedro  001· 4  consulta el estado: pendiente                                                       
+  ✓ S04  Carlos 002· 2  ve la solicitud entre las que lo esperan y la toma                                  
+  ✓ S05  Carlos 002· 3  registra al solicitante como empresa por proyecto                     BR-02         
+  ✓ S06  Carlos 002· 4  registra el standing crediticio                                                     
+  ✓ S07  Carlos 002· 4  confirma el valor de maquinaria que el solicitante declaró                          
+  ✓ S08  Carlos 002· 5  registra el proyecto y su calendario de certificación                               
+  ✓ S09  Carlos 002· 6  registra al pagador y su comportamiento de pago                                     
+  ✓ S10  Lea$e  002· 7  declara el expediente plenamente evidenciado                                        
+  ✓ S11  Lea$e  002· 8  verifica el valor contra el límite de autoridad                                     
+  ✓ S12  Carlos 002· 9  registra la aprobación con razón y condiciones                        BR-02 BR-12   
+  ✓ S13  Lea$e  002·10  produce el calendario anclado a hitos                                 BR-04         
+  ✓ S14  Pedro  001· 5  consulta el estado: aprobada                                                        
+  ✓ S15  Lea$e  001· 6  compra la máquina al proveedor                                        BR-01         
+  ✓ S16  Julia  003· 2  registra la entrega y ambos lados la aceptan                          BR-05         
+  ✓ S17  Lea$e  003· 3  abre el despliegue y fija el acta de entrega                          BR-05         
+  ✓ S18  Pedro  001· 8  confirma la recepción: las cuotas se hacen exigibles                  BR-08         
+  ✓ S19  Pedro  001· 9  ve las condiciones que la aprobación cargó y paga el inicial          BR-12         
+  ✓ S20  Carlos 002·11  registra la garantía en su lugar y las condiciones quedan liquidadas                
+  ✓ S21  Pedro  001·10  ve sus cuotas y el estado de cada una                                               
+  ✓ S22  Julia  003· 4  acumula lecturas de horas-motor                                       BR-06         
+  ✓ S23  Lea$e  003· 5  marca servicio debido al alcanzar el intervalo                        BR-06         
+  ✓ S24  Pedro  003· 5  el custodio ve que su máquina necesita servicio                       BR-06         
+  ✓ S25  Julia  003· 6  la ve entre las que necesitan servicio, con sus horas                               
+  ✓ S26  Julia  003· 7  pide una ventana de servicio contra el despliegue                     BR-06         
+  ✓ S27  Pedro  003· 7  el cliente acuerda el período en que liberará la máquina                            
+  ✓ S28  Julia  003· 8  completa el servicio dentro de la ventana y revalúa la máquina        BR-06         
+  ✓ S29  Carlos 002·12  relee la decisión, sus condiciones y la evidencia que la sostuvo                    
+  ✓ S30  Carlos 002·13  registra la primera valorización como certificada y pagada            BR-04         
+  ✓ S31  Pedro  001·11  la cuota anclada a esa valorización se vuelve exigible                BR-04 BR-08   
+  ✓ S32  Pedro  001·12  paga cada cuota al certificarse su hito                               BR-04         
+  ✓ S33  Pedro  001·13  distingue pagadas de pendientes en cualquier punto                                  
+  ✓ S34  Lea$e  001·14  abre la opción de adquisición al pagarse todas                        BR-07 BR-11   
+  ✓ S35  Julia  003· 9  consulta el final y todavía no está determinado                                     
+  ✓ S36  Pedro  001·15  ejerce la opción dentro de la ventana de treinta días                 BR-07 BR-11   
+  ✓ S37  Julia  003·10  cierra el despliegue y retira la máquina de la flota                  BR-01 BR-07   
+  ✓ S38  Pedro  001·16  la operación llega al estado terminal Acquired                                      
+
+Resumen
+  38 pasos · 38 corridos · 0 pendientes · 0 fallidos
+  Reglas ejercidas: 9/9
+
+El hilo corre de extremo a extremo.

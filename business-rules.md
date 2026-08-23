@@ -19,7 +19,7 @@ users are — that is [`personas/`](personas/).
   ours it carries `[ASSUMPTION: …]`. The brief fixes no leasing mechanics, so most rules here will
   be ours. An invented rule that is not marked is a defect.
 - **Cited, not quoted.** Acceptance criteria in the spec state the rule's effect and cite the
-  identifier — *"The system rejects an instalment payment before receipt is confirmed (BR-08)"* —
+  identifier — *"The system rejects an installment payment before receipt is confirmed (BR-08)"* —
   so that no reference is load-bearing.
 
 Entries are ordered by identifier.
@@ -44,7 +44,7 @@ consumers.
 - **Why:** the gap Lea$e exists to close — equipment needed at the start, payment received at the
   end — is a property of project-based work. Outside it, the product has no reason to exist.
 - **Source:** brief — corporate and SME credit growth; companies generally work by project.
-- **Affects:** eligibility, underwriting, instalment scheduling.
+- **Affects:** eligibility, underwriting, installment scheduling.
 
 ### BR-03 — Lea$e contracts outside the financial-lease regime
 
@@ -64,13 +64,13 @@ financial-lease regime, and neither party obtains that regime's tax treatment.
   schedule of BR-04 would not be Lea$e's to set.]`
 - **Affects:** contracting, pricing, tax treatment.
 
-### BR-04 — Instalments are due against project progress, not the calendar
+### BR-04 — Installments are due against project progress, not the calendar
 
 The payment schedule of a contract is anchored to the milestones at which the client's project is
 certified and paid, not to fixed calendar dates.
 
 - **Why:** this is the gap Lea$e exists to close. A client working by project is paid on approved
-  progress — in Peruvian construction, the *valorización* — and a calendar instalment falling due
+  progress — in Peruvian construction, the *valorización* — and a calendar installment falling due
   before that certification recreates exactly the shortfall that stopped the client from buying the
   machine outright.
 - **Source:** brief — payment for the project arrives at the end ·
@@ -103,15 +103,15 @@ reached its interval is due for service regardless of how long it has held the c
   reading is the accepted measure of use.]`
 - **Affects:** handover, maintenance scheduling, pricing, end of term.
 
-### BR-07 — Paying every instalment opens the option to acquire the machine, at no further cost
+### BR-07 — Paying every installment opens the option to acquire the machine, at no further cost
 
-Once every instalment of a contract is paid, the client gains the option to acquire the machine it
-has been using, and exercising it requires no payment beyond the instalments already paid.
+Once every installment of a contract is paid, the client gains the option to acquire the machine it
+has been using, and exercising it requires no payment beyond the installments already paid.
 
 - **Why:** it is what Lea$e promises the client at the outset, and it is what makes a contract with
   Lea$e worth more to a client than renting the same machine. It is also the only way the ownership
   BR-01 retains ever ends. A residual payment would recreate, at the finish line, the exact
-  liquidity gap the instalments already exist to avoid — the client would again need cash on hand
+  liquidity gap the installments already exist to avoid — the client would again need cash on hand
   it does not have.
 - **Source:** brief — second diagram, *"Pago TODAS las cuotas → opciones de adquisición"*,
   the only element highlighted in the original
@@ -122,17 +122,17 @@ has been using, and exercising it requires no payment beyond the instalments alr
   the brief prices nothing and a silent residual charge would contradict Principle III.]`
 - **Affects:** contracting, collections, end of term, fleet planning.
 
-### BR-08 — Instalments fall due only after the client confirms receipt
+### BR-08 — Installments fall due only after the client confirms receipt
 
-No instalment of a contract is payable before the client has confirmed it received the machine.
+No installment of a contract is payable before the client has confirmed it received the machine.
 
 - **Why:** the client pays for use, and there is no use before delivery. Lea$e's position also
   rests on a machine that has actually reached the site (BR-01) — charging before that is
   collecting against nothing.
-- **Source:** brief — the second diagram puts delivery ahead of the instalment flow ·
+- **Source:** brief — the second diagram puts delivery ahead of the installment flow ·
   `[ASSUMPTION: receipt is an explicit act of the client rather than something inferred from the
-  supplier, so that the moment instalments become payable is one both parties agreed on.]`
-- **Affects:** contracting, instalment scheduling, collections.
+  supplier, so that the moment installments become payable is one both parties agreed on.]`
+- **Affects:** contracting, installment scheduling, collections.
 
 ### BR-09 — A slipping project becomes default-eligible past a fixed tolerance
 
@@ -171,7 +171,7 @@ grounds BR-06's Service Due state alone does not.
 
 ### BR-11 — An available acquisition option lapses if it is not exercised
 
-Once every instalment is paid and the option to acquire opens (BR-07), the client has 30 calendar
+Once every installment is paid and the option to acquire opens (BR-07), the client has 30 calendar
 days to exercise it. If the client neither exercises nor declines within that window, the option
 lapses, the contract ends without acquisition, and the machine returns to Lea$e.
 
@@ -190,7 +190,7 @@ lapses, the contract ends without acquisition, and the machine returns to Lea$e.
 
 ### BR-12 — Any upfront payment is capped and cannot exceed a tenth of the machine
 
-Where a contract requires the client to pay anything before its instalment schedule begins, that
+Where a contract requires the client to pay anything before its installment schedule begins, that
 amount may not exceed 10% of the machine's value.
 
 - **Why:** the client comes to Lea$e precisely because it cannot produce the machine's price before
@@ -201,7 +201,7 @@ amount may not exceed 10% of the machine's value.
 - **Source:** `[ASSUMPTION: the brief fixes no pricing at all. Ten per cent is ours — small enough
   that it does not reproduce the problem the product exists to solve, large enough to remain a real
   condition an underwriter can set against a weaker case.]`
-- **Affects:** underwriting conditions, contracting, the start of the instalment schedule.
+- **Affects:** underwriting conditions, contracting, the start of the installment schedule.
 
 ### BR-13 — A deployed machine must stay worth at least what its contract still owes
 
@@ -212,7 +212,7 @@ less than it is owed.
 - **Why:** this is the rule that separates Lea$e's interest in a machine's condition from a rental
   firm's. A rental company watches wear to price its next rental; if a machine deteriorates it
   charges less next time and loses nothing already committed. Lea$e has *already paid the supplier*
-  in full (BR-01, and the brief's third diagram) and is recovering that money over instalments the
+  in full (BR-01, and the brief's third diagram) and is recovering that money over installments the
   client pays as its project certifies (BR-04). The machine is the security for money already out
   the door. Wear is therefore not a pricing input here — it is an erosion of the only collateral
   behind an outstanding balance, and it is why hours, condition and servicing are watched at all.

@@ -38,7 +38,7 @@
   silence. The generic Spec Kit item above is read against that convention: the check is that no
   ambiguity was filled in *without* a marker, not that zero markers exist.
 - **Closed (2026-08-21, issue #5):** the `[CLARIFY: ...]` marker this spec previously carried, in
-  **Key Product Decisions** — how far an Instalment Schedule may bend before a slipping operation
+  **Key Product Decisions** — how far an Installment Schedule may bend before a slipping operation
   is treated as defaulted — is resolved by the new BR-09 (30 days uncertified on one milestone, or
   two milestones uncertified at once, whichever comes first). Reaching that threshold makes an
   operation eligible for a Default Declaration; it does not create one, per FR-023/AC-026.
@@ -50,9 +50,9 @@
   corresponding criterion.
 - **EVAL iteration 01 → 02 (2026-08-21).** Three fixes from the aggregator's findings. (1) **Stage 1
   gained step 12** — Underwriter recording each Certification Milestone as certified. FR-024 existed
-  but was staged nowhere, so `001`'s Stage 1, which pays every instalment, could not complete: no
-  milestone would ever certify, so no instalment would ever fall due. The POC would have had to
-  either skip the BR-04 anchoring or pay instalments that never became payable. **This moves what the
+  but was staged nowhere, so `001`'s Stage 1, which pays every installment, could not complete: no
+  milestone would ever certify, so no installment would ever fall due. The POC would have had to
+  either skip the BR-04 anchoring or pay installments that never became payable. **This moves what the
   POC builds** and is flagged for Luis in issue #5. (2) AC-026 restated BR-09's second limb as "two
   milestones uncertified at once", which is true of every project with two future milestones and so
   could never be declared unmet; it now says "simultaneously past their expected dates", matching the
@@ -66,13 +66,13 @@
      not delegated authority. Closed: FR-025 / AC-028.
   2. *FR-024 named no recorder* — every other Evidence Item names Underwriter, and the fact the whole
      Slippage Warning chain hangs on was left ownerless. Closed: FR-024 now names him.
-  3. *AC-027 made a certified milestone's instalment fall due unconditionally*, contradicting `001`'s
-     FR-011/AC-009 and BR-08, which forbid an instalment falling due before the client confirms
+  3. *AC-027 made a certified milestone's installment fall due unconditionally*, contradicting `001`'s
+     FR-011/AC-009 and BR-08, which forbid an installment falling due before the client confirms
      receipt. A milestone can certify before the machine arrives. Closed: certification is now stated
      as a necessary and not a sufficient condition, in both FR-024 and AC-027.
 - **Third persona-agent pass (2026-08-21).** Carlos confirmed his failure case now runs to its end
   without a gap, and raised one sharp concrete defect, now closed: a Certification Milestone carried
-  its date but never its amount, so an instalment could be anchored to a milestone (FR-014) with no
+  its date but never its amount, so an installment could be anchored to a milestone (FR-014) with no
   way to check the milestone covers it — the date answered "on time" and nothing answered "enough",
   which is the whole of the judgement `personas/Carlos.MD` describes. Closed: FR-007 / AC-006 and the
   Certification Milestone entity now carry the amount each milestone is expected to release.
@@ -82,21 +82,21 @@
   milestone but not the Payer behaviour recorded at FR-008, and no Payer accumulates history across
   Assessments even though AC-023's own rationale calls a past slip "evidence for the next decision"
   — portfolio-level views are deferred in Later stages, so Carlos judges a slip on a thinner file
-  than he built at approval; the instalment offset after certification stays an open business
+  than he built at approval; the installment offset after certification stays an open business
   decision; and "which machine" (FR-012) binds no one at `003`'s handover.
 - **Persona-agent review (2026-08-21, issue #5, EVAL iteration 01).** The Carlos agent found two
   defects against `personas/Carlos.MD`, both now closed:
   1. *Nothing recorded that a Certification Milestone had been certified.* FR-017's Slippage
      Warning tested for its absence, FR-018 depended on it arriving, FR-023/BR-09 computed
      eligibility from it, and FR-014's whole due condition rested on it — but no requirement let
-     anyone create it. Read literally, every milestone slipped on every operation and no instalment
+     anyone create it. Read literally, every milestone slipped on every operation and no installment
      ever fell due. Closed: FR-024 / AC-027 and the Certification Record concept.
   2. *The fast refusal was blocked.* FR-010 forbade recording any Decision — including `refused` —
      on an incompletely evidenced Assessment, so the applicant with no certification schedule, the
      case most deserving an immediate no, could not be closed at all. This contradicted Carlos's
      stated permission to "refuse with a reason" and his stated obstacle that speed is itself a
      decision. Closed: FR-010 now bounds only `approved` and `escalated` (AC-008, AC-009).
-  Reservations the agent raised that are **not** closed, and why: the instalment due-date offset
+  Reservations the agent raised that are **not** closed, and why: the installment due-date offset
   stays an open business decision (Assumptions); cross-Assessment Payer history stays deferred
   (Later stages, "Portfolio-level views"); committee-approved operations are not explicitly bound
   by FR-012's Conditions or FR-014's anchoring; and no requirement backs "demand further evidence
