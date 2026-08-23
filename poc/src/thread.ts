@@ -30,6 +30,7 @@ import { statusOf } from './domain/leasing.ts'
 import type { AssessmentId, CertificationMilestone, MilestoneId } from './domain/underwriting.ts'
 import {
   AUTHORITY_LIMIT_USD,
+  DOWN_PAYMENT_CAP,
   availableOutcomes,
   certify,
   isFullyEvidenced,
@@ -43,9 +44,12 @@ import {
   confirmReceipt,
   exerciseAcquisitionOption,
   operationState,
+  dueCount,
+  instalmentState,
   paidCount,
   payInstalment,
   pendingCount,
+  waitingOn,
 } from './domain/operation.ts'
 import type { DeploymentId, MachineId } from './domain/fleet.ts'
 import {
@@ -82,7 +86,9 @@ const CASE = {
   deployment: 'DP-0001' as DeploymentId,
 
   machineryValueUSD: 128_000,
-  downPaymentUSD: 25_600,
+  // Un décimo, que es el tope de BR-12. Antes eran 25.600 —un quinto—, escritos cuando la regla
+  // todavía no existía: la iteración del 2026-08-21 la agregó y este caso pasó a violarla.
+  downPaymentUSD: 12_800,
   serviceIntervalHours: 250,
 
   handoverAt: new Date('2026-09-01T00:00:00.000Z'),
@@ -313,6 +319,9 @@ export const THREAD: readonly Step<World>[] = [
     spec: '002',
     stage1: 9,
     what: 'registra la aprobación con razón y condiciones',
+    // El inicial es una condición, y BR-12 la topa en un décimo de la máquina: es acá donde la
+    // regla muerde, porque `001` paso 9 liquida ese pago contra lo que esta decisión fijó.
+    rules: ['BR-02', 'BR-12'],
     run: (w) => {
       recordDecision(assessment(w), {
         outcome: 'approved',
@@ -334,6 +343,10 @@ export const THREAD: readonly Step<World>[] = [
       const decision = assessment(w).decision
       check(decision?.conditions !== undefined, 'una aprobación sin condiciones no es la decisión')
       check(Boolean(decision?.reason), 'la decisión quedó sin razón registrada')
+      check(
+        decision.conditions.downPaymentUSD <= CASE.machineryValueUSD * DOWN_PAYMENT_CAP,
+        'el inicial excede el décimo que BR-12 tolera',
+      )
     },
   },
   {
@@ -456,13 +469,19 @@ export const THREAD: readonly Step<World>[] = [
     id: 'S18',
     actor: 'Pedro',
     spec: '001',
-    stage1: 9,
+    stage1: 10,
     what: 've sus cuotas y el estado de cada una',
     run: (w) => {
       const op = operation(w)
       check(op.instalments.length === MILESTONES.length, 'no ve todas sus cuotas')
       check(paidCount(op) === 0, 'hay cuotas pagadas antes de tiempo')
-      check(pendingCount(op) === MILESTONES.length, 'las pendientes no son todas')
+      // Recibida la máquina pero sin ninguna valorización certificada, las seis están `pending` y
+      // todas esperan lo mismo: su hito. Eso es lo que `001` paso 13 pide poder decir de cada una.
+      check(pendingCount(op, MILESTONES) === MILESTONES.length, 'las pendientes no son todas')
+      check(dueCount(op, MILESTONES) === 0, 'hay cuotas exigibles sin hito certificado')
+      for (const i of op.instalments) {
+        check(waitingOn(i, op, MILESTONES)?.rule === 'BR-04', `${i.id} no espera su certificación`)
+      }
       check(
         acquisitionOptionStatus(op) === 'not yet available',
         'la opción de adquisición no puede estar disponible aún',
@@ -553,7 +572,7 @@ export const THREAD: readonly Step<World>[] = [
     id: 'S24',
     actor: 'Pedro',
     spec: '001',
-    stage1: 10,
+    stage1: 12,
     what: 'paga cada cuota al certificarse su hito',
     rules: ['BR-04'],
     run: (w) => {
@@ -563,7 +582,13 @@ export const THREAD: readonly Step<World>[] = [
         certify(milestone, milestone.expectedAt)
         const instalment = op.instalments.find((i) => i.anchoredTo === milestone.id)
         check(instalment !== undefined, `${milestone.name} no tiene cuota anclada`)
-        payInstalment(op, instalment.id, MILESTONES)
+        // Certificar es lo que la vuelve `due`. Ese estado intermedio es el que separa a Lea$e de
+        // un prestamista con calendario, así que se observa antes de pagarla y no después.
+        check(
+          instalmentState(instalment, op, MILESTONES) === 'due',
+          `${instalment.id} no se volvió exigible al certificarse ${milestone.name}`,
+        )
+        payInstalment(op, instalment.id, MILESTONES, milestone.expectedAt)
       }
       check(paidCount(op) === MILESTONES.length, 'quedaron cuotas sin pagar')
     },
@@ -572,15 +597,16 @@ export const THREAD: readonly Step<World>[] = [
     id: 'S25',
     actor: 'Pedro',
     spec: '001',
-    stage1: 11,
+    stage1: 13,
     what: 'distingue pagadas de pendientes en cualquier punto',
     run: (w) => {
       const op = operation(w)
       check(paidCount(op) === 6, `pagadas inesperadas: ${paidCount(op)}`)
-      check(pendingCount(op) === 0, `pendientes inesperadas: ${pendingCount(op)}`)
-      // Las dos cifras dan cuenta de todas las cuotas, siempre.
+      check(dueCount(op, MILESTONES) === 0, `exigibles inesperadas: ${dueCount(op, MILESTONES)}`)
+      check(pendingCount(op, MILESTONES) === 0, `pendientes inesperadas: ${pendingCount(op, MILESTONES)}`)
+      // Las tres cifras dan cuenta de todas las cuotas, siempre: no hay una cuarta situación.
       check(
-        paidCount(op) + pendingCount(op) === op.instalments.length,
+        paidCount(op) + dueCount(op, MILESTONES) + pendingCount(op, MILESTONES) === op.instalments.length,
         'las cuentas no dan cuenta de todas las cuotas',
       )
     },
@@ -591,7 +617,7 @@ export const THREAD: readonly Step<World>[] = [
     id: 'S26',
     actor: 'Lea$e',
     spec: '001',
-    stage1: 12,
+    stage1: 14,
     what: 'abre la opción de adquisición al pagarse todas',
     rules: ['BR-07'],
     run: (w) => {
@@ -620,7 +646,7 @@ export const THREAD: readonly Step<World>[] = [
     id: 'S28',
     actor: 'Pedro',
     spec: '001',
-    stage1: 13,
+    stage1: 15,
     what: 'ejerce la opción de adquisición',
     rules: ['BR-07'],
     run: (w) => {
@@ -651,7 +677,7 @@ export const THREAD: readonly Step<World>[] = [
     id: 'S30',
     actor: 'Pedro',
     spec: '001',
-    stage1: 14,
+    stage1: 16,
     what: 'la operación llega a estado completo',
     run: (w) => {
       check(

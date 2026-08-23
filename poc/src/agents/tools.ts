@@ -33,9 +33,13 @@ import {
   confirmReceipt,
   exerciseAcquisitionOption,
   operationState,
+  dueCount,
+  instalmentState,
   paidCount,
   payInstalment,
   pendingCount,
+  unpaidCount,
+  waitingOn,
 } from '../domain/operation.ts'
 import type { DeploymentId, MachineId } from '../domain/fleet.ts'
 import {
@@ -195,15 +199,18 @@ const PEDRO: readonly ToolDef[] = [
       const milestones = w.milestones.all()
       return json({
         pagadas: paidCount(operation),
-        pendientes: pendingCount(operation),
+        exigibles: dueCount(operation, milestones),
+        pendientes: pendingCount(operation, milestones),
         cuotas: operation.instalments.map((i) => {
           const milestone = milestones.find((m) => m.id === i.anchoredTo)
+          // `001` paso 13: de una cuota pendiente hay que poder saber *qué* está esperando.
+          const waiting = i.paidAt ? undefined : waitingOn(i, operation, milestones)
           return {
             id: i.id,
             montoUSD: i.amountUSD,
-            estado: i.status,
+            estado: instalmentState(i, operation, milestones),
             anclada_a: milestone?.name ?? i.anchoredTo,
-            hito_certificado: Boolean(milestone?.certifiedAt),
+            esperando: waiting ? `${waiting.rule} — ${waiting.because}` : null,
           }
         }),
       })
@@ -218,9 +225,9 @@ const PEDRO: readonly ToolDef[] = [
     run: (w, input) => {
       const operation = w.operations.byId(input.operacionId as OperationId)
       if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
-      payInstalment(operation, input.cuotaId, w.milestones.all())
+      payInstalment(operation, input.cuotaId, w.milestones.all(), w.clock.now())
       w.operations.save(operation)
-      return `Cuota ${input.cuotaId} pagada. Quedan ${pendingCount(operation)} pendientes.`
+      return `Cuota ${input.cuotaId} pagada. Quedan ${unpaidCount(operation)} sin pagar.`
     },
   }),
 
@@ -233,7 +240,7 @@ const PEDRO: readonly ToolDef[] = [
       if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
       return json({
         opcion: acquisitionOptionStatus(operation),
-        pendientes: pendingCount(operation),
+        sinPagar: unpaidCount(operation),
         operacion: operationState(operation),
       })
     },

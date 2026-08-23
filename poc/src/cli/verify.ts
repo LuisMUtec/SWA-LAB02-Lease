@@ -18,8 +18,14 @@ import { BUSINESS_RULES, STAGE_1_RULES, type BusinessRule } from '../domain/rule
 import { check, CheckFailed } from '../evidence/transcript.ts'
 import { statusOf } from '../domain/leasing.ts'
 import type { LeasingRequestId } from '../domain/leasing.ts'
-import { AUTHORITY_LIMIT_USD, isFullyEvidenced } from '../domain/underwriting.ts'
-import { acquisitionOptionStatus, operationState, paidCount, pendingCount } from '../domain/operation.ts'
+import { AUTHORITY_LIMIT_USD, DOWN_PAYMENT_CAP, isFullyEvidenced } from '../domain/underwriting.ts'
+import {
+  acquisitionOptionStatus,
+  instalmentState,
+  operationState,
+  paidCount,
+  unpaidCount,
+} from '../domain/operation.ts'
 import type { OperationId } from '../domain/operation.ts'
 import { headingFor } from '../domain/fleet.ts'
 import type { DeploymentId, MachineId } from '../domain/fleet.ts'
@@ -82,6 +88,19 @@ const ASSERTIONS: readonly Assertion[] = [
     },
   },
   {
+    rule: 'BR-12',
+    what: 'el inicial que la aprobación fijó no pasa de un décimo de la máquina',
+    run: () => {
+      const down = assessment.decision?.conditions?.downPaymentUSD
+      check(down !== undefined, 'la aprobación no fijó un pago inicial')
+      check(
+        down <= assessment.machineryValueUSD * DOWN_PAYMENT_CAP,
+        `un inicial de USD ${down.toLocaleString('en-US')} sobre una máquina de ` +
+          `USD ${assessment.machineryValueUSD.toLocaleString('en-US')}`,
+      )
+    },
+  },
+  {
     what: 'la aprobación lleva razón y condiciones',
     run: () => {
       check(!!assessment.decision?.reason, 'la aprobación no dice por qué')
@@ -111,10 +130,17 @@ const ASSERTIONS: readonly Assertion[] = [
     run: () => check(!!operation.receiptConfirmedAt, 'no hay recepción confirmada y hay cuotas pagadas'),
   },
   {
-    what: 'las cuotas están todas pagadas',
+    what: 'las cuotas están todas pagadas, y ninguna quedó en otro estado',
     run: () => {
-      check(pendingCount(operation) === 0, `quedan ${pendingCount(operation)} pendientes`)
+      check(unpaidCount(operation) === 0, `quedan ${unpaidCount(operation)} sin pagar`)
       check(paidCount(operation) === operation.instalments.length, 'la cuenta de pagadas no cuadra')
+      // `001` exige que toda cuota esté siempre en exactamente uno de `pending`, `due` o `paid`.
+      for (const i of operation.instalments) {
+        check(
+          instalmentState(i, operation, milestones) === 'paid',
+          `${i.id} no quedó en 'paid' sino en '${instalmentState(i, operation, milestones)}'`,
+        )
+      }
     },
   },
 
@@ -222,4 +248,6 @@ if (failed > 0 || missing.length > 0) {
 }
 
 console.log()
-console.log(c('32', 'El estado final es el que Stage 1 describe, y las siete reglas quedan afirmadas.'))
+console.log(
+  c('32', `El estado final es el que Stage 1 describe, y sus ${STAGE_1_RULES.length} reglas quedan afirmadas.`),
+)

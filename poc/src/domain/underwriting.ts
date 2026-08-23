@@ -122,6 +122,15 @@ export function availableOutcomes(assessment: Assessment): readonly DecisionOutc
     : ['escalated']
 }
 
+/**
+ * El tope del pago inicial, como fracción del valor de la máquina — BR-12.
+ *
+ * No es una política de precios: es lo que impide que la condición reconstruya, en la línea de
+ * salida, la misma falta de liquidez que las cuotas existen para resolver. Un cliente que pudiera
+ * pagar un tercio de la máquina por adelantado no necesitaba a Lea$e para ese tercio.
+ */
+export const DOWN_PAYMENT_CAP = 0.1
+
 export function recordDecision(assessment: Assessment, decision: Decision): void {
   if (assessment.decision) {
     throw new SpecViolation('la evaluación ya tiene una decisión registrada')
@@ -146,6 +155,14 @@ export function recordDecision(assessment: Assessment, decision: Decision): void
     if (!decision.conditions) {
       throw new SpecViolation('una aprobación no se registra sin sus condiciones')
     }
+    const cap = assessment.machineryValueUSD * DOWN_PAYMENT_CAP
+    if (decision.conditions.downPaymentUSD > cap) {
+      throw new RuleViolation(
+        'BR-12',
+        `un inicial de USD ${decision.conditions.downPaymentUSD.toLocaleString('en-US')} excede el tope de ` +
+          `USD ${cap.toLocaleString('en-US')} — un décimo de la máquina`,
+      )
+    }
   }
 
   assessment.decision = decision
@@ -161,7 +178,14 @@ export interface Instalment {
    */
   readonly anchoredTo: MilestoneId
   readonly amountUSD: number
-  status: 'pending' | 'paid'
+  /**
+   * Cuándo se pagó. Ausente mientras no se haya pagado.
+   *
+   * El estado que `001` exige —`pending` / `due` / `paid`— no se guarda: se deriva, porque `due`
+   * no es algo que alguien escriba sino un hecho sobre el mundo (su hito se certificó y la máquina
+   * se recibió). Guardarlo sería poder contradecirlo. Ver `instalmentState` en `operation.ts`.
+   */
+  paidAt?: Date
 }
 
 /**
@@ -194,7 +218,6 @@ export function produceInstalmentSchedule(assessment: Assessment): readonly Inst
     // La última absorbe el redondeo. El costo del financiamiento no lo fija ninguna spec y
     // deliberadamente no se inventa aquí.
     amountUSD: index === milestones.length - 1 ? financed - each * (milestones.length - 1) : each,
-    status: 'pending' as const,
   }))
 }
 

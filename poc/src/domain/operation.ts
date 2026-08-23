@@ -40,51 +40,112 @@ export function confirmReceipt(operation: LeasingOperation, at: Date): void {
  *           antes de que el hito se certifique recrea exactamente el faltante que impidió al
  *           cliente comprar la máquina, que es la brecha que Lea$e existe para cerrar.
  */
+/**
+ * Los tres estados que `001` exige de una cuota: `pending`, `due`, `paid`.
+ *
+ * `due` se agregó el 2026-08-21 y la spec dice por qué con todas las letras: una cuota que no lleva
+ * noción de cuándo se debe «no puede expresar lo único que distingue a Lea$e de un prestamista con
+ * calendario». Sin él, `pending` mezclaba dos situaciones que no se parecen — una cuota esperando a
+ * que la obra avance y una cuota exigible que el cliente no pagó.
+ */
+export type InstalmentState = 'pending' | 'due' | 'paid'
+
+/** Lo que le falta a una cuota para ser exigible, con la regla que lo manda. */
+export interface Waiting {
+  readonly rule: 'BR-04' | 'BR-08'
+  readonly because: string
+}
+
+/**
+ * Qué le falta a una cuota, o nada si ya es exigible.
+ *
+ * `001` paso 13 pide que de una cuota pendiente se sepa *qué está esperando*, no solo que espera.
+ * El orden importa: BR-08 gobierna la operación entera y BR-04 la cuota, así que una recepción sin
+ * confirmar se reporta antes que un hito sin certificar.
+ */
+export function waitingOn(
+  instalment: Instalment,
+  operation: LeasingOperation,
+  milestones: readonly CertificationMilestone[],
+): Waiting | undefined {
+  if (!operation.receiptConfirmedAt) {
+    return { rule: 'BR-08', because: 'ninguna cuota es exigible antes de confirmarse la recepción' }
+  }
+  const milestone = milestones.find((m) => m.id === instalment.anchoredTo)
+  if (!milestone) {
+    throw new SpecViolation(`la cuota ${instalment.id} está anclada a un hito que no existe`)
+  }
+  if (!milestone.certifiedAt) {
+    return {
+      rule: 'BR-04',
+      because: `la cuota vence contra la certificación de «${milestone.name}», que aún no ocurrió`,
+    }
+  }
+  return undefined
+}
+
+export function instalmentState(
+  instalment: Instalment,
+  operation: LeasingOperation,
+  milestones: readonly CertificationMilestone[],
+): InstalmentState {
+  if (instalment.paidAt) return 'paid'
+  return waitingOn(instalment, operation, milestones) ? 'pending' : 'due'
+}
+
 export function payInstalment(
   operation: LeasingOperation,
   instalmentId: string,
   milestones: readonly CertificationMilestone[],
+  at: Date,
 ): void {
   const instalment = operation.instalments.find((i) => i.id === instalmentId)
   if (!instalment) throw new SpecViolation(`la cuota ${instalmentId} no pertenece a la operación`)
-  if (instalment.status === 'paid') throw new SpecViolation(`la cuota ${instalmentId} ya está pagada`)
+  if (instalment.paidAt) throw new SpecViolation(`la cuota ${instalmentId} ya está pagada`)
 
-  if (!operation.receiptConfirmedAt) {
-    throw new RuleViolation('BR-08', 'ninguna cuota es exigible antes de confirmarse la recepción')
-  }
+  // Solo se paga una cuota `due`. El rechazo cita la regla que la retiene, no un estado.
+  const waiting = waitingOn(instalment, operation, milestones)
+  if (waiting) throw new RuleViolation(waiting.rule, waiting.because)
 
-  const milestone = milestones.find((m) => m.id === instalment.anchoredTo)
-  if (!milestone) {
-    throw new SpecViolation(`la cuota ${instalmentId} está anclada a un hito que no existe`)
-  }
-  if (!milestone.certifiedAt) {
-    throw new RuleViolation(
-      'BR-04',
-      `la cuota vence contra la certificación de «${milestone.name}», que aún no ocurrió`,
-    )
-  }
-
-  instalment.status = 'paid'
+  instalment.paidAt = at
 }
 
 export function paidCount(operation: LeasingOperation): number {
-  return operation.instalments.filter((i) => i.status === 'paid').length
+  return operation.instalments.filter((i) => i.paidAt).length
 }
 
-export function pendingCount(operation: LeasingOperation): number {
-  return operation.instalments.filter((i) => i.status === 'pending').length
+/** Las que faltan pagar — `pending` y `due` juntas. Es lo que BR-07 mira para abrir la opción. */
+export function unpaidCount(operation: LeasingOperation): number {
+  return operation.instalments.filter((i) => !i.paidAt).length
+}
+
+/** Las exigibles hoy: su hito se certificó y la máquina se recibió. */
+export function dueCount(
+  operation: LeasingOperation,
+  milestones: readonly CertificationMilestone[],
+): number {
+  return operation.instalments.filter((i) => instalmentState(i, operation, milestones) === 'due').length
+}
+
+/** Las que todavía esperan algo. */
+export function pendingCount(
+  operation: LeasingOperation,
+  milestones: readonly CertificationMilestone[],
+): number {
+  return operation.instalments.filter((i) => instalmentState(i, operation, milestones) === 'pending')
+    .length
 }
 
 /** Todas pagadas, y nunca antes. BR-07: es la única forma en que termina la propiedad de BR-01. */
 export function acquisitionOptionStatus(operation: LeasingOperation): AcquisitionOptionStatus {
-  return pendingCount(operation) === 0 ? 'available' : 'not yet available'
+  return unpaidCount(operation) === 0 ? 'available' : 'not yet available'
 }
 
 export function exerciseAcquisitionOption(operation: LeasingOperation, at: Date): void {
   if (acquisitionOptionStatus(operation) !== 'available') {
     throw new RuleViolation(
       'BR-07',
-      `la opción se abre al pagarse todas las cuotas; quedan ${pendingCount(operation)} pendientes`,
+      `la opción se abre al pagarse todas las cuotas; quedan ${unpaidCount(operation)} sin pagar`,
     )
   }
   if (operation.acquisitionExercisedAt) {

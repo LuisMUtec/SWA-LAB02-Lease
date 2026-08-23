@@ -12,6 +12,9 @@
 # spec y Stage 1. Esto prueba algo que aquel no puede: que las tres superficies de herramientas
 # alcanzan para llevar el caso de punta a punta, y que el estado cruza procesos.
 #
+# Los números son los de `CASE` en `src/thread.ts` — 128.000 de máquina, 12.800 de inicial (el tope
+# de BR-12). Cuando divergían, dos cosas que decíamos «el mismo caso» corrían con datos distintos.
+#
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -64,7 +67,7 @@ step carlos revisar_evidencia --expedienteId "$AS"
 step carlos consultar_limite_autoridad --expedienteId "$AS"
 step carlos registrar_aprobacion --expedienteId "$AS" \
   --razon "Proyecto adjudicado con calendario de valorizaciones y pagador publico" \
-  --inicialUSD 19200 --garantias "Prenda sobre la maquina y seguro con Lease como beneficiario"
+  --inicialUSD 12800 --garantias "Prenda sobre la maquina y seguro con Lease como beneficiario"
 step carlos producir_calendario_cuotas --expedienteId "$AS"; OP=$LAST_ID
 step pedro consultar_estado_solicitud --solicitudId "$REQ"
 
