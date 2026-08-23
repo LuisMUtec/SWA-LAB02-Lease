@@ -31,6 +31,24 @@ jobs:
       - name: Correr el hilo
         run: node src/cli/demo.ts --no-color
 
+      # La frontera de autoridad de los agentes. Es una comprobacion estructural sobre datos, asi
+      # que corre sin llave de API y sin red: si un agente llegara a sostener una herramienta
+      # fuera de su superficie, el build falla.
+      - name: La frontera de autoridad se sostiene
+        run: node src/cli/agent.ts --matrix
+
+      # Levanta los tres servidores MCP de verdad y comprueba que cada uno sirve solo su
+      # superficie y que los tres comparten el mundo. Sin llave de API y sin red.
+      - name: Los servidores MCP sirven su superficie
+        run: node src/mcp/smoke.ts
+
+      # Recorre Stage 1 de punta a punta por línea de comandos —un proceso por paso, un solo mundo
+      # en SQLite— y después abre el mundo en un proceso nuevo y afirma el estado final regla por
+      # regla. Comprueba lo que el hilo determinista no puede: que las tres superficies de
+      # herramientas alcanzan para llevar el caso completo, y que el estado cruza procesos.
+      - name: El e2e corre por CLI y el estado final se sostiene
+        run: npm run e2e -- --no-color
+
       # La transcripción versionada tiene que corresponder a lo que el código hace hoy. El reloj
       # es fijo, así que cualquier diferencia es un cambio real, no ruido.
       - name: La evidencia está al día

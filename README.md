@@ -101,7 +101,9 @@ gate de 8/10 sin margen.
 
 Falta correr el EVAL. Las tres specs están en Draft y ninguna ha pasado por `/speckit-clarify`.
 
-El POC corre. Sus `Stage 1` no son tres entregas sino una sola corrida —lo que `001` declara fuera
+El POC corre por tres vías sobre una sola definición de herramientas: línea de comandos
+(`npm run e2e`, sin llave ni red), tres servidores MCP acotados por actor, y el SDK de
+Anthropic. Sus `Stage 1` no son tres entregas sino una sola corrida —lo que `001` declara fuera
 de alcance es exactamente lo que `002` y `003` producen—, y [`poc/`](poc/README.md) la construye
 completa: 30 pasos, cada uno citando la spec y el número de Stage 1 que le manda, con las siete
 reglas que Stage 1 ejerce. La transcripción queda versionada en `poc/evidence/run.txt`.
