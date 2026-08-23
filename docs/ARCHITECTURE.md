@@ -1,14 +1,13 @@
 # Arquitectura — Lea$e
 
-El presente documento describe la arquitectura del sistema en cuatro vistas complementarias. Cada
-una delimita un aspecto distinto y no reitera lo afirmado por las restantes.
+La arquitectura del sistema se describe en cuatro vistas complementarias.
 
 | Vista | Objeto |
 |---|---|
 | [V1 · Contexto de negocio](#v1--contexto-de-negocio) | Actores externos del sistema y flujos entre ellos |
 | [V2 · Frontera de autoridad](#v2--frontera-de-autoridad) | Distribución de capacidades por actor y cruces prohibidos |
 | [V3 · Capas y transportes](#v3--capas-y-transportes) | Estructura del código y dirección de sus dependencias |
-| [V4 · Recorrido de Stage 1](#v4--recorrido-de-stage-1) | Secuencia del recorrido implementado |
+| [V4 · Recorrido de Stage 1](#v4--recorrido-de-stage-1) | Secuencia de los pasos implementados |
 
 ## Objeto y delimitación
 
@@ -18,7 +17,7 @@ No redefine reglas de negocio, que cita a [`business-rules.md`](../business-rule
 qué hace el sistema, atribución exclusiva de [`specs/`](../specs/) conforme al Principio IV; y no
 documenta la ejecución del POC, materia de [`poc/README.md`](../poc/README.md).
 
-Constituye el *design record* que el Principio I designa sin asignarle ubicación:
+Ocupa la posición del *design record* que el Principio I designa sin ubicar:
 
 > *No architecture decision, component boundary, diagram, or line of POC code may be produced before
 > the requirement it serves exists in the spec chain.* […] *A queue, a cloud product, or a topology
@@ -27,7 +26,7 @@ Constituye el *design record* que el Principio I designa sin asignarle ubicació
 
 De dicho principio se deriva la regla de redacción que el documento observa: todo componente y toda
 relación representados citan el requisito funcional (`FR-nnn`) o la regla de negocio (`BR-nn`) que
-los origina. Un elemento sin cita constituye un defecto. El
+los origina. Un elemento sin cita es un defecto. El
 [procedimiento de verificación](#procedimiento-de-verificación) permite comprobarlo.
 
 ---
@@ -36,8 +35,7 @@ los origina. Un elemento sin cita constituye un defecto. El
 
 El enunciado incorpora dos diagramas
 ([1](lab-02-diagram-1-request-purchase.png), [2](lab-02-diagram-2-delivery-payment-acquisition.png))
-con tres actores y seis relaciones. La vista las recoge y añade una séptima que aquéllos no
-representan.
+con tres actores y seis relaciones. La vista las recoge y añade una séptima, ausente en el enunciado.
 
 ```mermaid
 flowchart TB
@@ -77,8 +75,7 @@ flowchart TB
 
 ### Dependencia del pagador del proyecto
 
-Las siete primeras relaciones proceden del enunciado. La 7bis no consta en él y constituye el aporte
-de esta vista.
+Las siete primeras relaciones proceden del enunciado; la 7bis es el aporte de esta vista.
 
 Puesto que las cuotas vencen contra la certificación del proyecto (BR-04), la capacidad de repago no
 depende del solicitante sino del agente que le paga. `002` FR-008 exige nombrarlo aun cuando su
@@ -87,24 +84,22 @@ persona [`Carlos.MD`](../personas/Carlos.MD) formula la misma condición: *«He 
 companies and only has a file on one»*.
 
 La omisión de esta relación priva a BR-04 de fundamento y reduce el sistema a la administración de
-contratos que el Principio III excluye, esto es, un sistema que no interviene sobre la causa por la
-que el cliente no puede financiar el equipo por adelantado.
+contratos que el Principio III excluye: una que deja intacta la causa por la que el cliente no puede
+financiar el equipo por adelantado.
 
 ### Naturaleza de BR-03
 
-BR-03 constituye una restricción sobre la forma del contrato, no una integración con terceros. Lea$e
-no es banco, financiera, cooperativa registrada ni empresa inscrita en el registro SBS de
-arrendamiento, por lo que el régimen del D.L. 299 le resulta inaplicable. Ello no impide que un
-arrendamiento comercial concluya en adquisición, que es estipulación civil. La regla figura en el
-catálogo y no entre las que el código ejerce, dado que determina el régimen de contratación y no un
-comportamiento del sistema.
+BR-03 es una restricción sobre la forma del contrato, no una integración con terceros. Lea$e no es
+banco, financiera, cooperativa registrada ni empresa inscrita en el registro SBS de arrendamiento,
+por lo que el régimen del D.L. 299 le resulta inaplicable. Ello deja abierta la adquisición al
+término de un arrendamiento comercial, que es estipulación civil. La regla figura en el catálogo, pero el código no
+la ejerce: gobierna el régimen bajo el que se contrata, materia ajena a la conducta del sistema.
 
 ---
 
 ## V2 · Frontera de autoridad
 
-La separación de funciones constituye un invariante verificado por la integración continua en cada
-push, y no una convención documental.
+La integración continua verifica la separación de funciones en cada push.
 
 ```mermaid
 flowchart TB
@@ -129,9 +124,9 @@ flowchart TB
 | Carlos → `flota` | `registrar_entrega`, `cerrar_despliegue_por_adquisicion`. Decidir el préstamo y ejecutarlo no pueden corresponder a la misma persona | `002` FR-021 |
 | Julia → `decision` | `registrar_aprobacion`, `pagar_cuota`. Ejecuta sobre la máquina y no determina el incumplimiento del cliente | `003` FR-021 |
 
-La superficie `cliente` no interviene en ninguno de los cruces prohibidos, por no constituir una
-superficie de Lea$e. La frontera que las especificaciones establecen es interna a la empresa y separa
-la decisión de la ejecución.
+La superficie `cliente` queda fuera de los cruces prohibidos, por situarse fuera de Lea$e. La
+frontera que las especificaciones establecen es interna a la empresa y separa la decisión de la
+ejecución.
 
 ### Correspondencia en tres capas
 
@@ -152,9 +147,9 @@ superficie.
 requiere que el estado `Service Due` sea observable por el custodio, que se sitúa del lado del
 cliente.
 
-El criterio de asignación es la naturaleza del acto y no el actor al que la herramienta se refiere.
-La herramienta consulta el estado de una máquina que la empresa mantiene en custodia y no ejecuta
-operación alguna sobre la flota: no incorpora máquinas, no entrega, no acuerda ventanas de servicio
+El criterio de asignación es la naturaleza del acto, con independencia del actor al que la
+herramienta se refiera. Ésta consulta el estado de una máquina que la empresa mantiene en custodia y
+carece de efecto sobre la flota: no incorpora máquinas, no entrega, no acuerda ventanas de servicio
 ni cierra despliegues. Dichos actos permanecen en la superficie `flota`.
 
 ### Naturaleza de la frontera
@@ -169,8 +164,8 @@ registrar_entrega es una herramienta de Julia, no de Carlos.
   002 FR-021 — decidir prestar y prestar no pueden ser el acto de la misma persona
 ```
 
-El campo `tools:` del frontmatter de los subagentes en `.claude/agents/` opera como refuerzo y no
-como mecanismo: la garantía no depende de que el entorno de ejecución respete una lista de permitidos.
+El campo `tools:` del frontmatter de los subagentes en `.claude/agents/` opera como refuerzo: la
+garantía no depende de que el entorno de ejecución respete una lista de permitidos.
 
 ---
 
@@ -233,7 +228,7 @@ herramientas. El sistema presenta cinco entradas, dos de las cuales no atraviesa
 | `cli/demo.ts` + `thread.ts` | no: invoca el dominio directamente | memoria, reloj fijo | no |
 | `cli/verify.ts` | no: acceso de solo lectura | SQLite, proceso independiente | no |
 
-La cuarta entrada constituye la vía determinista del entregable: se ejecuta sin acceso a la red y su
+La cuarta entrada es la vía determinista del entregable: se ejecuta sin acceso a la red y su
 transcripción, versionada en [`poc/evidence/run.txt`](../poc/evidence/run.txt), es comparada byte a
 byte por la integración continua.
 
@@ -248,7 +243,7 @@ definición sirve tanto a un proceso de vida larga como a uno de invocación ún
 Los hitos de certificación atraviesan agregados y procesos: `002` los crea al registrar el proyecto y
 los certifica conforme avanza la obra, y `001` los consulta para determinar la exigibilidad de una
 cuota (BR-04). Al ejecutarse tres servidores MCP como procesos independientes, los hitos requieren
-tratamiento de estado compartido, razón por la que se sitúan en `World` y no entre los repositorios.
+tratamiento de estado compartido, y por ello se sitúan en `World`, fuera de los repositorios.
 
 ### Estado compartido
 
@@ -259,18 +254,17 @@ de su extensión.
 
 ### Evolución de la persistencia
 
-El almacén SQLite conserva el estado completo como un documento en una única fila. Constituye un
-almacén de prueba de concepto y no un modelo de datos. La incorporación de Postgres o Neon se
-resuelve mediante un adaptador adicional tras `ports/world.ts`, sin modificación del dominio ni del
-hilo determinista. Esta propiedad es la finalidad de la costura y la que distingue el diseño de una
-aplicación de gestión genérica.
+El almacén SQLite conserva el estado completo como un documento en una única fila: es un almacén de
+prueba de concepto, no un modelo de datos. La incorporación de Postgres o Neon se resuelve mediante
+un adaptador adicional tras `ports/world.ts`, sin modificación del dominio ni del hilo determinista.
+Esta propiedad es la finalidad de la costura.
 
 ---
 
 ## V4 · Recorrido de Stage 1
 
-Los `Stage 1` de las tres especificaciones no constituyen tres entregas independientes sino un único
-recorrido: lo que `001` declara fuera de alcance es precisamente lo que `002` y `003` producen.
+Los `Stage 1` de las tres especificaciones forman un único recorrido: lo que `001` declara fuera de
+alcance es precisamente lo que `002` y `003` producen.
 
 ```mermaid
 sequenceDiagram
@@ -345,8 +339,8 @@ respuesta errónea del modelo no puede infringir una regla de negocio.
 ### Verificabilidad de D4
 
 D4 exige que la primera etapa del alcance corresponda exactamente al recorrido que el POC construye.
-La fuente de esta vista no es la especificación sino
-[`poc/evidence/run.txt`](../poc/evidence/run.txt), la transcripción versionada de la ejecución.
+Esta vista se deriva de [`poc/evidence/run.txt`](../poc/evidence/run.txt), la transcripción
+versionada de la ejecución, y no de la especificación que dicha ejecución debe satisfacer.
 
 `npm run citations -- --check` verifica dicha correspondencia en tres extremos: que el paso citado
 exista, que su texto coincida con el registrado en el último snapshot versionado, y que ningún paso
