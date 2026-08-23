@@ -10,7 +10,9 @@
   "scripts": {
     "demo": "node src/cli/demo.ts",
     "demo:evidence": "node src/cli/demo.ts --no-color > evidence/run.txt; cat evidence/run.txt",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "agent": "node src/cli/agent.ts",
+    "agent:matrix": "node src/cli/agent.ts --matrix"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
