@@ -44,13 +44,60 @@ const fields = (tool: ToolDef): [string, z.ZodType][] => Object.entries(tool.sha
 const field = (tool: ToolDef, name: string): z.ZodType | undefined =>
   tool.shape[name] as z.ZodType | undefined
 
-const typeOf = (schema: z.ZodType): string => (schema as { def?: { type?: string } }).def?.type ?? '?'
+type Def = { type?: string; element?: z.ZodType; shape?: Record<string, z.ZodType> }
+const defOf = (schema: z.ZodType): Def => (schema as unknown as { def?: Def }).def ?? {}
+const typeOf = (schema: z.ZodType): string => defOf(schema).type ?? '?'
+
+/**
+ * La forma que hay que escribir para satisfacer un esquema.
+ *
+ * `<array>` a secas no le sirve a nadie: un agente con la instruccion de no inventar nada se queda
+ * sin manera de averiguar que lleva adentro, y termina probando formatos hasta acertar. Esto baja
+ * hasta el elemento y devuelve algo copiable.
+ */
+function shapeOf(schema: z.ZodType): string {
+  const def = defOf(schema)
+  switch (def.type) {
+    case 'array':
+      return def.element ? `[${shapeOf(def.element)}, ...]` : '[...]'
+    case 'object': {
+      const inner = Object.entries(def.shape ?? {}).map(([k, v]) => `"${k}": ${shapeOf(v)}`)
+      return `{${inner.join(', ')}}`
+    }
+    case 'string':
+      return '"texto"'
+    case 'number':
+      return '123'
+    case 'boolean':
+      return 'true|false'
+    default:
+      return `<${def.type ?? '?'}>`
+  }
+}
+
+/** Las descripciones de los campos anidados, que de otro modo no se ven en ninguna parte. */
+function innerHints(schema: z.ZodType, path: string): string[] {
+  const def = defOf(schema)
+  if (def.type === 'array' && def.element) return innerHints(def.element, `${path}[]`)
+  if (def.type === 'object') {
+    return Object.entries(def.shape ?? {}).flatMap(([k, v]) =>
+      v.description ? [`      ${path}.${k} — ${v.description}`] : [],
+    )
+  }
+  return []
+}
 
 function describeTool(tool: ToolDef): string {
   const lines = [`${tool.name}`, ``, `  ${tool.description}`, ``]
   for (const [name, schema] of fields(tool)) {
     const hint = schema.description ? ` — ${schema.description}` : ''
+    const nested = typeOf(schema) === 'array' || typeOf(schema) === 'object'
     lines.push(`  --${name} <${typeOf(schema)}>${hint}`)
+    if (nested) {
+      // Una bandera anidada se pasa como JSON en una sola cadena. Se muestra tal cual se escribe.
+      lines.push(`      forma: '${shapeOf(schema)}'`)
+      lines.push(...innerHints(schema, `--${name}`))
+    }
   }
   return lines.join('\n')
 }
