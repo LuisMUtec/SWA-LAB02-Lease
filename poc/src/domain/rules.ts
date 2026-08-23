@@ -30,12 +30,17 @@ export type BusinessRule = keyof typeof BUSINESS_RULES
 /**
  * Las reglas que Stage 1 ejerce.
  *
- * BR-03 no produce comportamiento. De las cinco que se agregaron el 2026-08-21, solo BR-12 cae
- * dentro: `001` Stage 1 paso 9 liquida un pago inicial «within BR-12's cap». Las otras cuatro son
- * de etapas posteriores y las specs lo dicen ellas mismas — BR-09 y BR-10 gobiernan el
- * incumplimiento y la parada por seguridad, que ningún Stage 1 asume; BR-11 acota la opción a
- * treinta días pero su caducidad queda fuera («Stage 1 exercises it»); y de BR-13 Stage 1 ejerce el
- * dato —el Assessed Value— pero no su invariante, porque `003` excluye el deterioro expresamente.
+ * BR-03 no produce comportamiento. De las cinco que se agregaron el 2026-08-21 caen dentro dos:
+ *
+ *   BR-12 — `001` paso 9 liquida un pago inicial «within BR-12's cap».
+ *   BR-11 — `001` paso 15 ejerce la opción «within the 30-day window BR-11 allows». La *caducidad*
+ *           queda fuera —Stage 1 no deja caducar nada—, pero la ventana que la acota es lo que
+ *           hace admisible ese ejercicio, y el dominio la mide antes de aceptarlo.
+ *
+ * Las otras tres son de etapas posteriores y las specs lo dicen ellas mismas: BR-09 y BR-10
+ * gobiernan el incumplimiento y la parada por seguridad, que ningún Stage 1 asume; y de BR-13
+ * Stage 1 ejerce el dato —el Assessed Value de `003` pasos 2 y 8— pero no su invariante, porque
+ * `003` excluye el deterioro expresamente.
  */
 export const STAGE_1_RULES: readonly BusinessRule[] = [
   'BR-01',
@@ -45,6 +50,7 @@ export const STAGE_1_RULES: readonly BusinessRule[] = [
   'BR-06',
   'BR-07',
   'BR-08',
+  'BR-11',
   'BR-12',
 ]
 

@@ -16,7 +16,8 @@
  *
  * Cada paso cita la spec y el número que le manda. Eso hace que D4 —«su primera etapa es
  * exactamente el happy path que el POC construye»— sea verificable corriendo algo, en vez de
- * afirmable. Si Johar mueve un paso de Stage 1, este archivo deja de corresponder y se nota.
+ * afirmable. Si una spec mueve un paso de Stage 1, este archivo deja de corresponder y se nota —
+ * `src/cli/citations.ts` lo comprueba contra el texto de las tres.
  *
  * Solo happy path. Los tres Stage 1 dicen que nada en ellos supone un rechazo, una demora ni un
  * incumplimiento; un hilo que afirmara caminos negativos ya no sería Stage 1. Las guardas que las
@@ -33,22 +34,31 @@ import {
   DOWN_PAYMENT_CAP,
   availableOutcomes,
   certify,
+  confirmMachineryValue,
   isFullyEvidenced,
+  machineryValueOf,
   missingEvidence,
-  produceInstalmentSchedule,
+  produceInstallmentSchedule,
   recordDecision,
 } from './domain/underwriting.ts'
 import type { OperationId } from './domain/operation.ts'
 import {
   acquisitionOptionStatus,
+  acquisitionWindowEnds,
+  conditionsOf,
+  conditionsSettled,
   confirmReceipt,
   exerciseAcquisitionOption,
   operationState,
   dueCount,
-  instalmentState,
+  installmentFor,
+  installmentState,
   paidCount,
-  payInstalment,
+  payInstallment,
   pendingCount,
+  recordGuaranteesInPlace,
+  settleDownPayment,
+  unsettledConditions,
   waitingOn,
 } from './domain/operation.ts'
 import type { DeploymentId, MachineId } from './domain/fleet.ts'
@@ -56,12 +66,15 @@ import {
   agreeServiceWindow,
   closeByAcquisitionRetirement,
   completeService,
+  currentAssessedValue,
   headingFor,
   hoursSinceLastService,
   isServiceDue,
+  openServiceWindow,
   overdueHours,
   recordHandover,
   recordReading,
+  requestServiceWindow,
 } from './domain/fleet.ts'
 
 /**
@@ -86,6 +99,10 @@ const CASE = {
   deployment: 'DP-0001' as DeploymentId,
 
   machineryValueUSD: 128_000,
+  // FR-031b: lo que Lea$e estima que vale al entregarla, y otra vez al completarse el servicio.
+  // El cliente no acepta ninguna de las dos — `003` paso 2 lo dice expresamente.
+  assessedValueAtHandoverUSD: 128_000,
+  assessedValueAfterServiceUSD: 121_000,
   // Un décimo, que es el tope de BR-12. Antes eran 25.600 —un quinto—, escritos cuando la regla
   // todavía no existía: la iteración del 2026-08-21 la agregó y este caso pasó a violarla.
   downPaymentUSD: 12_800,
@@ -97,6 +114,7 @@ const CASE = {
     { hours: 265, at: new Date('2026-09-25T00:00:00.000Z') },
   ],
   serviceWindow: {
+    requestedAt: new Date('2026-09-25T00:00:00.000Z'),
     from: new Date('2026-09-26T00:00:00.000Z'),
     to: new Date('2026-09-30T00:00:00.000Z'),
     completedAt: new Date('2026-09-28T00:00:00.000Z'),
@@ -151,18 +169,13 @@ function deployment(w: World) {
 export const UNCOVERED: Readonly<Record<SpecId, Readonly<Record<number, string>>>> = {
   '001': {
     1: 'precondición: el caso arranca con el proyecto ya adjudicado',
-    7: 'el mismo momento que `003`·2, y el hilo lo construye desde el lado de Julia (S15)',
-    9: 'NO CONSTRUIDO — liquidar las condiciones antes de que arranque el calendario',
-    11: 'el hilo afirma la transición a `due` dentro de S24, que cita el paso 12; merecería paso propio',
+    7: 'el mismo momento que `003`·2 —la spec lo dice así— y el hilo lo construye del lado de Julia',
   },
   '002': {
-    1: 'precondición: la solicitud la envía `001`, y el hilo la construye ahí (S02)',
-    11: 'NO CONSTRUIDO — registrar como cumplida una condición de la aprobación',
-    12: 'el hilo relee el expediente en pasos posteriores, así que la retención se ejerce sin paso propio',
-    13: 'la certificación ocurre dentro de S24, que cita `001`·12; merecería paso propio',
+    1: 'precondición: la solicitud la envía `001`, y el hilo la construye ahí',
   },
   '003': {
-    1: 'precondición: la aprobación es de `002` y la compra de la máquina es S14',
+    1: 'precondición: la aprobación es de `002` y la compra de la máquina es un paso de `001`',
   },
 }
 
@@ -234,7 +247,7 @@ export const THREAD: readonly Step<World>[] = [
       w.assessments.save({
         id: CASE.assessment,
         requestId: CASE.request,
-        machineryValueUSD: CASE.machineryValueUSD,
+        machineryValueStatedUSD: CASE.machineryValueUSD,
       })
       check(
         w.assessments.byRequest(CASE.request)?.id === CASE.assessment,
@@ -278,6 +291,28 @@ export const THREAD: readonly Step<World>[] = [
     id: 'S07',
     actor: 'Carlos',
     spec: '002',
+    stage1: 4,
+    what: 'confirma el valor de maquinaria que el solicitante declaró',
+    run: (w) => {
+      // Declarar y confirmar son dos actos: el primero lo hace quien pide, el segundo quien
+      // arriesga. El paso 4 de `002` los pone juntos porque el límite del paso 8 y el tope de
+      // BR-12 se miden contra el confirmado — medir contra el declarado sería dejar que el
+      // solicitante elija su propio límite.
+      confirmMachineryValue(assessment(w), {
+        amountUSD: CASE.machineryValueUSD,
+        note: 'Cotización del distribuidor autorizado, vigente 30 días',
+        at: w.clock.now(),
+      })
+      check(
+        machineryValueOf(assessment(w)) === CASE.machineryValueUSD,
+        'el valor sobre el que se decide no es el confirmado',
+      )
+    },
+  },
+  {
+    id: 'S08',
+    actor: 'Carlos',
+    spec: '002',
     stage1: 5,
     what: 'registra el proyecto y su calendario de certificación',
     run: (w) => {
@@ -296,7 +331,7 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S08',
+    id: 'S09',
     actor: 'Carlos',
     spec: '002',
     stage1: 6,
@@ -311,7 +346,7 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S09',
+    id: 'S10',
     actor: 'Lea$e',
     spec: '002',
     stage1: 7,
@@ -323,13 +358,13 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S10',
+    id: 'S11',
     actor: 'Lea$e',
     spec: '002',
     stage1: 8,
     what: 'verifica el valor contra el límite de autoridad',
     run: (w) => {
-      const value = assessment(w).machineryValueUSD
+      const value = machineryValueOf(assessment(w))
       check(
         value <= AUTHORITY_LIMIT_USD,
         `USD ${value.toLocaleString('en-US')} excede el límite de USD ${AUTHORITY_LIMIT_USD.toLocaleString('en-US')}`,
@@ -342,7 +377,7 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S11',
+    id: 'S12',
     actor: 'Carlos',
     spec: '002',
     stage1: 9,
@@ -378,33 +413,38 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S12',
+    id: 'S13',
     actor: 'Lea$e',
     spec: '002',
     stage1: 10,
     what: 'produce el calendario anclado a hitos',
     rules: ['BR-04'],
     run: (w) => {
-      const instalments = produceInstalmentSchedule(assessment(w))
+      const installments = produceInstallmentSchedule(assessment(w))
+      const approved = assessment(w).decision?.conditions
+      check(approved !== undefined, 'la aprobación no dejó condiciones que copiar')
       w.operations.save({
         id: CASE.operation,
         requestId: CASE.request,
-        instalments,
+        installments,
+        // La operación se lleva copia de las condiciones: liquidarlas es acto de Pedro y el
+        // expediente es de Carlos — `001` paso 9 contra `002` paso 11.
+        conditions: conditionsOf(approved),
       })
 
-      check(instalments.length === MILESTONES.length, 'una valorización quedó sin cuota')
+      check(installments.length === MILESTONES.length, 'una valorización quedó sin cuota')
       // Cada cuota nombra el hito cuya certificación la hace exigible, y ninguna una fecha propia.
-      for (const instalment of instalments) {
-        const milestone = MILESTONES.find((m) => m.id === instalment.anchoredTo)
-        check(milestone !== undefined, `la cuota ${instalment.id} no ancla a un hito del proyecto`)
+      for (const installment of installments) {
+        const milestone = MILESTONES.find((m) => m.id === installment.anchoredTo)
+        check(milestone !== undefined, `la cuota ${installment.id} no ancla a un hito del proyecto`)
       }
       const financed = CASE.machineryValueUSD - CASE.downPaymentUSD
-      const total = instalments.reduce((sum, i) => sum + i.amountUSD, 0)
+      const total = installments.reduce((sum, i) => sum + i.amountUSD, 0)
       check(total === financed, `el calendario suma ${total} y lo financiado es ${financed}`)
     },
   },
   {
-    id: 'S13',
+    id: 'S14',
     actor: 'Pedro',
     spec: '001',
     stage1: 5,
@@ -418,7 +458,7 @@ export const THREAD: readonly Step<World>[] = [
 
   // ─── La entrega ──────────────────────────────────────────────────────────────
   {
-    id: 'S14',
+    id: 'S15',
     actor: 'Lea$e',
     spec: '001',
     stage1: 6,
@@ -438,7 +478,7 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S15',
+    id: 'S16',
     actor: 'Julia',
     spec: '003',
     stage1: 2,
@@ -452,6 +492,7 @@ export const THREAD: readonly Step<World>[] = [
         contractedSite: 'Km 42+500, tramo II',
         acceptedByLease: 'Julia',
         acceptedByClient: 'Rosa Quispe',
+        assessedValueUSD: CASE.assessedValueAtHandoverUSD,
         at: CASE.handoverAt,
       })
       w.deployments.save(created)
@@ -459,10 +500,19 @@ export const THREAD: readonly Step<World>[] = [
       check(Boolean(created.handover.custodian), 'la entrega quedó sin custodio nombrado')
       check(Boolean(created.handover.acceptedByLease), 'Lea$e no aceptó el acta')
       check(Boolean(created.handover.acceptedByClient), 'el cliente no aceptó el acta')
+      // FR-031b: la valorización va junto a la entrega, y **fuera** del acta que ambos firman.
+      check(
+        currentAssessedValue(created).amountUSD === CASE.assessedValueAtHandoverUSD,
+        'la entrega no dejó registrado el valor estimado de la máquina',
+      )
+      check(
+        !Object.hasOwn(created.handover, 'assessedValueUSD'),
+        'el valor estimado se coló en el acta que el cliente acepta',
+      )
     },
   },
   {
-    id: 'S16',
+    id: 'S17',
     actor: 'Lea$e',
     spec: '003',
     stage1: 3,
@@ -479,7 +529,7 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S17',
+    id: 'S18',
     actor: 'Pedro',
     spec: '001',
     stage1: 8,
@@ -494,24 +544,69 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S18',
+    id: 'S19',
+    actor: 'Pedro',
+    spec: '001',
+    stage1: 9,
+    what: 've las condiciones que la aprobación cargó y paga el inicial',
+    rules: ['BR-12'],
+    run: (w) => {
+      const op = operation(w)
+      // FR-022: las condiciones son suyas de ver, no solo de cumplir. Un cliente que no puede
+      // leerlas no puede saber qué le falta para que el calendario arranque.
+      check(op.conditions.downPaymentUSD === CASE.downPaymentUSD, 'la operación no lleva el inicial que se aprobó')
+      check(Boolean(op.conditions.guarantees), 'la operación no dice qué garantía se exigió')
+      check(
+        op.conditions.downPaymentUSD <= CASE.machineryValueUSD * DOWN_PAYMENT_CAP,
+        'el inicial que hay que liquidar excede el décimo que BR-12 tolera',
+      )
+
+      // Mientras haya condición sin liquidar, el calendario no arranca: la cuota espera eso y no
+      // su hito, y `001` paso 13 pide que la cuota sepa decir cuál de las dos cosas espera.
+      const first = op.installments[0]
+      check(first !== undefined, 'la operación no tiene cuotas')
+      check(waitingOn(first, op, MILESTONES)?.cite === '001 FR-024', 'la cuota no espera las condiciones')
+
+      settleDownPayment(op, CASE.downPaymentUSD, CASE.handoverAt)
+      check(op.conditions.downPaymentSettledAt !== undefined, 'el inicial no quedó liquidado')
+      check(!conditionsSettled(op), 'las condiciones no pueden estar completas: falta la garantía')
+    },
+  },
+  {
+    id: 'S20',
+    actor: 'Carlos',
+    spec: '002',
+    stage1: 11,
+    what: 'registra la garantía en su lugar y las condiciones quedan liquidadas',
+    run: (w) => {
+      const op = operation(w)
+      // FR-012c: la garantía la constata quien la exigió. Es la otra mitad del paso 9 de `001`,
+      // y hasta que las dos estén no hay calendario que corra.
+      recordGuaranteesInPlace(op, CASE.handoverAt)
+      check(conditionsSettled(op), `todavía falta ${unsettledConditions(op).join(' y ')}`)
+      check(unsettledConditions(op).length === 0, 'quedó una condición sin liquidar')
+    },
+  },
+  {
+    id: 'S21',
     actor: 'Pedro',
     spec: '001',
     stage1: 10,
     what: 've sus cuotas y el estado de cada una',
     run: (w) => {
       const op = operation(w)
-      check(op.instalments.length === MILESTONES.length, 'no ve todas sus cuotas')
+      check(op.installments.length === MILESTONES.length, 'no ve todas sus cuotas')
       check(paidCount(op) === 0, 'hay cuotas pagadas antes de tiempo')
-      // Recibida la máquina pero sin ninguna valorización certificada, las seis están `pending` y
-      // todas esperan lo mismo: su hito. Eso es lo que `001` paso 13 pide poder decir de cada una.
+      // Recibida la máquina y liquidadas las condiciones, pero sin ninguna valorización
+      // certificada, las seis están `pending` y todas esperan lo mismo: su hito. Eso es lo que
+      // `001` paso 13 pide poder decir de cada una.
       check(pendingCount(op, MILESTONES) === MILESTONES.length, 'las pendientes no son todas')
       check(dueCount(op, MILESTONES) === 0, 'hay cuotas exigibles sin hito certificado')
-      for (const i of op.instalments) {
+      for (const i of op.installments) {
         check(waitingOn(i, op, MILESTONES)?.rule === 'BR-04', `${i.id} no espera su certificación`)
       }
       check(
-        acquisitionOptionStatus(op) === 'not yet available',
+        acquisitionOptionStatus(op, w.clock.now()) === 'not yet available',
         'la opción de adquisición no puede estar disponible aún',
       )
     },
@@ -519,7 +614,7 @@ export const THREAD: readonly Step<World>[] = [
 
   // ─── La máquina trabajando ───────────────────────────────────────────────────
   {
-    id: 'S19',
+    id: 'S22',
     actor: 'Julia',
     spec: '003',
     stage1: 4,
@@ -535,7 +630,7 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S20',
+    id: 'S23',
     actor: 'Lea$e',
     spec: '003',
     stage1: 5,
@@ -549,7 +644,31 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S21',
+    id: 'S24',
+    actor: 'Pedro',
+    spec: '003',
+    stage1: 5,
+    what: 'el custodio ve que su máquina necesita servicio',
+    rules: ['BR-06'],
+    run: (w) => {
+      // FR-010b: el estado es observable **por el custodio**, que está del lado del cliente y no
+      // pertenece a Lea$e. Si solo Julia pudiera verlo, quien tiene la máquina en el terreno se
+      // enteraría de que hay que pararla cuando alguien lo llame — y es él quien decide cuándo
+      // puede pararla.
+      const d = w.deployments.byOperation(CASE.operation)
+      check(d !== undefined, 'la operación del custodio no tiene despliegue')
+      check(d.id === CASE.deployment, 'el despliegue hallado no es el de la operación')
+      check(d.handover.custodian === 'Rosa Quispe — jefa de equipos de la constructora', 'el custodio no es el del acta')
+
+      const m = w.machines.byId(d.machineId)
+      check(m !== undefined, 'el despliegue no tiene máquina')
+      check(isServiceDue(m), 'el custodio no ve el servicio debido que Lea$e sí ve')
+      check(hoursSinceLastService(m) === 265, 'el custodio no ve las horas que lo hicieron vencer')
+      check(openServiceWindow(d) === undefined, 'hay una ventana pedida antes de pedirla')
+    },
+  },
+  {
+    id: 'S25',
     actor: 'Julia',
     spec: '003',
     stage1: 6,
@@ -566,38 +685,138 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S22',
+    id: 'S26',
     actor: 'Julia',
     spec: '003',
     stage1: 7,
-    what: 'acuerda una ventana de servicio con el cliente',
+    what: 'pide una ventana de servicio contra el despliegue',
+    rules: ['BR-06'],
     run: (w) => {
-      agreeServiceWindow(deployment(w), CASE.serviceWindow.from, CASE.serviceWindow.to)
-      check(deployment(w).serviceWindows.length === 1, 'la ventana no quedó registrada')
+      // FR-010b. Pedirla es lo único que puede hacer sola: la máquina está en una obra que no
+      // controla, y fijar cuándo se para es del que la tiene.
+      requestServiceWindow(deployment(w), machine(w), CASE.serviceWindow.requestedAt)
+      const window = openServiceWindow(deployment(w))
+      check(window !== undefined, 'la ventana pedida no quedó registrada')
+      check(window.agreed === undefined, 'la ventana quedó acordada sin que el cliente la acordara')
     },
   },
   {
-    id: 'S23',
+    id: 'S27',
+    actor: 'Pedro',
+    spec: '003',
+    stage1: 7,
+    what: 'el cliente acuerda el período en que liberará la máquina',
+    run: (w) => {
+      // FR-010: el acto es del cliente. Que sea un paso aparte es lo que impide que el pedido de
+      // Julia valga por el acuerdo.
+      agreeServiceWindow(
+        deployment(w),
+        CASE.serviceWindow.from,
+        CASE.serviceWindow.to,
+        CASE.serviceWindow.requestedAt,
+      )
+      const window = openServiceWindow(deployment(w))
+      check(window?.agreed !== undefined, 'la ventana no quedó acordada')
+      check(window.agreed.from.getTime() === CASE.serviceWindow.from.getTime(), 'la ventana empieza en otra fecha')
+      check(deployment(w).serviceWindows.length === 1, 'se abrió más de una ventana')
+    },
+  },
+  {
+    id: 'S28',
     actor: 'Julia',
     spec: '003',
     stage1: 8,
-    what: 'completa el servicio dentro de la ventana',
+    what: 'completa el servicio dentro de la ventana y revalúa la máquina',
     rules: ['BR-06'],
     run: (w) => {
-      const window = deployment(w).serviceWindows[0]
-      check(window !== undefined, 'no hay ventana acordada')
-      completeService(machine(w), window, CASE.serviceWindow.completedAt, machine(w).accumulatedHours)
+      completeService(
+        deployment(w),
+        machine(w),
+        CASE.serviceWindow.completedAt,
+        machine(w).accumulatedHours,
+        CASE.assessedValueAfterServiceUSD,
+      )
 
       check(!isServiceDue(machine(w)), 'la máquina sigue debiendo servicio')
       // El siguiente intervalo cuenta desde las horas al completarse, no desde la fecha.
       check(machine(w).hoursAtLastService === 265, 'el intervalo no se recontó desde las horas')
       check(hoursSinceLastService(machine(w)) === 0, 'quedaron horas colgando del servicio anterior')
+      // FR-031b: el otro momento en que alguien la mira de verdad, y por eso el otro en que se
+      // revalúa. Dos valorizaciones, no una: la de entrega y ésta.
+      check(deployment(w).assessedValues.length === 2, 'el servicio no dejó una revaluación')
+      check(
+        currentAssessedValue(deployment(w)).amountUSD === CASE.assessedValueAfterServiceUSD,
+        'la máquina no quedó revaluada al completarse el servicio',
+      )
+      check(currentAssessedValue(deployment(w)).because === 'servicio completado', 'la revaluación no dice qué la produjo')
     },
   },
 
   // ─── El pago ─────────────────────────────────────────────────────────────────
   {
-    id: 'S24',
+    id: 'S29',
+    actor: 'Carlos',
+    spec: '002',
+    stage1: 12,
+    what: 'relee la decisión, sus condiciones y la evidencia que la sostuvo',
+    run: (w) => {
+      // Una decisión que no se puede releer no se puede sostener, y es lo que se le pide a un
+      // analista cuando alguien pregunta por qué prestó. Sigue entera después de decidida.
+      const a = assessment(w)
+      check(a.decision?.outcome === 'approved', 'la decisión no es recuperable')
+      check(Boolean(a.decision?.reason), 'la decisión perdió su razón')
+      check(a.decision?.conditions?.downPaymentUSD === CASE.downPaymentUSD, 'las condiciones no son recuperables')
+      check(isFullyEvidenced(a), 'la evidencia sobre la que se decidió ya no está completa')
+      check(a.machineryValueConfirmation !== undefined, 'la confirmación del valor no quedó en el expediente')
+      check(a.project?.schedule.length === MILESTONES.length, 'el calendario de certificación no es recuperable')
+    },
+  },
+  {
+    id: 'S30',
+    actor: 'Carlos',
+    spec: '002',
+    stage1: 13,
+    what: 'registra la primera valorización como certificada y pagada',
+    rules: ['BR-04'],
+    run: (w) => {
+      // FR-024. Es el acto de Lea$e del que depende `001` paso 11: sin él ningún hito se certifica,
+      // ninguna cuota vence, y el POC pagaría contra el almanaque — el prestamista genérico que
+      // el Principio III prohíbe.
+      const first = MILESTONES[0]
+      check(first !== undefined, 'el proyecto no tiene valorizaciones')
+      certify(first, first.expectedAt)
+      check(first.certifiedAt !== undefined, 'la valorización no quedó certificada')
+    },
+  },
+  {
+    id: 'S31',
+    actor: 'Pedro',
+    spec: '001',
+    stage1: 11,
+    what: 'la cuota anclada a esa valorización se vuelve exigible',
+    rules: ['BR-04', 'BR-08'],
+    run: (w) => {
+      const op = operation(w)
+      const first = MILESTONES[0]
+      check(first !== undefined, 'el proyecto no tiene valorizaciones')
+      const installment = installmentFor(op, first.id)
+      check(installment !== undefined, `${first.name} no tiene cuota anclada`)
+
+      // Éste es el paso por el que el POC demuestra la brecha en vez de un libro mayor: el pago
+      // sigue el avance certificado de la obra, no una fecha. Y las dos condiciones son las que
+      // `001` paso 11 nombra — el hito certificado *y* la recepción confirmada.
+      check(op.receiptConfirmedAt !== undefined, 'la recepción no está confirmada')
+      check(
+        installmentState(installment, op, MILESTONES) === 'due',
+        `${installment.id} no se volvió exigible al certificarse ${first.name}`,
+      )
+      // Las otras cinco siguen esperando la suya: lo que venció es una cuota, no el calendario.
+      check(dueCount(op, MILESTONES) === 1, `exigibles inesperadas: ${dueCount(op, MILESTONES)}`)
+      check(pendingCount(op, MILESTONES) === MILESTONES.length - 1, 'las pendientes no son las cinco restantes')
+    },
+  },
+  {
+    id: 'S32',
     actor: 'Pedro',
     spec: '001',
     stage1: 12,
@@ -607,22 +826,23 @@ export const THREAD: readonly Step<World>[] = [
       const op = operation(w)
       for (const milestone of MILESTONES) {
         // El proyecto avanza y la valorización se certifica; recién entonces la cuota es exigible.
-        certify(milestone, milestone.expectedAt)
-        const instalment = op.instalments.find((i) => i.anchoredTo === milestone.id)
-        check(instalment !== undefined, `${milestone.name} no tiene cuota anclada`)
+        // La primera ya se certificó en su propio paso — el acto es de `002`·13, no de éste.
+        if (!milestone.certifiedAt) certify(milestone, milestone.expectedAt)
+        const installment = op.installments.find((i) => i.anchoredTo === milestone.id)
+        check(installment !== undefined, `${milestone.name} no tiene cuota anclada`)
         // Certificar es lo que la vuelve `due`. Ese estado intermedio es el que separa a Lea$e de
         // un prestamista con calendario, así que se observa antes de pagarla y no después.
         check(
-          instalmentState(instalment, op, MILESTONES) === 'due',
-          `${instalment.id} no se volvió exigible al certificarse ${milestone.name}`,
+          installmentState(installment, op, MILESTONES) === 'due',
+          `${installment.id} no se volvió exigible al certificarse ${milestone.name}`,
         )
-        payInstalment(op, instalment.id, MILESTONES, milestone.expectedAt)
+        payInstallment(op, installment.id, MILESTONES, milestone.expectedAt)
       }
       check(paidCount(op) === MILESTONES.length, 'quedaron cuotas sin pagar')
     },
   },
   {
-    id: 'S25',
+    id: 'S33',
     actor: 'Pedro',
     spec: '001',
     stage1: 13,
@@ -634,7 +854,7 @@ export const THREAD: readonly Step<World>[] = [
       check(pendingCount(op, MILESTONES) === 0, `pendientes inesperadas: ${pendingCount(op, MILESTONES)}`)
       // Las tres cifras dan cuenta de todas las cuotas, siempre: no hay una cuarta situación.
       check(
-        paidCount(op) + dueCount(op, MILESTONES) + pendingCount(op, MILESTONES) === op.instalments.length,
+        paidCount(op) + dueCount(op, MILESTONES) + pendingCount(op, MILESTONES) === op.installments.length,
         'las cuentas no dan cuenta de todas las cuotas',
       )
     },
@@ -642,48 +862,74 @@ export const THREAD: readonly Step<World>[] = [
 
   // ─── El cierre ───────────────────────────────────────────────────────────────
   {
-    id: 'S26',
+    id: 'S34',
     actor: 'Lea$e',
     spec: '001',
     stage1: 14,
     what: 'abre la opción de adquisición al pagarse todas',
-    rules: ['BR-07'],
+    rules: ['BR-07', 'BR-11'],
     run: (w) => {
+      const op = operation(w)
       check(
-        acquisitionOptionStatus(operation(w)) === 'available',
+        acquisitionOptionStatus(op, CASE.acquisitionAt) === 'available',
         'pagadas todas las cuotas, la opción sigue sin abrirse',
       )
+      // BR-11: se abre con la última cuota, y esa misma fecha arranca los treinta días. Que la
+      // ventana se ancle al hecho y no a cuándo alguien pregunte es lo que la hace afirmable.
+      const last = MILESTONES[MILESTONES.length - 1]
+      check(last !== undefined, 'el proyecto no tiene valorizaciones')
+      check(
+        op.optionAvailableSince?.getTime() === last.expectedAt.getTime(),
+        'la opción no se abrió con el pago de la última cuota',
+      )
+      const ends = acquisitionWindowEnds(op)
+      check(ends !== undefined, 'la opción disponible no dice cuándo caduca')
+      check(CASE.acquisitionAt < ends, 'el caso ejerce la opción fuera de la ventana de BR-11')
     },
   },
   {
-    id: 'S27',
+    id: 'S35',
     actor: 'Julia',
     spec: '003',
     stage1: 9,
-    what: 'sabe a qué final se dirige el despliegue',
+    what: 'consulta el final y todavía no está determinado',
     run: (w) => {
-      // Antes de que el término acabe, y sin que ella lo decida: lo decidió la última cuota.
+      const op = operation(w)
+      // La spec amendó este paso el 2026-08-21 para retirar la promesa de saberlo antes de tiempo,
+      // y `not yet determined` es una de sus cuatro respuestas, no un hueco. Con la opción abierta
+      // y sin ejercer, el cliente todavía puede rehusarla o dejarla caducar: contestarle a Julia
+      // «vuelve» o «se la queda» sería inventarle una certeza que nadie tiene. Ésa es exactamente
+      // su queja, y el sistema no la resuelve fingiendo.
+      check(acquisitionOptionStatus(op, CASE.acquisitionAt) === 'available', 'la opción no está disponible')
       check(
-        headingFor(operation(w)) === 'Acquisition Retirement',
-        'no puede anticipar que la máquina deja la flota',
+        headingFor(op, CASE.acquisitionAt) === 'not yet determined',
+        'el final se dio por determinado antes de que el cliente decidiera',
       )
       check(deployment(w).close === undefined, 'el despliegue ya estaba cerrado')
     },
   },
   {
-    id: 'S28',
+    id: 'S36',
     actor: 'Pedro',
     spec: '001',
     stage1: 15,
-    what: 'ejerce la opción de adquisición',
-    rules: ['BR-07'],
+    what: 'ejerce la opción dentro de la ventana de treinta días',
+    rules: ['BR-07', 'BR-11'],
     run: (w) => {
-      exerciseAcquisitionOption(operation(w), CASE.acquisitionAt)
-      check(operation(w).acquisitionExercisedAt !== undefined, 'la opción no quedó ejercida')
+      const op = operation(w)
+      exerciseAcquisitionOption(op, CASE.acquisitionAt)
+      check(op.acquisitionExercisedAt !== undefined, 'la opción no quedó ejercida')
+      check(acquisitionOptionStatus(op, CASE.acquisitionAt) === 'exercised', 'la opción no quedó en «exercised»')
+      // Y con eso la respuesta de `003` paso 9 se vuelve definitiva, que es lo que ese paso dice:
+      // deja de ser «todavía no se sabe» en el mismo acto.
+      check(
+        headingFor(op, CASE.acquisitionAt) === 'Acquisition Retirement',
+        'ejercida la opción, el final sigue sin determinarse',
+      )
     },
   },
   {
-    id: 'S29',
+    id: 'S37',
     actor: 'Julia',
     spec: '003',
     stage1: 10,
@@ -702,14 +948,16 @@ export const THREAD: readonly Step<World>[] = [
     },
   },
   {
-    id: 'S30',
+    id: 'S38',
     actor: 'Pedro',
     spec: '001',
     stage1: 16,
-    what: 'la operación llega a estado completo',
+    what: 'la operación llega al estado terminal Acquired',
     run: (w) => {
+      // `001` paso 16 fija el nombre con todas las letras: «the unambiguous terminal state
+      // `Acquired`». Llamarlo `completed` era una palabra nuestra sobre un estado suyo.
       check(
-        operationState(operation(w)) === 'completed',
+        operationState(operation(w)) === 'Acquired',
         `la operación quedó en ${operationState(operation(w))}`,
       )
     },

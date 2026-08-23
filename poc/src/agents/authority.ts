@@ -26,6 +26,11 @@ export const SURFACE_OF: Readonly<Record<string, Surface>> = {
   enviar_solicitud_leasing: 'cliente',
   consultar_estado_solicitud: 'cliente',
   confirmar_recepcion_maquina: 'cliente',
+  ver_condiciones: 'cliente',
+  pagar_inicial: 'cliente',
+  // Mirar el estado de servicio de la máquina que tiene en custodia, no actuar sobre ella:
+  // `003` FR-010b se lo debe al custodio, y no le da ningún acto de flota. Ver la nota al pie.
+  consultar_estado_servicio: 'cliente',
   ver_cuotas: 'cliente',
   pagar_cuota: 'cliente',
   consultar_opcion_adquisicion: 'cliente',
@@ -36,12 +41,15 @@ export const SURFACE_OF: Readonly<Record<string, Surface>> = {
   tomar_solicitud: 'decision',
   registrar_elegibilidad: 'decision',
   registrar_standing_crediticio: 'decision',
+  confirmar_valor_maquinaria: 'decision',
   registrar_proyecto: 'decision',
   registrar_pagador: 'decision',
   revisar_evidencia: 'decision',
   consultar_limite_autoridad: 'decision',
   registrar_aprobacion: 'decision',
   producir_calendario_cuotas: 'decision',
+  registrar_garantia_en_lugar: 'decision',
+  consultar_expediente: 'decision',
   certificar_hito: 'decision',
 
   // Actos sobre la máquina física.
@@ -49,6 +57,7 @@ export const SURFACE_OF: Readonly<Record<string, Surface>> = {
   registrar_entrega: 'flota',
   listar_despliegues_abiertos: 'flota',
   registrar_lectura_horas: 'flota',
+  solicitar_ventana_servicio: 'flota',
   acordar_ventana_servicio: 'flota',
   completar_servicio: 'flota',
   consultar_final_despliegue: 'flota',
@@ -82,6 +91,18 @@ export const FORBIDDEN_CROSSINGS: readonly {
     why: 'ella ejecuta sobre la máquina; nunca decide que un cliente dejó de pagar',
   },
 ]
+
+/*
+ * `consultar_estado_servicio` es de Pedro y no de Julia, y conviene decir por qué.
+ *
+ * `003` FR-010b exige que el estado `Service Due` sea observable **por el custodio**, que está del
+ * lado del cliente. La superficie no la fija de quién habla la herramienta sino qué acto es: esto
+ * lee el estado de la máquina que la empresa ya tiene en custodia, y no mueve nada de la flota — no
+ * incorpora, no entrega, no acuerda ventanas, no cierra. Los actos siguen siendo de Julia.
+ *
+ * La línea que las specs prohíben cruzar es otra: decidir contra ejecutar. Ninguno de los dos
+ * cruces prohibidos toca a Pedro, porque `cliente` no es una superficie de Lea$e.
+ */
 
 export interface Violation {
   actor: ActorName

@@ -9,8 +9,9 @@
  * mundo en un proceso nuevo —la primera lectura que no comparte memoria con ninguna escritura— y
  * afirma el desenlace regla por regla.
  *
- * Las siete reglas que Stage 1 ejerce tienen que quedar afirmadas por algo. Si una queda sin
- * cubrir, esto falla: una prueba que no puede fallar no es evidencia de nada.
+ * Las reglas que Stage 1 ejerce tienen que quedar afirmadas por algo — `STAGE_1_RULES` las
+ * enumera. Si una queda sin cubrir, esto falla: una prueba que no puede fallar no es evidencia
+ * de nada.
  */
 
 import { sqliteWorld } from '../adapters/sqlite/world.ts'
@@ -18,16 +19,24 @@ import { BUSINESS_RULES, STAGE_1_RULES, type BusinessRule } from '../domain/rule
 import { check, CheckFailed } from '../evidence/transcript.ts'
 import { statusOf } from '../domain/leasing.ts'
 import type { LeasingRequestId } from '../domain/leasing.ts'
-import { AUTHORITY_LIMIT_USD, DOWN_PAYMENT_CAP, isFullyEvidenced } from '../domain/underwriting.ts'
+import {
+  AUTHORITY_LIMIT_USD,
+  DOWN_PAYMENT_CAP,
+  isFullyEvidenced,
+  machineryValueOf,
+} from '../domain/underwriting.ts'
 import {
   acquisitionOptionStatus,
-  instalmentState,
+  acquisitionWindowEnds,
+  conditionsSettled,
+  installmentState,
   operationState,
   paidCount,
   unpaidCount,
+  unsettledConditions,
 } from '../domain/operation.ts'
 import type { OperationId } from '../domain/operation.ts'
-import { headingFor } from '../domain/fleet.ts'
+import { currentAssessedValue, headingFor } from '../domain/fleet.ts'
 import type { DeploymentId, MachineId } from '../domain/fleet.ts'
 
 const argv = process.argv.slice(2)
@@ -83,8 +92,24 @@ const ASSERTIONS: readonly Assertion[] = [
   {
     what: 'la decisión se tomó dentro del límite de autoridad',
     run: () => {
-      check(assessment.machineryValueUSD <= AUTHORITY_LIMIT_USD, 'el valor excede el límite y aun así se decidió')
+      check(machineryValueOf(assessment) <= AUTHORITY_LIMIT_USD, 'el valor excede el límite y aun así se decidió')
       check(assessment.decision?.outcome === 'approved', 'la decisión no es una aprobación')
+    },
+  },
+  {
+    what: 'el valor sobre el que se decidió es el que el analista confirmó, no el declarado',
+    run: () => {
+      const confirmed = assessment.machineryValueConfirmation
+      check(confirmed !== undefined, 'nadie confirmó el valor que el solicitante declaró')
+      check(Boolean(confirmed.note), 'la confirmación no dice contra qué se confirmó')
+      check(
+        machineryValueOf(assessment) === confirmed.amountUSD,
+        'el valor que decide no es el confirmado',
+      )
+      check(
+        confirmed.amountUSD === assessment.machineryValueStatedUSD,
+        'el confirmado y el declarado difieren, y Stage 1 no admite esa discrepancia',
+      )
     },
   },
   {
@@ -94,10 +119,25 @@ const ASSERTIONS: readonly Assertion[] = [
       const down = assessment.decision?.conditions?.downPaymentUSD
       check(down !== undefined, 'la aprobación no fijó un pago inicial')
       check(
-        down <= assessment.machineryValueUSD * DOWN_PAYMENT_CAP,
+        down <= machineryValueOf(assessment) * DOWN_PAYMENT_CAP,
         `un inicial de USD ${down.toLocaleString('en-US')} sobre una máquina de ` +
-          `USD ${assessment.machineryValueUSD.toLocaleString('en-US')}`,
+          `USD ${machineryValueOf(assessment).toLocaleString('en-US')}`,
       )
+    },
+  },
+  {
+    what: 'las condiciones de la aprobación quedaron liquidadas antes de que corriera el calendario',
+    run: () => {
+      const c = operation.conditions
+      check(c.downPaymentUSD === assessment.decision?.conditions?.downPaymentUSD, 'la operación no lleva el inicial aprobado')
+      check(!!c.downPaymentSettledAt, 'el pago inicial nunca se liquidó')
+      check(!!c.guaranteesInPlaceAt, 'la garantía nunca quedó en su lugar')
+      check(conditionsSettled(operation), `quedó sin liquidar ${unsettledConditions(operation).join(' y ')}`)
+      // Y se liquidaron *antes*: una cuota pagada sobre condiciones abiertas sería el calendario
+      // corriendo antes de arrancar.
+      for (const i of operation.installments) {
+        check(!i.paidAt || i.paidAt >= c.downPaymentSettledAt!, `${i.id} se pagó antes de liquidarse el inicial`)
+      }
     },
   },
   {
@@ -117,8 +157,8 @@ const ASSERTIONS: readonly Assertion[] = [
     rule: 'BR-04',
     what: 'cada cuota está anclada a un hito, y ese hito se certificó',
     run: () => {
-      check(operation.instalments.length > 0, 'la operación no tiene cuotas')
-      for (const i of operation.instalments) {
+      check(operation.installments.length > 0, 'la operación no tiene cuotas')
+      for (const i of operation.installments) {
         check(!!i.anchoredTo, `la cuota ${i.id} no lleva ancla`)
         check(!!certifiedOf(i.anchoredTo), `la cuota ${i.id} se pagó sin certificarse «${i.anchoredTo}»`)
       }
@@ -133,12 +173,12 @@ const ASSERTIONS: readonly Assertion[] = [
     what: 'las cuotas están todas pagadas, y ninguna quedó en otro estado',
     run: () => {
       check(unpaidCount(operation) === 0, `quedan ${unpaidCount(operation)} sin pagar`)
-      check(paidCount(operation) === operation.instalments.length, 'la cuenta de pagadas no cuadra')
+      check(paidCount(operation) === operation.installments.length, 'la cuenta de pagadas no cuadra')
       // `001` exige que toda cuota esté siempre en exactamente uno de `pending`, `due` o `paid`.
-      for (const i of operation.instalments) {
+      for (const i of operation.installments) {
         check(
-          instalmentState(i, operation, milestones) === 'paid',
-          `${i.id} no quedó en 'paid' sino en '${instalmentState(i, operation, milestones)}'`,
+          installmentState(i, operation, milestones) === 'paid',
+          `${i.id} no quedó en 'paid' sino en '${installmentState(i, operation, milestones)}'`,
         )
       }
     },
@@ -177,8 +217,13 @@ const ASSERTIONS: readonly Assertion[] = [
         check(!!w.completedAt, 'quedó una ventana sin servicio hecho')
         // Las fechas tienen que volver como fechas: comparar `Date` contra string coacciona a NaN
         // y la guarda de ventana deja pasar cualquier cosa. Ver «Lo que el CLI destapó».
-        check(w.from instanceof Date && w.to instanceof Date, 'la ventana no volvió como fechas')
-        check(w.completedAt! >= w.from && w.completedAt! <= w.to, 'el servicio quedó fuera de su ventana')
+        // Pedirla y acordarla son dos actos — `003` paso 7. Una ventana servida sin acuerdo del
+        // cliente sería Julia fijando cuándo se para una máquina que no está en su terreno.
+        check(w.requestedAt instanceof Date, 'la ventana no dice cuándo se pidió')
+        check(w.agreed !== undefined, 'la ventana se sirvió sin que el cliente acordara el período')
+        check(w.agreed.at >= w.requestedAt, 'el cliente acordó la ventana antes de que se la pidieran')
+        check(w.agreed.from instanceof Date && w.agreed.to instanceof Date, 'la ventana no volvió como fechas')
+        check(w.completedAt! >= w.agreed.from && w.completedAt! <= w.agreed.to, 'el servicio quedó fuera de su ventana')
       }
       check(machine.hoursAtLastService > 0, 'el intervalo no cuenta desde el último servicio')
     },
@@ -189,10 +234,56 @@ const ASSERTIONS: readonly Assertion[] = [
     rule: 'BR-07',
     what: 'pagadas todas, la opción se abrió y el cliente la ejerció',
     run: () => {
-      check(acquisitionOptionStatus(operation) === 'available', 'la opción no está disponible')
-      check(!!operation.acquisitionExercisedAt, 'la opción no se ejerció')
-      check(operationState(operation) === 'completed', `la operación quedó ${operationState(operation)}`)
-      check(headingFor(operation) === 'Acquisition Retirement', 'el despliegue no apuntaba a la adquisición')
+      const at = operation.acquisitionExercisedAt
+      check(!!at, 'la opción no se ejerció')
+      check(!!operation.optionAvailableSince, 'la opción no registra cuándo se abrió')
+      check(
+        acquisitionOptionStatus(operation, at) === 'exercised',
+        `la opción quedó en ${acquisitionOptionStatus(operation, at)}`,
+      )
+      // `001` paso 16 fija el nombre del estado terminal, y es éste.
+      check(operationState(operation) === 'Acquired', `la operación quedó ${operationState(operation)}`)
+      check(
+        headingFor(operation, at) === 'Acquisition Retirement',
+        'ejercida la opción, el despliegue no apuntaba a la adquisición',
+      )
+    },
+  },
+  {
+    rule: 'BR-11',
+    what: 'la opción se ejerció dentro de los treinta días que se le conceden',
+    run: () => {
+      const at = operation.acquisitionExercisedAt
+      check(!!at, 'la opción no se ejerció')
+      const since = operation.optionAvailableSince
+      check(!!since, 'la opción no registra cuándo se abrió')
+      // Se abre con la última cuota pagada, y no antes: ahí arranca la ventana.
+      const lastPaid = operation.installments
+        .map((i) => i.paidAt)
+        .filter((d): d is Date => d !== undefined)
+        .reduce((a, b) => (a > b ? a : b))
+      check(since.getTime() === lastPaid.getTime(), 'la ventana no arranca con el pago de la última cuota')
+      const ends = acquisitionWindowEnds(operation)
+      check(!!ends, 'la opción disponible no dice cuándo caduca')
+      check(at >= since && at <= ends, `se ejerció el ${at.toISOString().slice(0, 10)}, fuera de la ventana`)
+    },
+  },
+  {
+    what: 'la máquina se valorizó al entregarse y se revaluó al completarse el servicio',
+    run: () => {
+      // FR-031b pide las dos: la línea de base y la revaluación. Y ninguna la acepta el cliente.
+      check(deployment.assessedValues.length >= 2, 'falta una de las dos valorizaciones que FR-031b pide')
+      const [first] = deployment.assessedValues
+      check(first?.because === 'entrega', 'la primera valorización no es la de entrega')
+      check(
+        deployment.assessedValues.some((v) => v.because === 'servicio completado'),
+        'el servicio se completó sin revaluar la máquina',
+      )
+      check(currentAssessedValue(deployment).amountUSD > 0, 'la valorización vigente no es un monto')
+      check(
+        !Object.hasOwn(deployment.handover, 'assessedValueUSD'),
+        'el valor estimado quedó dentro del acta que el cliente acepta',
+      )
     },
   },
   {

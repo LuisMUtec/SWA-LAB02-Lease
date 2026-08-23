@@ -60,6 +60,7 @@ export function memoryDeployments(): Deployments {
   return {
     save: (deployment) => void rows.set(deployment.id, deployment),
     byId: (id) => rows.get(id),
+    byOperation: (id) => [...rows.values()].find((d) => d.operationId === id),
     open: () => [...rows.values()].filter((d) => !d.close),
   }
 }

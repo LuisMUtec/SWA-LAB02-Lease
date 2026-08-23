@@ -47,6 +47,13 @@ export interface Machines {
 export interface Deployments {
   save(deployment: Deployment): void
   byId(id: DeploymentId): Deployment | undefined
+  /**
+   * El despliegue de una operación.
+   *
+   * Lo necesita el custodio, que llega por el lado de su operación y no conoce identificadores de
+   * flota — `003` FR-010b le debe el estado de servicio de *su* máquina.
+   */
+  byOperation(id: OperationId): Deployment | undefined
   /** Los despliegues abiertos — lo que Julia tiene a cargo ahora mismo. */
   open(): readonly Deployment[]
 }

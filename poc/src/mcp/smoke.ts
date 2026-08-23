@@ -15,7 +15,7 @@ import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-import type { ActorName } from '../agents/tools.ts'
+import { TOOLS, type ActorName } from '../agents/tools.ts'
 
 const db = join(mkdtempSync(join(tmpdir(), 'lease-smoke-')), 'lease.db')
 const serverPath = new URL('./server.ts', import.meta.url).pathname
@@ -50,7 +50,18 @@ console.log('Pedro')
 const pedro = await connect('Pedro')
 const pedroTools = (await pedro.listTools()).tools.map((t) => t.name)
 
-check(pedroTools.length === 8, `publica 8 herramientas (${pedroTools.length})`)
+// El número sale del catálogo, no de acá: una cifra escrita a mano se desactualiza sola con la
+// primera herramienta que alguien agregue, y lo que importa comprobar es que el servidor publique
+// **exactamente** la superficie de su actor — ni una de más, ni una de menos.
+const pedroExpected = TOOLS.Pedro.length
+check(
+  pedroTools.length === pedroExpected,
+  `publica las ${pedroExpected} herramientas de su actor (${pedroTools.length})`,
+)
+check(
+  TOOLS.Pedro.every((t) => pedroTools.includes(t.name)),
+  'publica todas las de Pedro y ninguna ajena',
+)
 check(!pedroTools.includes('registrar_aprobacion'), 'no publica registrar_aprobacion — 002 es de Carlos')
 check(!pedroTools.includes('registrar_entrega'), 'no publica registrar_entrega — 003 es de Julia')
 

@@ -63,7 +63,7 @@ distinto. **Cada afirmación ocurre una sola vez, en su altitud.**
 | POC | [`poc/`](poc/README.md) | El código que corre el happy path, y la evidencia de que corrió |
 
 Los criterios de aceptación **enuncian el efecto de la regla y citan su ID** —*"rejects an
-instalment payment before receipt is confirmed (BR-08)"*— para que ninguna referencia sea
+installment payment before receipt is confirmed (BR-08)"*— para que ninguna referencia sea
 portante.
 
 ## EVAL
@@ -137,14 +137,16 @@ El POC corre por tres vías sobre una sola definición de herramientas: línea d
 (`npm run e2e`, sin llave ni red), tres servidores MCP acotados por actor, y el SDK de
 Anthropic. Sus `Stage 1` no son tres entregas sino una sola corrida —lo que `001` declara fuera
 de alcance es exactamente lo que `002` y `003` producen—, y [`poc/`](poc/README.md) la construye
-completa: 30 pasos, cada uno citando la spec y el número de Stage 1 que le manda, con las ocho
-reglas que Stage 1 ejerce. La transcripción queda versionada en `poc/evidence/run.txt`.
+completa: 38 pasos, cada uno citando la spec y el número de Stage 1 que le manda, con las nueve
+reglas que Stage 1 ejerce. La transcripción queda versionada en `poc/evidence/run.txt`, y CI corre
+el hilo con `--strict`: un paso declarado y sin construir rompe el build.
 
-Las dos divergencias que [`poc/DOMAIN.md`](poc/DOMAIN.md) marcaba **quedaron resueltas** en la
-iteración del 2026-08-21: `001` ahora enumera sus tres estados y su `Installment` lleva el ancla al
-hito que BR-04 exige. Sigue abierta la ortografía —`Installment` en `001`, `Instalment` en `002` y
-`003`— y el POC quedó del lado minoritario. Lo que Stage 1 pide y el POC todavía no construye está
-listado en [`poc/README.md`](poc/README.md).
+Las divergencias que [`poc/DOMAIN.md`](poc/DOMAIN.md) marcaba **quedaron todas resueltas**, y en las
+specs, que es donde correspondía: en la iteración del 2026-08-21 `001` pasó a enumerar sus tres
+estados y su `Installment` a llevar el ancla al hito que BR-04 exige; el 2026-08-23 se unificó la
+ortografía de la cuota, que `001` escribía de una manera y `002` y `003` de otra. **No queda ningún
+punto de Stage 1 sin construir** — `poc/src/cli/citations.ts` lo comprueba paso por paso contra el
+texto de las tres specs, y falla si aparece uno nuevo sin declarar.
 
 ## Documentos
 

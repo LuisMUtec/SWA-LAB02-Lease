@@ -123,6 +123,7 @@ export function sqliteWorld(path: string, now = new Date('2026-08-19T00:00:00.00
     deployments: {
       save: (deployment) => put(snap.deployments, deployment),
       byId: (id: DeploymentId) => snap.deployments.find((d) => d.id === id),
+      byOperation: (id: OperationId) => snap.deployments.find((d) => d.operationId === id),
       open: () => snap.deployments.filter((d) => !d.close),
     },
 

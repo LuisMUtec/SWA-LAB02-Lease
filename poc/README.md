@@ -52,7 +52,7 @@ deja de corresponder y se nota en la transcripción.
 
 Sobre el mismo dominio corren tres agentes, uno por persona. **Las funciones del dominio son sus
 herramientas** — no hay una capa nueva entre medio, y por eso las guardas siguen vigentes:
-`pagar_cuota` llama a `payInstalment`, que rechaza un pago sin recepción confirmada (BR-08) o sin
+`pagar_cuota` llama a `payInstallment`, que rechaza un pago sin recepción confirmada (BR-08) o sin
 hito certificado (BR-04).
 
 > **El agente propone; el dominio dispone.** Un agente que alucine no puede violar una regla de
@@ -91,7 +91,7 @@ transporte, y las sirven tres adaptadores de veintitantas líneas cada uno:
 | **SDK** — `npm run agent` | El tool runner de Anthropic en proceso | `ANTHROPIC_API_KEY` | la corrida con modelo, sin harness |
 
 **El acotamiento vive en el binario, no en quien lo invoca.** El servidor MCP de Carlos publica
-once herramientas y ninguna toca la flota; `lease.ts carlos` despacha esas mismas once y no
+catorce herramientas y ninguna toca la flota; `lease.ts carlos` despacha esas mismas catorce y no
 reconoce `registrar_entrega`. La garantía no depende de que el harness respete una allowlist — por
 eso el frontmatter `tools:` de los subagentes es refuerzo, no el mecanismo.
 
@@ -134,11 +134,17 @@ prueba de humo MCP podían ver:
   inoperante por MCP y por CLI; solo funcionaba en memoria.
 - **Una fecha inválida se reportaba como éxito.** `new Date(basura)` no falla, y `certificar_hito`
   informaba «certificada» sobre un hito que quedaba en `null`, con la cuota anclada rebotando
-  después contra BR-04 sin que nada dijera por qué. Ahora las cinco entradas de fecha se validan.
+  después contra BR-04 sin que nada dijera por qué. Ahora las seis entradas de fecha se validan.
 
 Un tercero, más chico: las herramientas devolvían `No existe X` como resultado exitoso. Para un
-agente da igual —lo lee y reintenta—, pero un script veía código 0 sobre una referencia rota. Los
-23 sitios ahora lanzan `NotFound`, que MCP marca `isError` y el CLI convierte en código 1.
+agente da igual —lo lee y reintenta—, pero un script veía código 0 sobre una referencia rota. Toda
+referencia que no resuelve lanza ahora `NotFound`, que MCP marca `isError` y el CLI convierte en
+código 1.
+
+Y quedaba una mitad sin hacer, que esta revisión cerró: seis sitios más devolvían la *misma clase*
+de falla como texto exitoso sin decir «No existe» —«El despliegue no tiene máquina», «No hay una
+ventana de servicio pendiente»—, así que `completar_servicio` sobre un despliegue ya servido salía
+con código 0 y un `set -e` seguía de largo. Los seis lanzan ahora, y por la misma puerta.
 
 Ninguno se veía compilando. Los tres se vieron corriendo.
 
@@ -149,7 +155,7 @@ corrida con modelo, certificar seis valorizaciones costó trece comandos: siete 
 seis de trabajo.
 
 Un skill lo resuelve, pero un `SKILL.md` escrito a mano sería el cuarto lugar donde vive la firma de
-veintisiete herramientas, y la primera bandera que alguien agregue lo deja mintiendo en silencio.
+treinta y cuatro herramientas, y la primera bandera que alguien agregue lo deja mintiendo en silencio.
 Así que `npm run generate` los proyecta desde `roster.ts` —la identidad— y `tools.ts` —el catálogo—,
 compartiendo el renderizador que imprime `--help`: **lo que el agente lee en el skill es literalmente
 lo que el `--help` le diría.** `generate.ts --check` está en CI.
@@ -179,23 +185,25 @@ lectura que no comparte memoria con ninguna escritura, y afirma el desenlace:
 
 ```
   ✓ BR-02  el solicitante quedó registrado como empresa que trabaja por proyecto
+  ✓ BR-12  el inicial que la aprobación fijó no pasa de un décimo de la máquina
   ✓ BR-04  cada cuota está anclada a un hito, y ese hito se certificó
   ✓ BR-08  la recepción se confirmó, que es lo que hizo exigibles las cuotas
   ✓ BR-05  la entrega tiene acta aceptada por ambos lados, con custodio y sitio
   ✓ BR-06  el acumulado es la marca más alta, y el servicio se completó dentro de su ventana
   ✓ BR-07  pagadas todas, la opción se abrió y el cliente la ejerció
+  ✓ BR-11  la opción se ejerció dentro de los treinta días que se le conceden
   ✓ BR-01  la máquina fue de Lea$e hasta el cierre, y salió de la flota al adquirirse
 
-  14 afirmaciones · 14 sostenidas · 0 rotas
-  Reglas cubiertas: 7/7
+  19 afirmaciones · 19 sostenidas · 0 rotas
+  Reglas cubiertas: 9/9
 ```
 
-Si una de las siete reglas de Stage 1 queda sin afirmar, falla igual que si una afirmación se
+Si una de las nueve reglas de Stage 1 queda sin afirmar, falla igual que si una afirmación se
 rompe: borrar una comprobación no puede ser una forma de aprobar.
 
 **Sabe fallar.** Cinco mutaciones deliberadas, cuatro cazadas nombrando su regla: reintroducir el
 replacer de fechas roto (BR-06), no retirar la máquina al cerrar por adquisición (BR-01), borrar la
-afirmación de BR-08 (cobertura 6/7), y una lectura de horas menor —que *no* falla, porque el
+afirmación de BR-08 (cobertura 8/9), y una lectura de horas menor —que *no* falla, porque el
 dominio la acepta a propósito y la prueba afirma lo que el dominio promete, no más.
 
 La quinta se escapa, y conviene decir por qué: cambiar `Math.max(acumulado, lectura)` por
@@ -249,10 +257,12 @@ src/
     demo.ts            el hilo determinista contra el dominio
     lease.ts           una herramienta por invocación, acotada por actor
     agent.ts           la corrida vía SDK, y la matriz de autoridad
-  thread.ts          el hilo de Stage 1
     verify.ts          el estado final, afirmado regla por regla
+    citations.ts       el guardián de las citas a Stage 1
+    generate.ts        proyecta los subagentes y skills de Claude Code
+  thread.ts          el hilo de Stage 1
 scripts/
-  happy-path.sh      Stage 1 entero por CLI, un proceso por paso, y después verify.ts
+  happy-path.sh      Stage 1 entero por CLI (`npm run e2e`), y después verify.ts
 evidence/
   run.txt            la corrida determinista, versionada
 ```
@@ -266,33 +276,43 @@ Los tres `Stage 1` dicen que nada en ellos supone un rechazo, una demora ni un i
 hilo no afirma caminos negativos: si lo hiciera, dejaría de corresponder a Stage 1, que es la
 propiedad por la que existe.
 
-Las guardas que las reglas imponen sí viven en el dominio —`payInstalment` verifica la recepción
+Las guardas que las reglas imponen sí viven en el dominio —`payInstallment` verifica la recepción
 (BR-08) y la certificación del hito (BR-04) antes de aceptar un pago— porque ahí no son una prueba
 de la regla: son la regla.
 
-## Lo que Stage 1 pide y este POC todavía no construye
+## Lo que las specs del 2026-08-21 movieron, y dónde quedó
 
-Las specs se movieron el 2026-08-21 —nueve iteraciones de EVAL, cinco reglas de negocio nuevas y
-los tres `Stage 1` reescritos— y el POC quedó detrás en puntos concretos. Están acá porque un POC
-que calla lo que no hace no es evidencia de nada:
+Las specs se movieron —nueve iteraciones de EVAL, cinco reglas de negocio nuevas y los tres
+`Stage 1` reescritos— y el POC quedó detrás en diez puntos concretos. **Los diez están construidos**;
+la tabla se queda porque decir qué se movió y cómo se alcanzó vale más que borrarla:
 
-| Ahora manda | Estado |
+| Lo que la spec pasó a mandar | Cómo quedó |
 |---|---|
-| `001`·10-13 — la cuota en `pending` / `due` / `paid`, y de una pendiente se sabe qué espera | **construido** |
-| BR-12 — el inicial no pasa de un décimo de la máquina | **construido**, y el caso se corrigió: eran 25.600 sobre 128.000 |
-| `001`·14-15 — la opción en `not yet available` / `available` / `exercised` / `declined` / `lapsed` | dos estados y un timestamp |
-| `001`·16 — el estado terminal se llama `Acquired` | se llama `completed` |
-| `001`·9 y `002`·11 — las condiciones se liquidan antes de arrancar el calendario | no existe |
-| `002`·4 — confirmar el valor de maquinaria que el solicitante declaró | no existe |
-| `003`·2 y `003`·8 — el `Assessed Value` al entregar, y revaluado al completar el servicio | no existe |
-| `003`·7 — la ventana se pide (FR-010b) y después se acuerda (FR-010) | un solo acto |
-| `003`·5 — `Service Due` observable por el custodio, no solo por Julia | solo por Julia |
-| BR-11 — treinta días para ejercer la opción | sin ventana |
+| `001`·10-13 — la cuota en `pending` / `due` / `paid`, y de una pendiente se sabe qué espera | `installmentState()` deriva los tres; `waitingOn()` dice qué falta y quién lo manda |
+| BR-12 — el inicial no pasa de un décimo de la máquina | invariante en `recordDecision()`; el caso se corrigió, eran 25.600 sobre 128.000 |
+| `001`·9 y `002`·11 — las condiciones se liquidan antes de arrancar el calendario | `OperationConditions` con sus dos mitades: el inicial lo paga Pedro, la garantía la constata Carlos. Sin las dos, la cuota espera eso y no su hito |
+| `001`·14-15 — la opción en `not yet available` / `available` / `exercised` / `declined` / `lapsed` | los cinco, **derivados** de hechos: cuántas cuotas quedan, si se ejerció, si se rehusó, cuánto pasó |
+| `001`·16 — el estado terminal se llama `Acquired` | se llama `Acquired` |
+| BR-11 — treinta días para ejercer la opción | la ventana arranca con la última cuota pagada, y ejercerla fuera es un rechazo que cita la regla |
+| `002`·4 — confirmar el valor de maquinaria que el solicitante declaró | declarado y confirmado son dos campos; el límite de autoridad y el tope de BR-12 se miden contra el confirmado |
+| `003`·2 y `003`·8 — el `Assessed Value` al entregar, y revaluado al completar el servicio | dos valorizaciones en el `Deployment`, **fuera** del acta que el cliente acepta |
+| `003`·7 — la ventana se pide (FR-010b) y después se acuerda (FR-010) | dos actos: Julia pide, el cliente acuerda. No hay forma de acordar sin pedido |
+| `003`·5 — `Service Due` observable por el custodio, no solo por Julia | `consultar_estado_servicio` en la superficie de Pedro — lee, no actúa |
 
-De las cinco reglas nuevas, solo **BR-12** cae dentro de Stage 1 y por eso entró a `STAGE_1_RULES`.
-Las otras cuatro las excluyen las specs mismas: BR-09 y BR-10 gobiernan el incumplimiento y la
-parada por seguridad; BR-11 acota la opción pero su caducidad queda fuera; y de BR-13 Stage 1
-ejerce el dato —el `Assessed Value`— pero no su invariante.
+De las cinco reglas nuevas, **BR-11 y BR-12** caen dentro de Stage 1 y por eso están en
+`STAGE_1_RULES`. Las otras tres las excluyen las specs mismas: BR-09 y BR-10 gobiernan el
+incumplimiento y la parada por seguridad; y de BR-13 Stage 1 ejerce el dato —el `Assessed Value`—
+pero no su invariante, porque `003` excluye el deterioro expresamente.
+
+### Un final que todavía no se sabe
+
+El cambio menos obvio es de `003`·9. Antes `headingFor()` contestaba «se la queda» apenas la opción
+se abría, y eso era inventarle a Julia una certeza que nadie tiene: con la opción disponible y sin
+ejercer, el cliente todavía puede rehusarla o dejarla caducar. La spec amendó el paso el 2026-08-21
+para retirar esa promesa, y ahora `not yet determined` es **una de las respuestas**, no un hueco.
+
+Es incómodo —es exactamente la queja de Julia, que planifica alrededor de una máquina que quizá no
+vuelva— y el sistema no la resuelve fingiendo que la sabe.
 
 ### El guardián de las citas
 
@@ -324,11 +344,12 @@ No se omite ni se finge. La transcripción dice la verdad sobre cuánto del hilo
 eso es exactamente lo que la hace evidencia: *«"It compiles" and "it is scaffolded" are not
 delivery»* (Principio V).
 
-Hoy corre completo: **30 de 30 pasos, 7 de 7 reglas ejercidas**, y `npm run demo -- --strict` pasa.
+Hoy corre completo: **38 de 38 pasos, 9 de 9 reglas ejercidas**, y `npm run demo -- --strict` pasa
+— y pasa **en CI**, que corre el hilo con `--strict` desde que dejó de haber pasos sin construir.
 
 ## Vocabulario
 
-Las tres specs nombran las mismas cosas distinto —`Installment` / `Instalment`, `Company` /
+Las tres specs nombran las mismas cosas distinto —`Installment` / `Installment`, `Company` /
 `Applicant`— y un esquema no puede tener las dos. [`DOMAIN.md`](DOMAIN.md) fija cuál usa el código
 y por qué, y lista las divergencias que siguen abiertas contra las specs.
 

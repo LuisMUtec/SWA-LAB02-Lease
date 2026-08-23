@@ -72,10 +72,26 @@ export interface Decision {
   readonly decidedBy: string
 }
 
+/**
+ * Lo que el analista confirmó del valor que el solicitante declaró — `002` paso 4.
+ *
+ * Declarar y confirmar son dos actos distintos: el primero lo hace quien pide y el segundo quien
+ * arriesga. El límite de autoridad y el tope de BR-12 se miden contra el confirmado, porque medir
+ * contra el declarado sería dejar que el solicitante elija su propio límite.
+ */
+export interface MachineryValueConfirmation {
+  readonly amountUSD: number
+  readonly note: string
+  readonly at: Date
+}
+
 export interface Assessment {
   readonly id: AssessmentId
   readonly requestId: LeasingRequestId
-  readonly machineryValueUSD: number
+  /** Lo que el solicitante declaró al enviar. Inmutable: es el dicho, no el hecho. */
+  readonly machineryValueStatedUSD: number
+  /** Lo que el analista confirmó. Ausente mientras no lo haya confirmado. */
+  machineryValueConfirmation?: MachineryValueConfirmation
   eligibility?: Eligibility
   creditStanding?: CreditStanding
   project?: ProjectEvidence
@@ -83,10 +99,44 @@ export interface Assessment {
   decision?: Decision
 }
 
+/**
+ * El valor sobre el que se decide.
+ *
+ * El confirmado en cuanto exista; hasta entonces, el declarado. Nada se decide antes de la
+ * confirmación —`missingEvidence` la exige— así que en toda decisión este valor es el confirmado.
+ */
+export function machineryValueOf(assessment: Assessment): number {
+  return assessment.machineryValueConfirmation?.amountUSD ?? assessment.machineryValueStatedUSD
+}
+
+/**
+ * Confirma el valor de la máquina — `002` paso 4.
+ *
+ * Stage 1 no supone una discrepancia: `001` manda su tratamiento a FR-009b y FR-028, que sus dos
+ * Stage 1 excluyen expresamente. Confirmar otro número no es un caso del happy path, y el rechazo
+ * lo dice en vez de dejar correr una operación sobre una máquina que no es la evaluada.
+ */
+export function confirmMachineryValue(
+  assessment: Assessment,
+  confirmation: MachineryValueConfirmation,
+): void {
+  if (assessment.machineryValueConfirmation) {
+    throw new SpecViolation('el valor de maquinaria ya estaba confirmado')
+  }
+  if (confirmation.amountUSD !== assessment.machineryValueStatedUSD) {
+    throw new SpecViolation(
+      `el valor confirmado (USD ${confirmation.amountUSD.toLocaleString('en-US')}) no es el declarado ` +
+        `(USD ${assessment.machineryValueStatedUSD.toLocaleString('en-US')}); una discrepancia queda fuera de Stage 1`,
+    )
+  }
+  assessment.machineryValueConfirmation = confirmation
+}
+
 /** El conjunto exigido a *toda* evaluación, para que dos casos se comparen por contenido y no por forma. */
 const REQUIRED_EVIDENCE = [
   'elegibilidad',
   'standing crediticio',
+  'valor de maquinaria confirmado',
   'proyecto con su calendario de certificación',
   'pagador',
 ] as const
@@ -95,14 +145,18 @@ export function missingEvidence(assessment: Assessment): readonly string[] {
   const missing: string[] = []
   if (!assessment.eligibility) missing.push(REQUIRED_EVIDENCE[0])
   if (!assessment.creditStanding) missing.push(REQUIRED_EVIDENCE[1])
+  // `002` paso 4 pone la confirmación del valor junto al standing, antes del paso 7 que declara el
+  // expediente evidenciado. Sin ella, el límite de autoridad y el tope de BR-12 se medirían contra
+  // un número que nadie verificó.
+  if (!assessment.machineryValueConfirmation) missing.push(REQUIRED_EVIDENCE[2])
   // Un proyecto sin calendario de certificación no es evidencia de un proyecto: BR-04 ancla cada
   // cuota a un hito, así que sin hitos no hay nada contra lo que la cuota pueda vencer. Exigirlo
   // recién al producir el calendario deja la aprobación ya registrada sobre evidencia que no
   // sostiene una operación.
   if (!assessment.project || assessment.project.schedule.length === 0) {
-    missing.push(REQUIRED_EVIDENCE[2])
+    missing.push(REQUIRED_EVIDENCE[3])
   }
-  if (!assessment.payer) missing.push(REQUIRED_EVIDENCE[3])
+  if (!assessment.payer) missing.push(REQUIRED_EVIDENCE[4])
   return missing
 }
 
@@ -117,7 +171,7 @@ export function isFullyEvidenced(assessment: Assessment): boolean {
  * están disponibles, y lo único que puede registrar es una elevación.
  */
 export function availableOutcomes(assessment: Assessment): readonly DecisionOutcome[] {
-  return assessment.machineryValueUSD <= AUTHORITY_LIMIT_USD
+  return machineryValueOf(assessment) <= AUTHORITY_LIMIT_USD
     ? ['approved', 'refused']
     : ['escalated']
 }
@@ -143,7 +197,7 @@ export function recordDecision(assessment: Assessment, decision: Decision): void
 
   if (!availableOutcomes(assessment).includes(decision.outcome)) {
     throw new SpecViolation(
-      `«${decision.outcome}» no está disponible: USD ${assessment.machineryValueUSD.toLocaleString('en-US')} ` +
+      `«${decision.outcome}» no está disponible: USD ${machineryValueOf(assessment).toLocaleString('en-US')} ` +
         `contra un límite de autoridad de USD ${AUTHORITY_LIMIT_USD.toLocaleString('en-US')}`,
     )
   }
@@ -155,7 +209,7 @@ export function recordDecision(assessment: Assessment, decision: Decision): void
     if (!decision.conditions) {
       throw new SpecViolation('una aprobación no se registra sin sus condiciones')
     }
-    const cap = assessment.machineryValueUSD * DOWN_PAYMENT_CAP
+    const cap = machineryValueOf(assessment) * DOWN_PAYMENT_CAP
     if (decision.conditions.downPaymentUSD > cap) {
       throw new RuleViolation(
         'BR-12',
@@ -169,7 +223,7 @@ export function recordDecision(assessment: Assessment, decision: Decision): void
 }
 
 /** Una cuota. No lleva fecha de vencimiento: lleva el hito cuya certificación la hace exigible. */
-export interface Instalment {
+export interface Installment {
   readonly id: string
   /**
    * El hito de certificación contra el que vence. BR-04 — y la razón de que Lea$e exista.
@@ -183,7 +237,7 @@ export interface Instalment {
    *
    * El estado que `001` exige —`pending` / `due` / `paid`— no se guarda: se deriva, porque `due`
    * no es algo que alguien escriba sino un hecho sobre el mundo (su hito se certificó y la máquina
-   * se recibió). Guardarlo sería poder contradecirlo. Ver `instalmentState` en `operation.ts`.
+   * se recibió). Guardarlo sería poder contradecirlo. Ver `installmentState` en `operation.ts`.
    */
   paidAt?: Date
 }
@@ -195,7 +249,7 @@ export interface Instalment {
  * produce un calendario: no existe una versión anclada al almanaque a la que caer de vuelta, que
  * es justamente lo que BR-04 prohíbe.
  */
-export function produceInstalmentSchedule(assessment: Assessment): readonly Instalment[] {
+export function produceInstallmentSchedule(assessment: Assessment): readonly Installment[] {
   const decision = assessment.decision
   if (decision?.outcome !== 'approved' || !decision.conditions) {
     throw new SpecViolation('solo una aprobación produce un calendario de cuotas')
@@ -209,7 +263,7 @@ export function produceInstalmentSchedule(assessment: Assessment): readonly Inst
     )
   }
 
-  const financed = assessment.machineryValueUSD - decision.conditions.downPaymentUSD
+  const financed = machineryValueOf(assessment) - decision.conditions.downPaymentUSD
   const each = Math.round(financed / milestones.length)
 
   return milestones.map((milestone, index) => ({

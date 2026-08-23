@@ -47,9 +47,33 @@ export interface OperatingHoursReading {
   readonly at: Date
 }
 
+/**
+ * Lo que Lea$e estima que la máquina vale, y cuándo — FR-031b.
+ *
+ * Se registra al entregar y se revalúa al completarse un servicio, que son los dos momentos en que
+ * alguien la mira de verdad. **El cliente no la acepta**: `003` paso 2 lo dice expresamente, y por
+ * eso vive en el `Deployment` y no dentro del `HandoverRecord`, que es lo que ambos lados firman.
+ */
+export interface AssessedValue {
+  readonly amountUSD: number
+  readonly at: Date
+  /** Qué la produjo: la entrega, o el servicio que se completó. */
+  readonly because: 'entrega' | 'servicio completado'
+}
+
+/**
+ * La ventana de servicio, que son **dos** actos y no uno — `003` paso 7.
+ *
+ * Julia la pide (FR-010b) y el cliente la acuerda (FR-010). Modelarlos como un solo acto le daba a
+ * Julia el poder de fijar cuándo se libera una máquina que no está en su terreno, que es
+ * exactamente lo que la spec no le da: la máquina está en obra y la obra decide cuándo puede
+ * pararla.
+ */
 export interface ServiceWindow {
-  readonly from: Date
-  readonly to: Date
+  /** Cuándo Julia la pidió — FR-010b. */
+  readonly requestedAt: Date
+  /** El período que el cliente acordó — FR-010. Ausente mientras no lo haya acordado. */
+  agreed?: { readonly from: Date; readonly to: Date; readonly at: Date }
   completedAt?: Date
   /** Las horas acumuladas al completarse. El siguiente intervalo cuenta desde aquí — BR-06. */
   completedAtHours?: number
@@ -66,6 +90,8 @@ export interface Deployment {
   readonly handover: HandoverRecord
   readonly readings: OperatingHoursReading[]
   readonly serviceWindows: ServiceWindow[]
+  /** La valorización de entrega y cada revaluación posterior, en orden — FR-031b. */
+  readonly assessedValues: AssessedValue[]
   close?: Close
 }
 
@@ -76,6 +102,8 @@ export interface HandoverInput {
   readonly contractedSite: string
   readonly acceptedByLease: string
   readonly acceptedByClient: string
+  /** Lo que Lea$e estima que vale al entregarla. No se le pide al cliente que lo acepte. */
+  readonly assessedValueUSD: number
   readonly at: Date
 }
 
@@ -103,6 +131,11 @@ export function recordHandover(
   if (!input.acceptedByLease || !input.acceptedByClient) {
     throw new RuleViolation('BR-05', 'la entrega la aceptan ambos lados o no queda aceptada')
   }
+  // FR-003 no abre un despliegue sin la valorización, y `003` paso 2 la pone junto a la entrega:
+  // sin ella no habría línea de base contra la que revaluar en el paso 8.
+  if (!Number.isFinite(input.assessedValueUSD) || input.assessedValueUSD <= 0) {
+    throw new SpecViolation('la entrega no abre un despliegue sin el valor estimado de la máquina')
+  }
   if (machine.fleetState !== 'available') {
     throw new SpecViolation(`la máquina está «${machine.fleetState}»; una entrega exige una disponible`)
   }
@@ -111,15 +144,27 @@ export function recordHandover(
   machine.accumulatedHours = input.hours
   machine.hoursAtLastService = input.hours
 
+  // El acta es lo que ambos lados aceptan; la valorización no. Se separan acá para que no puedan
+  // confundirse después — `003` paso 2.
+  const { assessedValueUSD, ...accepted } = input
+
   return {
     id,
     machineId: machine.id,
     operationId,
     // Congelada de hecho, no por convención: AC-004 exige que alterarla no sea posible.
-    handover: Object.freeze({ ...input }),
+    handover: Object.freeze({ ...accepted }),
     readings: [],
     serviceWindows: [],
+    assessedValues: [{ amountUSD: assessedValueUSD, at: input.at, because: 'entrega' }],
   }
+}
+
+/** Lo último que Lea$e estimó que vale. */
+export function currentAssessedValue(deployment: Deployment): AssessedValue {
+  const last = deployment.assessedValues[deployment.assessedValues.length - 1]
+  if (!last) throw new SpecViolation('el despliegue no tiene ninguna valorización')
+  return last
 }
 
 /**
@@ -152,43 +197,122 @@ export function overdueHours(machine: Machine): number {
   return Math.max(0, hoursSinceLastService(machine) - machine.serviceIntervalHours)
 }
 
-export function agreeServiceWindow(deployment: Deployment, from: Date, to: Date): ServiceWindow {
+/** La ventana viva: pedida y todavía sin servicio hecho. */
+export function openServiceWindow(deployment: Deployment): ServiceWindow | undefined {
+  return deployment.serviceWindows.find((w) => !w.completedAt)
+}
+
+/**
+ * Julia pide una ventana contra el despliegue — `003` paso 7, FR-010b.
+ *
+ * Se pide porque la máquina lo necesita, no porque haya una fecha: sin servicio debido no hay nada
+ * que pedirle al cliente, y pedirlo igual convertiría el mantenimiento por horas en uno por
+ * calendario, que es lo que BR-06 rechaza.
+ */
+export function requestServiceWindow(
+  deployment: Deployment,
+  machine: Machine,
+  at: Date,
+): ServiceWindow {
   if (deployment.close) throw new SpecViolation('el despliegue está cerrado')
-  const window: ServiceWindow = { from, to }
+  if (openServiceWindow(deployment)) {
+    throw new SpecViolation('ya hay una ventana de servicio pedida y sin completar')
+  }
+  if (!isServiceDue(machine)) {
+    throw new RuleViolation(
+      'BR-06',
+      `la máquina no tiene servicio debido: lleva ${hoursSinceLastService(machine)} h de las ` +
+        `${machine.serviceIntervalHours} de su intervalo`,
+    )
+  }
+  const window: ServiceWindow = { requestedAt: at }
   deployment.serviceWindows.push(window)
   return window
 }
 
 /**
- * Completa un servicio dentro de su ventana.
+ * El cliente acuerda el período — `003` paso 7, FR-010.
+ *
+ * Solo se acuerda una ventana que alguien pidió. Que no exista forma de acordar sin pedido es lo
+ * que mantiene los dos actos separados: si se pudiera, el acto de Julia volvería a ser suficiente.
+ */
+export function agreeServiceWindow(
+  deployment: Deployment,
+  from: Date,
+  to: Date,
+  at: Date,
+): ServiceWindow {
+  if (deployment.close) throw new SpecViolation('el despliegue está cerrado')
+  const window = openServiceWindow(deployment)
+  if (!window) throw new SpecViolation('no hay ninguna ventana de servicio pedida que acordar')
+  if (window.agreed) throw new SpecViolation('esa ventana de servicio ya estaba acordada')
+  if (to < from) throw new SpecViolation('la ventana termina antes de empezar')
+  window.agreed = { from, to, at }
+  return window
+}
+
+/**
+ * Completa un servicio dentro de su ventana, y revalúa la máquina — `003` paso 8.
  *
  * El siguiente intervalo cuenta desde las horas al completarse, no desde la fecha: es la misma
- * regla que hizo vencer este servicio — BR-06.
+ * regla que hizo vencer este servicio — BR-06. La revaluación va acá y no en un acto aparte porque
+ * FR-031b la ata al mismo momento: es la única vez, entre entrega y cierre, que alguien la abre.
  */
 export function completeService(
+  deployment: Deployment,
   machine: Machine,
-  window: ServiceWindow,
   at: Date,
   atHours: number,
+  assessedValueUSD: number,
 ): void {
-  if (window.completedAt) throw new SpecViolation('el servicio ya estaba completado')
-  if (at < window.from || at > window.to) {
+  const window = openServiceWindow(deployment)
+  if (!window) throw new SpecViolation('no hay ninguna ventana de servicio pendiente')
+  if (!window.agreed) {
+    throw new SpecViolation('la ventana se pidió pero el cliente todavía no la acordó')
+  }
+  if (at < window.agreed.from || at > window.agreed.to) {
     throw new SpecViolation('el servicio se completó fuera de su ventana acordada')
+  }
+  if (!Number.isFinite(assessedValueUSD) || assessedValueUSD <= 0) {
+    throw new SpecViolation('el servicio no se cierra sin revaluar la máquina')
   }
   window.completedAt = at
   window.completedAtHours = atHours
   machine.hoursAtLastService = atHours
+  deployment.assessedValues.push({
+    amountUSD: assessedValueUSD,
+    at,
+    because: 'servicio completado',
+  })
 }
 
 /**
- * A qué final se dirige el despliegue.
+ * A qué final se dirige el despliegue — `003` paso 9.
  *
- * Lo decide la última cuota del cliente (BR-07), no Julia y no el calendario — que es exactamente
- * su queja: planifica el siguiente contrato alrededor de una máquina que quizá no vuelva nunca.
- * Este dominio no lo decide, lo consulta: la conducta es de `001`.
+ * Lo decide el cliente (BR-07), no Julia y no el calendario — que es exactamente su queja:
+ * planifica el siguiente contrato alrededor de una máquina que quizá no vuelva nunca. Este dominio
+ * no lo decide, lo consulta: la conducta es de `001`.
+ *
+ * **`not yet determined` es una respuesta, no un hueco.** La spec la enumera junto a las otras y
+ * amendó el paso el 2026-08-21 precisamente para retirar la promesa de saberlo antes de tiempo. Una
+ * opción disponible y sin ejercer todavía puede rehusarse o caducar; contestar «vuelve» o «se la
+ * queda» ahí sería inventarle a Julia una certeza que nadie tiene.
  */
-export function headingFor(operation: LeasingOperation): Close['kind'] {
-  return acquisitionOptionStatus(operation) === 'available' ? 'Acquisition Retirement' : 'Return'
+export type DeploymentEnd = Close['kind'] | 'not yet determined'
+
+export function headingFor(operation: LeasingOperation, asOf: Date): DeploymentEnd {
+  switch (acquisitionOptionStatus(operation, asOf)) {
+    case 'exercised':
+      return 'Acquisition Retirement'
+    // Rehusada o caducada, la máquina vuelve. Las dos vías son de etapas posteriores; la respuesta
+    // que las nombra no lo es — `003` paso 9 corre «en cualquier punto».
+    case 'declined':
+    case 'lapsed':
+      return 'Return'
+    case 'not yet available':
+    case 'available':
+      return 'not yet determined'
+  }
 }
 
 /**

@@ -2,7 +2,7 @@
  * Las herramientas de los agentes, neutrales al transporte.
  *
  * No son una capa nueva: son el dominio expuesto. Y por eso las guardas siguen vigentes —
- * `pagar_cuota` llama a `payInstalment`, que rechaza un pago sin recepción confirmada (BR-08) o
+ * `pagar_cuota` llama a `payInstallment`, que rechaza un pago sin recepción confirmada (BR-08) o
  * sin hito certificado (BR-04). Un agente que alucine no puede violar una regla de negocio: la
  * guarda no está en el prompt, está en el código.
  *
@@ -23,22 +23,30 @@ import {
   AUTHORITY_LIMIT_USD,
   availableOutcomes,
   certify,
+  confirmMachineryValue,
+  machineryValueOf,
   missingEvidence,
-  produceInstalmentSchedule,
+  produceInstallmentSchedule,
   recordDecision,
 } from '../domain/underwriting.ts'
 import type { OperationId } from '../domain/operation.ts'
 import {
   acquisitionOptionStatus,
+  acquisitionWindowEnds,
+  conditionsOf,
+  conditionsSettled,
   confirmReceipt,
   exerciseAcquisitionOption,
   operationState,
   dueCount,
-  instalmentState,
+  installmentState,
   paidCount,
-  payInstalment,
+  payInstallment,
   pendingCount,
+  recordGuaranteesInPlace,
+  settleDownPayment,
   unpaidCount,
+  unsettledConditions,
   waitingOn,
 } from '../domain/operation.ts'
 import type { DeploymentId, MachineId } from '../domain/fleet.ts'
@@ -46,8 +54,11 @@ import {
   agreeServiceWindow,
   closeByAcquisitionRetirement,
   completeService,
+  currentAssessedValue,
   headingFor,
   hoursSinceLastService,
+  openServiceWindow,
+  requestServiceWindow,
   isServiceDue,
   overdueHours,
   recordHandover,
@@ -189,6 +200,79 @@ const PEDRO: readonly ToolDef[] = [
   }),
 
   def({
+    name: 'ver_condiciones',
+    description:
+      'Muestra las condiciones que la aprobación cargó y cuáles faltan liquidar. El calendario de cuotas no arranca hasta que estén todas.',
+    shape: { operacionId: z.string() },
+    run: (w, input) => {
+      const operation = w.operations.byId(input.operacionId as OperationId)
+      if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
+      const c = operation.conditions
+      return json({
+        inicialUSD: c.downPaymentUSD,
+        inicialLiquidado: c.downPaymentSettledAt?.toISOString() ?? null,
+        garantias: c.guarantees,
+        garantiaEnSuLugar: c.guaranteesInPlaceAt?.toISOString() ?? null,
+        falta: unsettledConditions(operation),
+        calendarioPuedeArrancar: conditionsSettled(operation),
+      })
+    },
+  }),
+
+  def({
+    name: 'pagar_inicial',
+    description:
+      'Paga el pago inicial que la aprobación fijó como condición. Es lo que la empresa liquida antes de que el calendario de cuotas arranque.',
+    shape: {
+      operacionId: z.string(),
+      montoUSD: z.number().describe('El monto exacto que la condición fija'),
+    },
+    run: (w, input) => {
+      const operation = w.operations.byId(input.operacionId as OperationId)
+      if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
+      settleDownPayment(operation, input.montoUSD, w.clock.now())
+      w.operations.save(operation)
+      const missing = unsettledConditions(operation)
+      return missing.length === 0
+        ? 'Pago inicial liquidado. No quedan condiciones: el calendario arranca.'
+        : `Pago inicial liquidado. Todavía falta ${missing.join(' y ')}.`
+    },
+  }),
+
+  def({
+    name: 'consultar_estado_servicio',
+    description:
+      'Dice si la máquina que la empresa tiene en custodia necesita servicio, con sus horas y el estado de la ventana. Es lo que el custodio ve sin pedirle nada a la responsable de flota.',
+    shape: { operacionId: z.string() },
+    run: (w, input) => {
+      const operation = w.operations.byId(input.operacionId as OperationId)
+      if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
+      const d = w.deployments.byOperation(operation.id)
+      if (!d) throw new NotFound(`La operación ${operation.id} todavía no tiene una máquina desplegada`)
+      const m = w.machines.byId(d.machineId)
+      if (!m) throw new NotFound(`El despliegue ${d.id} apunta a la máquina ${d.machineId}, que no existe`)
+      const window = openServiceWindow(d)
+      return json({
+        maquinaId: m.id,
+        custodio: d.handover.custodian,
+        horasAcumuladas: m.accumulatedHours,
+        horasDesdeUltimoServicio: hoursSinceLastService(m),
+        intervaloHoras: m.serviceIntervalHours,
+        servicioDebido: isServiceDue(m),
+        horasDeExceso: overdueHours(m),
+        ventana: window
+          ? {
+              solicitada: window.requestedAt.toISOString(),
+              acordada: window.agreed
+                ? { desde: window.agreed.from.toISOString(), hasta: window.agreed.to.toISOString() }
+                : null,
+            }
+          : null,
+      })
+    },
+  }),
+
+  def({
     name: 'ver_cuotas',
     description:
       'Lista las cuotas de una operación con su estado y el hito de certificación contra el que vence cada una.',
@@ -201,16 +285,18 @@ const PEDRO: readonly ToolDef[] = [
         pagadas: paidCount(operation),
         exigibles: dueCount(operation, milestones),
         pendientes: pendingCount(operation, milestones),
-        cuotas: operation.instalments.map((i) => {
+        cuotas: operation.installments.map((i) => {
           const milestone = milestones.find((m) => m.id === i.anchoredTo)
           // `001` paso 13: de una cuota pendiente hay que poder saber *qué* está esperando.
           const waiting = i.paidAt ? undefined : waitingOn(i, operation, milestones)
           return {
             id: i.id,
             montoUSD: i.amountUSD,
-            estado: instalmentState(i, operation, milestones),
+            estado: installmentState(i, operation, milestones),
             anclada_a: milestone?.name ?? i.anchoredTo,
-            esperando: waiting ? `${waiting.rule} — ${waiting.because}` : null,
+            // `cite` y no `rule`: lo que retiene una cuota puede ser una regla de negocio o un
+            // requisito de spec, y las dos se citan igual. `rule` no está en el segundo caso.
+            esperando: waiting ? `${waiting.cite} — ${waiting.because}` : null,
           }
         }),
       })
@@ -225,7 +311,7 @@ const PEDRO: readonly ToolDef[] = [
     run: (w, input) => {
       const operation = w.operations.byId(input.operacionId as OperationId)
       if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
-      payInstalment(operation, input.cuotaId, w.milestones.all(), w.clock.now())
+      payInstallment(operation, input.cuotaId, w.milestones.all(), w.clock.now())
       w.operations.save(operation)
       return `Cuota ${input.cuotaId} pagada. Quedan ${unpaidCount(operation)} sin pagar.`
     },
@@ -238,9 +324,14 @@ const PEDRO: readonly ToolDef[] = [
     run: (w, input) => {
       const operation = w.operations.byId(input.operacionId as OperationId)
       if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
+      const ends = acquisitionWindowEnds(operation)
       return json({
-        opcion: acquisitionOptionStatus(operation),
+        opcion: acquisitionOptionStatus(operation, w.clock.now()),
         sinPagar: unpaidCount(operation),
+        // BR-11 concede treinta días desde que se abre. Decir cuándo vencen es lo que hace
+        // accionable un «available» — sin la fecha, el cliente sabe que puede y no hasta cuándo.
+        disponibleDesde: operation.optionAvailableSince?.toISOString() ?? null,
+        caducaEl: ends?.toISOString() ?? null,
         operacion: operationState(operation),
       })
     },
@@ -292,7 +383,8 @@ const CARLOS: readonly ToolDef[] = [
       if (existing) return `Esa solicitud ya tiene el expediente ${existing.id}`
       const need = w.needs.byId(request.needId)
       const id = w.ids.next('AS') as AssessmentId
-      w.assessments.save({ id, requestId: request.id, machineryValueUSD: need?.machineryValueUSD ?? 0 })
+      if (!need) throw new NotFound(`La solicitud ${request.id} apunta a una necesidad que no existe`)
+      w.assessments.save({ id, requestId: request.id, machineryValueStatedUSD: need.machineryValueUSD })
       return `Expediente abierto: ${id}`
     },
   }),
@@ -324,6 +416,28 @@ const CARLOS: readonly ToolDef[] = [
       a.creditStanding = { grade: input.grado, note: input.nota }
       w.assessments.save(a)
       return 'Standing crediticio registrado'
+    },
+  }),
+
+  def({
+    name: 'confirmar_valor_maquinaria',
+    description:
+      'Confirma el valor de maquinaria que el solicitante declaró al enviar. El límite de autoridad y el tope del inicial se miden contra el confirmado, no contra el declarado.',
+    shape: {
+      expedienteId: z.string(),
+      valorConfirmadoUSD: z.number().describe('El valor que el analista confirma, en dólares'),
+      nota: z.string().describe('Contra qué se confirmó: cotización, tasación, lista de precios'),
+    },
+    run: (w, input) => {
+      const a = w.assessments.byId(input.expedienteId as AssessmentId)
+      if (!a) throw new NotFound(`No existe el expediente ${input.expedienteId}`)
+      confirmMachineryValue(a, {
+        amountUSD: input.valorConfirmadoUSD,
+        note: input.nota,
+        at: w.clock.now(),
+      })
+      w.assessments.save(a)
+      return `Valor de maquinaria confirmado en USD ${input.valorConfirmadoUSD.toLocaleString('en-US')}`
     },
   }),
 
@@ -404,7 +518,13 @@ const CARLOS: readonly ToolDef[] = [
     run: (w, input) => {
       const a = w.assessments.byId(input.expedienteId as AssessmentId)
       if (!a) throw new NotFound(`No existe el expediente ${input.expedienteId}`)
-      return json({ valorUSD: a.machineryValueUSD, limiteUSD: AUTHORITY_LIMIT_USD, disponibles: availableOutcomes(a) })
+      return json({
+        valorDeclaradoUSD: a.machineryValueStatedUSD,
+        valorConfirmadoUSD: a.machineryValueConfirmation?.amountUSD ?? null,
+        valorQueDecideUSD: machineryValueOf(a),
+        limiteUSD: AUTHORITY_LIMIT_USD,
+        disponibles: availableOutcomes(a),
+      })
     },
   }),
 
@@ -422,7 +542,7 @@ const CARLOS: readonly ToolDef[] = [
       const a = w.assessments.byId(input.expedienteId as AssessmentId)
       if (!a) throw new NotFound(`No existe el expediente ${input.expedienteId}`)
       const request = w.requests.byId(a.requestId)
-      if (!request) return 'El expediente no tiene solicitud'
+      if (!request) throw new NotFound(`El expediente ${a.id} apunta a una solicitud que no existe`)
       recordDecision(a, {
         outcome: 'approved',
         reason: input.razon,
@@ -449,17 +569,67 @@ const CARLOS: readonly ToolDef[] = [
     run: (w, input) => {
       const a = w.assessments.byId(input.expedienteId as AssessmentId)
       if (!a) throw new NotFound(`No existe el expediente ${input.expedienteId}`)
-      const instalments = produceInstalmentSchedule(a)
+      const installments = produceInstallmentSchedule(a)
+      const approved = a.decision?.conditions
+      if (!approved) throw new NotFound(`El expediente ${a.id} no tiene una aprobación con condiciones`)
       const id = w.ids.next('OP') as OperationId
-      w.operations.save({ id, requestId: a.requestId, instalments })
+      w.operations.save({ id, requestId: a.requestId, installments, conditions: conditionsOf(approved) })
       const milestones = w.milestones.all()
       return json({
         operacionId: id,
-        cuotas: instalments.map((i) => ({
+        cuotas: installments.map((i) => ({
           id: i.id,
           montoUSD: i.amountUSD,
           anclada_a: milestones.find((m) => m.id === i.anchoredTo)?.name,
         })),
+      })
+    },
+  }),
+
+  def({
+    name: 'registrar_garantia_en_lugar',
+    description:
+      'Registra que la garantía que la aprobación exigió quedó constituida. Es la condición que le toca al analista; el pago inicial lo liquida la empresa.',
+    shape: { operacionId: z.string() },
+    run: (w, input) => {
+      const operation = w.operations.byId(input.operacionId as OperationId)
+      if (!operation) throw new NotFound(`No existe la operación ${input.operacionId}`)
+      recordGuaranteesInPlace(operation, w.clock.now())
+      w.operations.save(operation)
+      const missing = unsettledConditions(operation)
+      return missing.length === 0
+        ? 'Garantía registrada en su lugar. No quedan condiciones: el calendario arranca.'
+        : `Garantía registrada en su lugar. Todavía falta ${missing.join(' y ')}.`
+    },
+  }),
+
+  def({
+    name: 'consultar_expediente',
+    description:
+      'Devuelve la decisión, sus condiciones y la evidencia sobre la que se tomó. Sigue disponible después de decidida: una decisión que no se puede releer no se puede sostener.',
+    shape: { expedienteId: z.string() },
+    run: (w, input) => {
+      const a = w.assessments.byId(input.expedienteId as AssessmentId)
+      if (!a) throw new NotFound(`No existe el expediente ${input.expedienteId}`)
+      return json({
+        expedienteId: a.id,
+        solicitudId: a.requestId,
+        valorDeclaradoUSD: a.machineryValueStatedUSD,
+        valorConfirmadoUSD: a.machineryValueConfirmation?.amountUSD ?? null,
+        evidencia: {
+          elegibilidad: a.eligibility ?? null,
+          standingCrediticio: a.creditStanding ?? null,
+          proyecto: a.project
+            ? {
+                adjudicado: a.project.awarded,
+                adjudicadoPor: a.project.awardedBy,
+                montoUSD: a.project.amountUSD,
+                hitos: a.project.schedule.map((m) => m.name),
+              }
+            : null,
+          pagador: a.payer ?? null,
+        },
+        decision: a.decision ?? null,
       })
     },
   }),
@@ -515,6 +685,9 @@ const JULIA: readonly ToolDef[] = [
       custodio: z.string().describe('Persona nombrada del lado del cliente que responde por la custodia'),
       sitioContratado: z.string(),
       aceptadoPorCliente: z.string().describe('Quién acepta el acta del lado del cliente'),
+      valorEstimadoUSD: z
+        .number()
+        .describe('Lo que Lea$e estima que la máquina vale al entregarla. No se le pide al cliente que lo acepte'),
     },
     run: (w, input) => {
       const m = w.machines.byId(input.maquinaId as MachineId)
@@ -527,6 +700,7 @@ const JULIA: readonly ToolDef[] = [
         contractedSite: input.sitioContratado,
         acceptedByLease: 'Julia',
         acceptedByClient: input.aceptadoPorCliente,
+        assessedValueUSD: input.valorEstimadoUSD,
         at: w.clock.now(),
       })
       w.deployments.save(created)
@@ -570,7 +744,7 @@ const JULIA: readonly ToolDef[] = [
       const d = w.deployments.byId(input.despliegueId as DeploymentId)
       if (!d) throw new NotFound(`No existe el despliegue ${input.despliegueId}`)
       const m = w.machines.byId(d.machineId)
-      if (!m) return 'El despliegue no tiene máquina'
+      if (!m) throw new NotFound(`El despliegue ${d.id} apunta a la máquina ${d.machineId}, que no existe`)
       recordReading(d, m, { hours: input.horas, at: parseDate(input.fecha, 'fecha') })
       w.deployments.save(d)
       w.machines.save(m)
@@ -584,8 +758,25 @@ const JULIA: readonly ToolDef[] = [
   }),
 
   def({
+    name: 'solicitar_ventana_servicio',
+    description:
+      'Le pide al cliente una ventana para servir la máquina. Solo procede si tiene servicio debido por horas. Acordar el período es acto del cliente, no de la responsable de flota.',
+    shape: { despliegueId: z.string() },
+    run: (w, input) => {
+      const d = w.deployments.byId(input.despliegueId as DeploymentId)
+      if (!d) throw new NotFound(`No existe el despliegue ${input.despliegueId}`)
+      const m = w.machines.byId(d.machineId)
+      if (!m) throw new NotFound(`El despliegue ${d.id} apunta a la máquina ${d.machineId}, que no existe`)
+      requestServiceWindow(d, m, w.clock.now())
+      w.deployments.save(d)
+      return `Ventana de servicio solicitada al custodio ${d.handover.custodian}. Falta que el cliente acuerde el período.`
+    },
+  }),
+
+  def({
     name: 'acordar_ventana_servicio',
-    description: 'Acuerda con el cliente un período dentro del cual liberará la máquina para el servicio debido.',
+    description:
+      'Registra el período que el cliente acordó para liberar la máquina. Solo se acuerda una ventana ya solicitada: pedirla y acordarla son dos actos.',
     shape: {
       despliegueId: z.string(),
       desde: z.string().describe('Fecha ISO de inicio'),
@@ -594,7 +785,7 @@ const JULIA: readonly ToolDef[] = [
     run: (w, input) => {
       const d = w.deployments.byId(input.despliegueId as DeploymentId)
       if (!d) throw new NotFound(`No existe el despliegue ${input.despliegueId}`)
-      agreeServiceWindow(d, parseDate(input.desde, 'desde'), parseDate(input.hasta, 'hasta'))
+      agreeServiceWindow(d, parseDate(input.desde, 'desde'), parseDate(input.hasta, 'hasta'), w.clock.now())
       w.deployments.save(d)
       return 'Ventana de servicio acordada'
     },
@@ -603,19 +794,25 @@ const JULIA: readonly ToolDef[] = [
   def({
     name: 'completar_servicio',
     description:
-      'Registra el servicio como completado. Debe caer dentro de la ventana acordada. El siguiente intervalo cuenta desde las horas al completarse.',
-    shape: { despliegueId: z.string(), fecha: z.string().describe('Fecha ISO en que se completó') },
+      'Registra el servicio como completado y revalúa la máquina. Debe caer dentro de la ventana acordada. El siguiente intervalo cuenta desde las horas al completarse.',
+    shape: {
+      despliegueId: z.string(),
+      fecha: z.string().describe('Fecha ISO en que se completó'),
+      valorEstimadoUSD: z.number().describe('Lo que Lea$e estima que la máquina vale ya servida'),
+    },
     run: (w, input) => {
       const d = w.deployments.byId(input.despliegueId as DeploymentId)
       if (!d) throw new NotFound(`No existe el despliegue ${input.despliegueId}`)
       const m = w.machines.byId(d.machineId)
-      if (!m) return 'El despliegue no tiene máquina'
-      const window = d.serviceWindows.find((sw) => !sw.completedAt)
-      if (!window) return 'No hay una ventana de servicio pendiente'
-      completeService(m, window, parseDate(input.fecha, 'fecha'), m.accumulatedHours)
+      if (!m) throw new NotFound(`El despliegue ${d.id} apunta a la máquina ${d.machineId}, que no existe`)
+      completeService(d, m, parseDate(input.fecha, 'fecha'), m.accumulatedHours, input.valorEstimadoUSD)
       w.deployments.save(d)
       w.machines.save(m)
-      return json({ servicioDebido: isServiceDue(m), intervaloCuentaDesdeHoras: m.hoursAtLastService })
+      return json({
+        servicioDebido: isServiceDue(m),
+        intervaloCuentaDesdeHoras: m.hoursAtLastService,
+        valorEstimadoUSD: currentAssessedValue(d).amountUSD,
+      })
     },
   }),
 
@@ -628,8 +825,12 @@ const JULIA: readonly ToolDef[] = [
       const d = w.deployments.byId(input.despliegueId as DeploymentId)
       if (!d) throw new NotFound(`No existe el despliegue ${input.despliegueId}`)
       const operation = w.operations.byId(d.operationId)
-      if (!operation) return 'El despliegue no tiene operación'
-      return json({ finalPrevisto: headingFor(operation), cerrado: Boolean(d.close) })
+      if (!operation) throw new NotFound(`El despliegue ${d.id} apunta a la operación ${d.operationId}, que no existe`)
+      return json({
+        finalPrevisto: headingFor(operation, w.clock.now()),
+        opcion: acquisitionOptionStatus(operation, w.clock.now()),
+        cerrado: Boolean(d.close),
+      })
     },
   }),
 
@@ -642,8 +843,9 @@ const JULIA: readonly ToolDef[] = [
       const d = w.deployments.byId(input.despliegueId as DeploymentId)
       if (!d) throw new NotFound(`No existe el despliegue ${input.despliegueId}`)
       const m = w.machines.byId(d.machineId)
+      if (!m) throw new NotFound(`El despliegue ${d.id} apunta a la máquina ${d.machineId}, que no existe`)
       const operation = w.operations.byId(d.operationId)
-      if (!m || !operation) return 'El despliegue está incompleto'
+      if (!operation) throw new NotFound(`El despliegue ${d.id} apunta a la operación ${d.operationId}, que no existe`)
       closeByAcquisitionRetirement(d, m, operation, w.clock.now())
       w.deployments.save(d)
       w.machines.save(m)

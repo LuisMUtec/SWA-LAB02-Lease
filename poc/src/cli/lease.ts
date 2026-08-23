@@ -11,7 +11,7 @@
  * deja que el dominio acepte o rechace.
  *
  * Lo que MCP no da y esto sí: corre sin cliente, sin protocolo y sin aprobación previa. Cualquiera
- * que clone el repo puede ejecutar el happy path completo con `npm run happy-path`.
+ * que clone el repo puede ejecutar el happy path completo con `npm run e2e`.
  *
  * El acotamiento por actor sigue siendo del binario, no del que lo invoca: `lease.ts carlos` no
  * despacha `registrar_entrega` — y al intentarlo cita el FR que lo prohíbe en vez de callar.
@@ -135,7 +135,9 @@ const tool = TOOLS[actor].find((t) => t.name === toolName)
 if (!tool) die(explainMissing(actor, toolName))
 
 const rest = argv.slice(2)
-if (rest[0] === '--help') {
+// En cualquier posición, no solo la primera: quien se queda a mitad de una invocación larga
+// agrega `--help` al final, y contestarle «no toma --help» es la peor respuesta posible.
+if (rest.includes('--help')) {
   console.log(describeTool(tool!))
   process.exit(0)
 }

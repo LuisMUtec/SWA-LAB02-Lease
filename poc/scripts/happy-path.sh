@@ -2,7 +2,7 @@
 #
 # El happy path de Stage 1, recorrido por línea de comandos.
 #
-#   npm run happy-path
+#   npm run e2e
 #
 # Cada paso es un proceso distinto sobre un mundo compartido en SQLite, invocado como lo invocaría
 # una persona o un agente con acceso a una terminal. No hay llave de API, no hay red y no hay
@@ -52,6 +52,8 @@ step carlos registrar_elegibilidad --expedienteId "$AS" --trabajaPorProyecto tru
   --nota "Constructora vigente que trabaja por obra adjudicada"
 step carlos registrar_standing_crediticio --expedienteId "$AS" --grado "Normal" \
   --nota "Sin atrasos en los ultimos 24 meses"
+step carlos confirmar_valor_maquinaria --expedienteId "$AS" --valorConfirmadoUSD 128000 \
+  --nota "Cotizacion del distribuidor autorizado, vigente 30 dias"
 step carlos registrar_proyecto --expedienteId "$AS" \
   --adjudicado "Carretera Canta-Huayllay tramo II" \
   --adjudicadoPor "Gobierno Regional de Lima" --montoUSD 4200000 \
@@ -77,19 +79,33 @@ step julia incorporar_maquina_flota \
 step julia registrar_entrega --maquinaId "$MQ" --operacionId "$OP" \
   --condicion "Operativa, sin danos, tren de rodaje 85%" --horas 1240 \
   --custodio "Ing. Rosa Quispe, residente de obra" --sitioContratado "Km 42, tramo II" \
-  --aceptadoPorCliente "Ing. Rosa Quispe"; DP=$LAST_ID
+  --aceptadoPorCliente "Ing. Rosa Quispe" --valorEstimadoUSD 128000; DP=$LAST_ID
 
 # ── Recibida la máquina, las cuotas se hacen exigibles ───────────────────────
 step pedro confirmar_recepcion_maquina --operacionId "$OP"
+
+# ── Y el calendario no arranca hasta liquidarse las condiciones ──────────────
+# Las dos mitades del mismo acto: el inicial lo paga la empresa (`001` paso 9), la garantia la
+# constata el analista (`002` paso 11). Mientras falte una, la cuota espera eso y no su hito.
+step pedro ver_condiciones --operacionId "$OP"
+step pedro pagar_inicial --operacionId "$OP" --montoUSD 12800
+step carlos registrar_garantia_en_lugar --operacionId "$OP"
 step pedro ver_cuotas --operacionId "$OP"
 
 # ── El reloj de la máquina son sus horas, no los días ────────────────────────
 step julia registrar_lectura_horas --despliegueId "$DP" --horas 1400 --fecha 2026-09-05
 step julia registrar_lectura_horas --despliegueId "$DP" --horas 1620 --fecha 2026-09-15
 step julia registrar_lectura_horas --despliegueId "$DP" --horas 1780 --fecha 2026-09-22
+# El custodio lo ve desde su lado, sin pedirselo a la responsable de flota — `003` paso 5.
+step pedro consultar_estado_servicio --operacionId "$OP"
 step julia listar_despliegues_abiertos
+# Pedirla y acordarla son dos actos: la maquina esta en una obra que Julia no controla.
+step julia solicitar_ventana_servicio --despliegueId "$DP"
 step julia acordar_ventana_servicio --despliegueId "$DP" --desde 2026-09-25 --hasta 2026-09-27
-step julia completar_servicio --despliegueId "$DP" --fecha 2026-09-26
+step julia completar_servicio --despliegueId "$DP" --fecha 2026-09-26 --valorEstimadoUSD 121000
+
+# ── La decisión sigue disponible después de tomada (`002` paso 12) ───────────
+step carlos consultar_expediente --expedienteId "$AS"
 
 # ── Cada cuota vence contra la certificación de su hito (BR-04) ──────────────
 cuota() {

@@ -25,11 +25,11 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      # Corre el hilo. Sin `--strict` mientras se construye: un paso todavía no implementado se
-      # reporta pendiente, no rompe el build. Para la entrega se agrega `-- --strict` y entonces
-      # un hilo incompleto sí falla.
+      # Corre el hilo con `--strict`: un paso declarado y sin construir hace fallar el build. Se
+      # corría sin la bandera mientras quedaban pasos pendientes; desde que no quedan, dejarla
+      # afuera solo serviría para que volvieran a aparecer sin que nadie se enterara.
       - name: Correr el hilo
-        run: node src/cli/demo.ts --no-color
+        run: node src/cli/demo.ts --no-color --strict
 
       # La frontera de autoridad de los agentes. Es una comprobacion estructural sobre datos, asi
       # que corre sin llave de API y sin red: si un agente llegara a sostener una herramienta
