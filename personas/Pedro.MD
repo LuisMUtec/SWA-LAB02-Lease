@@ -71,11 +71,12 @@ for. He needs to know which of these happened — not be left guessing whether t
 
 - **May:** record a machinery need for his project; submit a leasing request for it; check the
   status of his own leasing requests; confirm receipt of machinery for his own approved requests;
-  pay a pending installment on his own lease; view the paid/pending status of his own
+  pay an installment of his own lease once it falls due; view the paid/pending status of his own
   installments; exercise the acquisition option once it is available for his own lease.
 - **Must not:** see or act on another company's leasing requests, leases, or installments; pay an
-  installment that is already paid; exercise the acquisition option while any installment on his
-  lease is still pending; confirm receipt of machinery for a request that has not been approved.
+  installment that is already paid, or one that has not yet fallen due; exercise the acquisition
+  option while any installment on his lease is unpaid; confirm receipt of machinery for a request
+  that has not been approved.
 
 ## Success signal
 
