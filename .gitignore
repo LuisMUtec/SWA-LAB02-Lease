@@ -15,3 +15,7 @@ poc/.next/
 poc/.vercel/
 poc/.env*
 !poc/.env.example
+
+# Estado local del POC (SQLite compartido por los servidores MCP)
+poc/*.db
+poc/*.db-journal
