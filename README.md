@@ -59,6 +59,7 @@ distinto. **Cada afirmación ocurre una sola vez, en su altitud.**
 | Dominio | [`business-rules.md`](business-rules.md) | Las reglas que obedece el negocio, `BR-nn`, sobreviven a cualquier spec |
 | Personas | [`personas/`](personas/) | Quién es cada persona y qué necesita — cinco campos fijos, ver [`_TEMPLATE.MD`](personas/_TEMPLATE.MD) |
 | Feature | `specs/<n>/spec.md` | Qué hace el sistema y qué porción de la brecha cierra |
+| Diseño | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Dónde están las fronteras y por qué están ahí — el *design record* que el Principio I nombra |
 | Plan | `specs/<n>/plan.md`, `tasks.md` | Cómo se construye |
 | POC | [`poc/`](poc/README.md) | El código que corre el happy path, y la evidencia de que corrió |
 
