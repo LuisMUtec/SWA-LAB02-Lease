@@ -1,10 +1,6 @@
 # Arquitectura — Lea$e
 
-Dónde se sitúan las fronteras del sistema y en qué fundamento se apoyan, en cuatro vistas
-complementarias. Cada componente y cada relación citan el requisito funcional (`FR-nnn`) o la regla
-de negocio (`BR-nn`) del que se derivan, conforme al Principio I de la
-[constitución](../.specify/memory/constitution.md); el
-[procedimiento de verificación](#procedimiento-de-verificación) comprueba esas citas.
+La arquitectura de Lea$e en cuatro vistas.
 
 | Vista | Objeto |
 |---|---|
