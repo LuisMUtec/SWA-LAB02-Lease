@@ -12,7 +12,8 @@
     "demo:evidence": "node src/cli/demo.ts --no-color > evidence/run.txt; cat evidence/run.txt",
     "typecheck": "tsc --noEmit",
     "agent": "node src/cli/agent.ts",
-    "agent:matrix": "node src/cli/agent.ts --matrix"
+    "agent:matrix": "node src/cli/agent.ts --matrix",
+    "mcp:smoke": "node src/mcp/smoke.ts"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
